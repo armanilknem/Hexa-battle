@@ -1,0 +1,15 @@
+### Where does my code go?
+
+#### 1. The Model (ECS World: Data & Logic)
+Located in: `com.tdt4240.group3.model`
+*   `components/`: Put all data-only classes here (e.g., `TroopComponent`, `PositionComponent`).
+    *   **Rule**: No functions, only variables.
+*   `entities/`: Contains the `EntityManager` and `EntityFactory`.
+    *   **Rule**: Use the `EntityFactory` to define "blueprints" for new objects (like Troops or Cities).
+*   `systems/`: Put all logic classes here (e.g., `PlayerSystem`, `CombatSystem`).
+    *   **Rule**: Systems should use the `EntityManager` to find and modify data in the components.
+
+### Example: Adding a "Capture" feature
+1.  **Component**: Create `IsCapturedComponent` in `model/components/`.
+2.  **Entity**: Add this component to your `createCity` function in `model/entities/EntityFactory.kt`.
+3.  **System**: Create a `CaptureSystem` in `model/systems/` that checks troop positions vs. city positions.
