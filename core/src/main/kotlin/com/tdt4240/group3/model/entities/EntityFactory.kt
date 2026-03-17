@@ -1,19 +1,19 @@
 package com.tdt4240.group3.model.entities
 
 import com.tdt4240.group3.model.components.PlayerComponent
+import com.badlogic.ashley.core.Engine
+import ktx.ashley.entity
+import ktx.ashley.with
 
-class EntityFactory(private val entityManager: EntityManager) {
 
-    fun createPlayer(name: String, score: Int) : Entity {
-        val entity = entityManager.createEntity()
-        val playerComponent = PlayerComponent(name, score)
-        entityManager.addComponent(entity, playerComponent)
-        return entity
+
+class EntityFactory(private val engine: Engine) {
+
+    fun createPlayer(name: String) = engine.entity {
+        with<PlayerComponent> {
+            this.name = name
+        }
     }
 
-    // fun createTroop here
 
-    // fun createTile here
-
-    // fun createCity here
 }

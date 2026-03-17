@@ -1,27 +1,18 @@
 package com.tdt4240.group3.model.systems
 
-import com.tdt4240.group3.model.entities.EntityManager
 import com.tdt4240.group3.model.components.PlayerComponent
+import com.badlogic.ashley.systems.IteratingSystem
+import com.badlogic.ashley.core.Entity
+import ktx.ashley.allOf
+import ktx.ashley.get
 
-class PlayerSystem(private val entityManager: EntityManager) {
+class PlayerSystem : IteratingSystem(allOf(PlayerComponent::class).get()) {
 
-    fun addScore(entityId: Int, points: Int) {
-        val player = entityManager.getComponent(entityId, PlayerComponent::class.java)
-
-        if (player != null) {
-            player.score += points
-            println("SYSTEM: Player ${player.name} gained $points points. Total: ${player.score}")
-        }
-    }
-
-
-    fun update() {
-        entityManager.getAllEntitiesWithComponents().forEach { (id, components) ->
-            val player = components.filterIsInstance<PlayerComponent>().firstOrNull()
-            if (player != null) {
-                // Perform any per-frame logic here
-                // e.g., print(player.name + " is active")
-            }
+    override fun processEntity(entity: Entity, deltaTime: Float) {
+        // This runs automatically for every player entity
+        val player = entity[PlayerComponent.mapper]
+        player?.let {
+            // Logic here
         }
     }
 }

@@ -1,15 +1,39 @@
+# Game Architecture: MVC + Ashley ECS Guide
+
+To keep our code organized, we follow the **MVC** pattern combined with **Ashley ECS**.
+
 ### Where does my code go?
 
 #### 1. The Model (ECS World: Data & Logic)
 Located in: `com.tdt4240.group3.model`
 *   `components/`: Put all data-only classes here (e.g., `TroopComponent`, `PositionComponent`).
-    *   **Rule**: No functions, only variables.
-*   `entities/`: Contains the `EntityManager` and `EntityFactory`.
-    *   **Rule**: Use the `EntityFactory` to define "blueprints" for new objects (like Troops or Cities).
+    *   **Rule**: Implement `Component` and `Poolable`. Use a `mapper` in the `companion object`.
+*   `entities/`: Contains the `EntityFactory`.
+    *   **Rule**: Use `engine.entity { with<Component> { ... } }` to define "blueprints".
 *   `systems/`: Put all logic classes here (e.g., `PlayerSystem`, `CombatSystem`).
-    *   **Rule**: Systems should use the `EntityManager` to find and modify data in the components.
+    *   **Rule**: Extend `IteratingSystem` and use `allOf(...).get()` to filter entities.
+
+### How to connect everything (The Engine)
+
+To make the ECS work, we need to initialize and update the **Ashley Engine** in our main game loop or screen:
+
+```kotlin
+// 1. Initialize
+val engine = Engine()
+val factory = EntityFactory(engine)
+
+// 2. Add Systems
+engine.addSystem(PlayerSystem())
+
+// 3. Update (In your render loop)
+override fun render(delta: Float) {
+    engine.update(delta)
+}
+```
+
+---
 
 ### Example: Adding a "Capture" feature
 1.  **Component**: Create `IsCapturedComponent` in `model/components/`.
 2.  **Entity**: Add this component to your `createCity` function in `model/entities/EntityFactory.kt`.
-3.  **System**: Create a `CaptureSystem` in `model/systems/` that checks troop positions vs. city positions.
+3.  **System**: Create a `CaptureSystem` in `model/systems/` that extends `IteratingSystem` and checks troop vs city positions.
