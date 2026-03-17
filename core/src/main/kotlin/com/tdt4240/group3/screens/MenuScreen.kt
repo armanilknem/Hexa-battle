@@ -13,10 +13,11 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
         clearScreen(0.15f, 0.15f, 0.2f, 1f)
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-            game.setScreen<PlayScreen>()
+            game.setScreen<LobbyScreen>()
         }
 
         game.batch.use {
+            game.font.draw(game.batch, "Menu State", 100f, 150f)
             // TODO draw Menu
         }
     }
@@ -24,4 +25,5 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
     override fun dispose() {
         super.dispose()
     }
+
 }

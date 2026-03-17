@@ -1,31 +1,49 @@
 package com.tdt4240.group3.screens
 
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.game.playstate.PlaySubState
+import com.tdt4240.group3.states.playstate.PlayerTurnState
 import ktx.app.KtxScreen
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Input
-import ktx.app.clearScreen
 import ktx.graphics.use
 
 class PlayScreen(private val game: Hexa_Battle) : KtxScreen  {
-    override fun render(delta: Float) {
-        update(delta)
 
-        clearScreen(0.1f, 0.35f, 0.1f, 1f)
+    private var currentState : PlaySubState = PlayerTurnState()
+    private var previousState : PlaySubState = PlayerTurnState()
+
+
+    init {
+        currentState.enter(this)
+    }
+
+    override fun render(delta: Float) {
+        currentState.handleInput(this)
+        currentState.update(this, delta)
 
         game.batch.use {
-            // TODO draw Game
+            currentState.render(this@PlayScreen)
         }
     }
 
-    private fun update(delta: Float) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            game.setScreen<MenuScreen>()
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-            game.setScreen<LobbyScreen>()
-        }
+    fun changeState(newState : PlaySubState) {
+        currentState.exit(this)
+        previousState = currentState
+        currentState = newState
+        currentState.enter(this)
     }
+
+    fun goToMenu() {
+        game.setScreen<MenuScreen>()
+    }
+
+//    fun goToLobby() {
+//        game.setScreen<LobbyScreen>()
+//    }
+
+    fun getBatch() = game.batch
+    fun getFont() = game.font
+//    fun getPreviousState() = previousState
+//    fun getCurrentState() = currentState
 
     override fun dispose() {
         super.dispose()

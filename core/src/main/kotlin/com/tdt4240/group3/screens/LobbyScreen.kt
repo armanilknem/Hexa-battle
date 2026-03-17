@@ -14,9 +14,13 @@ class LobbyScreen(private val game: Hexa_Battle) : KtxScreen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             game.setScreen<MenuScreen>()
         }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            game.setScreen<PlayScreen>()
+        }
 
         game.batch.use {
             // TODO draw Lobby
+            game.font.draw(game.batch, "Lobby State", 100f, 150f)
         }
     }
 

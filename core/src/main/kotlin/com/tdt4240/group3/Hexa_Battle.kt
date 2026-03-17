@@ -1,5 +1,6 @@
 package com.tdt4240.group3
 
+import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
@@ -7,6 +8,7 @@ import ktx.async.KtxAsync
 import com.tdt4240.group3.screens.MenuScreen
 import com.tdt4240.group3.screens.PlayScreen
 import com.tdt4240.group3.screens.LobbyScreen
+import ktx.assets.disposeSafely
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
 
@@ -17,11 +19,14 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
     }
 
     lateinit var batch: SpriteBatch private set
+    lateinit var font: BitmapFont private set
+
 
     override fun create() {
         KtxAsync.initiate()
 
         batch = SpriteBatch()
+        font = BitmapFont()
 
         addScreen(MenuScreen(this))
         addScreen(PlayScreen(this))
@@ -31,6 +36,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
     }
     override fun dispose() {
         super.dispose()
+        font.disposeSafely()
         batch.dispose()
     }
 }
