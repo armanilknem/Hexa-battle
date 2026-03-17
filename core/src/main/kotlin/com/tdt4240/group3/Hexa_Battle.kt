@@ -1,38 +1,36 @@
 package com.tdt4240.group3
 
-import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
-import ktx.app.clearScreen
-import ktx.assets.disposeSafely
-import ktx.assets.toInternalFile
 import ktx.async.KtxAsync
-import ktx.graphics.use
+import com.tdt4240.group3.screens.MenuScreen
+import com.tdt4240.group3.screens.PlayScreen
+import com.tdt4240.group3.screens.LobbyScreen
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
+
+    companion object {
+        const val WIDTH = 640
+        const val HEIGHT = 480
+        const val TITLE = "Hexa Battle"
+    }
+
+    lateinit var batch: SpriteBatch private set
+
     override fun create() {
         KtxAsync.initiate()
 
-        addScreen(FirstScreen())
-        setScreen<FirstScreen>()
+        batch = SpriteBatch()
+
+        addScreen(MenuScreen(this))
+        addScreen(PlayScreen(this))
+        addScreen(LobbyScreen(this))
+
+        setScreen<MenuScreen>()
     }
-}
-
-class FirstScreen : KtxScreen {
-    private val image = Texture("logo.png".toInternalFile(), true).apply { setFilter(Linear, Linear) }
-    private val batch = SpriteBatch()
-
-    override fun render(delta: Float) {
-        clearScreen(red = 0.7f, green = 0.7f, blue = 0.7f)
-        batch.use {
-            it.draw(image, 100f, 160f)
-        }
-    }
-
     override fun dispose() {
-        image.disposeSafely()
-        batch.disposeSafely()
+        super.dispose()
+        batch.dispose()
     }
 }
