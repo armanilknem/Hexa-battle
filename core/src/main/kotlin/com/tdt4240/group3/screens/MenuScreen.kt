@@ -30,8 +30,8 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
         val optionsBtn  = VisTextButton("OPTIONS")
 
         playBtn.onClick    { game.setScreen<LobbyScreen>() }
-        howToBtn.onClick   { /* TODO */ }
-        optionsBtn.onClick { /* TODO */ }
+        howToBtn.onClick   { game.setScreen<HowToPlayScreen>() }
+        optionsBtn.onClick { game.setScreen<OptionsScreen>() }
 
         root.add(titleLabel).padBottom(48f).row()
         root.add(playBtn).width(280f).height(52f).padBottom(12f).row()
