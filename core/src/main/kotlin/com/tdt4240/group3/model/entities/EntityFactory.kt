@@ -11,7 +11,7 @@ import ktx.ashley.with
 class EntityFactory(private val engine: Engine) {
 
     fun createPlayer(name: String) = engine.entity {
-        with<PlayerComponent> {
+        with<PlayerComponent > {
             this.name = name
         }
     }
