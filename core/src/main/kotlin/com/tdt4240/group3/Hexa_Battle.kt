@@ -2,6 +2,9 @@ package com.tdt4240.group3
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.ashley.core.Engine
+import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.model.systems.PlayerSystem
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
@@ -11,6 +14,8 @@ import com.tdt4240.group3.screens.LobbyScreen
 import ktx.assets.disposeSafely
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
+    private lateinit var engine: Engine
+
 
     companion object {
         const val WIDTH = 640
@@ -28,10 +33,25 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         batch = SpriteBatch()
         font = BitmapFont()
 
-        addScreen(MenuScreen(this))
-        addScreen(PlayScreen(this))
-        addScreen(LobbyScreen(this))
+        // 1. Initialize the Ashley Engine
+        engine = Engine()
 
+        // 2. Add the PlayerSystem to the engine
+        engine.addSystem(PlayerSystem())
+
+        // 3. Initialize the EntityFactory
+        val factory = EntityFactory(engine)
+
+        // 4. Create a test player to verify functionality
+        factory.createPlayer("Sander")
+
+        // 5. Pass the engine to the screen so it can be updated
+//        addScreen(FirstScreen(engine))
+//        setScreen<FirstScreen>()
+
+        addScreen(MenuScreen(this))
+        addScreen(PlayScreen(this, engine))
+        addScreen(LobbyScreen(this))
         setScreen<MenuScreen>()
     }
     override fun dispose() {
