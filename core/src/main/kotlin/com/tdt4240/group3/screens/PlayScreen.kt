@@ -20,12 +20,12 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
     override fun render(delta: Float) {
         currentState.handleInput(this)
         currentState.update(this, delta)
-        // 6. Update the Ashley engine every frame
-        // This will trigger PlayerSystem.processEntity()
-        engine.update(delta)
 
         game.batch.use {
             currentState.render(this@PlayScreen)
+            // 6. Update the Ashley engine every frame
+            // This will trigger PlayerSystem.processEntity()
+            engine.update(delta)
         }
     }
 
