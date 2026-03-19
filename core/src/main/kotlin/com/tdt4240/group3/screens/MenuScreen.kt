@@ -1,29 +1,62 @@
 package com.tdt4240.group3.screens
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.Input
+import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.kotcrab.vis.ui.VisUI
+import com.kotcrab.vis.ui.widget.VisLabel
+import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
+import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
-import ktx.graphics.use
-
 
 class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
+
+    private lateinit var stage: Stage
+
+    override fun show() {
+        if (!VisUI.isLoaded()) VisUI.load()
+
+        stage = Stage(ScreenViewport())
+        Gdx.input.inputProcessor = stage
+
+        val root = Table().apply { setFillParent(true); center() }
+
+        val titleLabel  = VisLabel("HEXA·BATTLE")
+        val playBtn     = VisTextButton("PLAY")
+        val howToBtn    = VisTextButton("HOW TO PLAY")
+        val optionsBtn  = VisTextButton("OPTIONS")
+
+        playBtn.onClick    { game.setScreen<LobbyScreen>() }
+        howToBtn.onClick   { /* TODO */ }
+        optionsBtn.onClick { /* TODO */ }
+
+        root.add(titleLabel).padBottom(48f).row()
+        root.add(playBtn).width(280f).height(52f).padBottom(12f).row()
+        root.add(howToBtn).width(280f).height(52f).padBottom(12f).row()
+        root.add(optionsBtn).width(280f).height(52f).row()
+
+        stage.addActor(root)
+    }
+
+    override fun resize(width: Int, height: Int) {
+        stage.viewport.update(width, height, true)
+    }
+
     override fun render(delta: Float) {
-        clearScreen(0.15f, 0.15f, 0.2f, 1f)
+        clearScreen(0.055f, 0.067f, 0.094f, 1f)
+        stage.act(delta)
+        stage.draw()
+    }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-            game.setScreen<LobbyScreen>()
-        }
-
-        game.batch.use {
-            game.font.draw(game.batch, "Menu State", 100f, 150f)
-            // TODO draw Menu
-        }
+    override fun hide() {
+        Gdx.input.inputProcessor = null
     }
 
     override fun dispose() {
-        super.dispose()
+        stage.dispose()
+        if (VisUI.isLoaded()) VisUI.dispose()
     }
-
 }
