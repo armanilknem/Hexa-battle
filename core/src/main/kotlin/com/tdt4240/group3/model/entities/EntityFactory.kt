@@ -27,7 +27,7 @@ class EntityFactory(private val engine: Engine) {
             this.y = y
         }
         with<TeamComponent> {
-            this.team = TeamComponent.TeamName.NONE
+            this.team = team
         }
     }
 }
