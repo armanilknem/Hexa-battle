@@ -16,7 +16,7 @@ class PlayerSystem : IteratingSystem(allOf(PlayerComponent::class).get()) {
             // Logic here
 
             // code below is temporary to test Ashley enginge!!
-            Gdx.app.log("ECS", "Processing Player: ${p.name}")
+            // Gdx.app.log("ECS", "Processing Player: ${p.name}")
         }
     }
 }

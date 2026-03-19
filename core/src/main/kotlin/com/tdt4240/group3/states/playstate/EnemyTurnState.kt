@@ -7,6 +7,8 @@ import com.tdt4240.group3.screens.PlayScreen
 import ktx.app.clearScreen
 
 class EnemyTurnState : PlaySubState {
+    override val backgroundColor = Triple(0.35f, 0.1f, 0.1f)  // red
+
     override fun handleInput(screen: PlayScreen) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             screen.changeState(PauseState())
@@ -21,7 +23,7 @@ class EnemyTurnState : PlaySubState {
     }
 
     override fun render(screen: PlayScreen) {
-        clearScreen(0.35f, 0.1f, 0.1f, 1f)
+//        clearScreen(0.35f, 0.1f, 0.1f, 1f)
         screen.getFont().draw(screen.getBatch(), "Play State", 100f, 150f)
         screen.getFont().draw(screen.getBatch(), "Enemy Turn Substate", 100f, 100f)
     }

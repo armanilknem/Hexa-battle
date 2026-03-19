@@ -3,8 +3,10 @@ package com.tdt4240.group3
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.PlayerSystem
+import com.tdt4240.group3.model.systems.TileRenderSystem
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
@@ -44,13 +46,18 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
 
         // 4. Create a test player to verify functionality
         factory.createPlayer("Sander")
+        factory.generateRectangularGrid(12, 11)
+
+        val shapeRenderer = ShapeRenderer()
+        val playScreen = PlayScreen(this, engine)
+        engine.addSystem(TileRenderSystem(shapeRenderer, playScreen.camera))
 
         // 5. Pass the engine to the screen so it can be updated
 //        addScreen(FirstScreen(engine))
 //        setScreen<FirstScreen>()
 
         addScreen(MenuScreen(this))
-        addScreen(PlayScreen(this, engine))
+        addScreen(playScreen)
         addScreen(LobbyScreen(this))
         setScreen<MenuScreen>()
     }
@@ -58,5 +65,6 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         super.dispose()
         font.disposeSafely()
         batch.dispose()
+        ShapeRenderer().dispose()
     }
 }

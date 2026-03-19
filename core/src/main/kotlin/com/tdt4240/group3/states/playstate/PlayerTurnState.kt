@@ -7,6 +7,8 @@ import com.badlogic.gdx.Input
 import ktx.app.clearScreen
 
 class PlayerTurnState : PlaySubState {
+    override val backgroundColor = Triple(0.1f, 0.35f, 0.1f)  // green
+
     override fun handleInput(screen: PlayScreen) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             screen.changeState(PauseState())
@@ -21,7 +23,7 @@ class PlayerTurnState : PlaySubState {
     }
 
     override fun render(screen: PlayScreen) {
-        clearScreen(0.1f, 0.35f, 0.1f, 1f)
+//        clearScreen(0.1f, 0.35f, 0.1f, 1f)
         screen.getFont().draw(screen.getBatch(), "Play State", 100f, 150f)
         screen.getFont().draw(screen.getBatch(), "Player Turn Substate", 100f, 100f)
     }
