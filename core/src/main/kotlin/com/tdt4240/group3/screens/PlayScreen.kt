@@ -23,8 +23,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
         game.batch.use {
             currentState.render(this@PlayScreen)
-            // 6. Update the Ashley engine every frame
-            // This will trigger PlayerSystem.processEntity()
+            // Update the Ashley engine every frame (runs all registered systems, including render-related ones)
             engine.update(delta)
         }
     }
