@@ -17,6 +17,7 @@ import ktx.assets.disposeSafely
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
     private lateinit var engine: Engine
+    private lateinit var cityRenderSystem: CityRenderSystem
 
 
     companion object {
@@ -40,7 +41,8 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
 
         // 2. Add the systems to the engine
         engine.addSystem(PlayerSystem())
-        engine.addSystem(CityRenderSystem(batch))
+        cityRenderSystem = CityRenderSystem(batch)
+        engine.addSystem(cityRenderSystem)
 
         // 3. Initialize the EntityFactory
         val factory = EntityFactory(engine)
@@ -67,5 +69,6 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         super.dispose()
         font.disposeSafely()
         batch.dispose()
+        cityRenderSystem.disposeSafely()
     }
 }
