@@ -8,6 +8,7 @@ import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TileComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
+import ktx.graphics.use
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
@@ -17,9 +18,10 @@ class TileRenderSystem(private val shapeRenderer: ShapeRenderer, private val cam
 
     override fun update(deltaTime: Float) {
         shapeRenderer.projectionMatrix = camera.combined
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line)
-        super.update(deltaTime)  // calls processEntity for each entity
-        shapeRenderer.end()
+        // Use .use to automatically handle begin() and end()
+        shapeRenderer.use(ShapeRenderer.ShapeType.Line) {
+            super.update(deltaTime)
+        }
     }
 
     override fun processEntity(entity: Entity, deltaTime: Float) {

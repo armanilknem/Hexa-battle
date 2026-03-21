@@ -37,12 +37,12 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         currentState.update(this, delta)
         // 6. Update the Ashley engine every frame
         // This will trigger PlayerSystem.processEntity()
+        engine.update(delta)
 
         game.batch.projectionMatrix = camera.combined
         game.batch.use {
             currentState.render(this@PlayScreen)
         }
-        engine.update(delta)
     }
 
     fun changeState(newState : PlaySubState) {
