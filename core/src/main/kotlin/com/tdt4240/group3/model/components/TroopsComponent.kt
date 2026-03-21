@@ -10,6 +10,19 @@ class TroopsComponent : Component, Pool.Poolable {
     var isMoved: Boolean = false
     var isClicked: Boolean = false
 
+    fun isAttacked(attackPower: Int){
+        this.strength -= attackPower
+    }
+
+    fun setIsMoved(isMoved: Boolean){
+        this.isMoved = isMoved
+    }
+
+    fun setIsClicked(isClicked: Boolean){
+        this.isClicked = isClicked
+    }
+
+
     override fun reset() {
         strength = 0
         isMoved = false
