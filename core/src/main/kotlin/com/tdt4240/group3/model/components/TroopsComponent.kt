@@ -14,17 +14,16 @@ class TroopsComponent : Component, Pool.Poolable {
         this.strength -= attackPower
     }
 
-    fun setIsMoved(isMoved: Boolean){
-        this.isMoved = isMoved
+    fun hasBeenMoved(){
+        this.isMoved = true
     }
 
-    fun setIsClicked(isClicked: Boolean){
-        this.isClicked = isClicked
+    fun hasBeenClicked(){
+        this.isClicked = true
     }
 
 
     override fun reset() {
-        strength = 0
         isMoved = false
         isClicked = false
     }
