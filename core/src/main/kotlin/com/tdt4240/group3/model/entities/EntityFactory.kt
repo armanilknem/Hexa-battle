@@ -17,29 +17,29 @@ class EntityFactory(private val engine: Engine) {
         }
     }
 
-    fun createTroop( team: TeamComponent.TeamName, strength: Int, x: Int, y: Int) = engine.entity {
+    fun createTroop( team: TeamComponent.TeamName, strength: Int, q: Int, r: Int) = engine.entity {
         with<TroopsComponent> {
             this.strength = strength
             this.isMoved = false
             this.isClicked = false
         }
         with<PositionComponent> {
-            this.q = 0
-            this.r = 0
+            this.q = q
+            this.r = r
         }
         with<TeamComponent> {
             this.team = team
         }
     }
-    fun createCity(name: String, isCapital: Boolean, baseProduction: Int, x: Int, y: Int, team: TeamComponent.TeamName) = engine.entity {
+    fun createCity(name: String, isCapital: Boolean, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
         with<CityComponent> {
             this.name = name
             this.baseProduction = baseProduction
             this.isCapital = isCapital
         }
         with<PositionComponent> {
-            this.q = x
-            this.r = y
+            this.q = q
+            this.r = r
         }
         with<TeamComponent> {
             this.team = team
