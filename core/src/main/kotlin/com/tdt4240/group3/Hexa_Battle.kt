@@ -7,6 +7,7 @@ import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.PlayerSystem
 import com.tdt4240.group3.model.systems.CityRenderSystem
 import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.screens.HowToPlayScreen
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
