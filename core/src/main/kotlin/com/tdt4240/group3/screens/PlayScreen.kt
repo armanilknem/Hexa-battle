@@ -1,12 +1,13 @@
 package com.tdt4240.group3.screens
 
+import com.badlogic.ashley.core.Engine
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.game.playstate.PlaySubState
 import com.tdt4240.group3.states.playstate.PlayerTurnState
 import ktx.app.KtxScreen
 import ktx.graphics.use
 
-class PlayScreen(private val game: Hexa_Battle) : KtxScreen  {
+class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : KtxScreen  {
 
     private var currentState : PlaySubState = PlayerTurnState()
     private var previousState : PlaySubState = PlayerTurnState()
@@ -22,6 +23,8 @@ class PlayScreen(private val game: Hexa_Battle) : KtxScreen  {
 
         game.batch.use {
             currentState.render(this@PlayScreen)
+            // Update the Ashley engine every frame (runs all registered systems, including render-related ones)
+            engine.update(delta)
         }
     }
 
