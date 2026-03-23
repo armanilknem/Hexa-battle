@@ -7,12 +7,14 @@ import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.PlayerSystem
 import com.tdt4240.group3.model.systems.CityRenderSystem
 import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.screens.HowToPlayScreen
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
 import com.tdt4240.group3.screens.MenuScreen
 import com.tdt4240.group3.screens.PlayScreen
 import com.tdt4240.group3.screens.LobbyScreen
+import com.tdt4240.group3.screens.OptionsScreen
 import ktx.assets.disposeSafely
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
@@ -63,6 +65,9 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         addScreen(MenuScreen(this))
         addScreen(PlayScreen(this, engine))
         addScreen(LobbyScreen(this))
+        addScreen(HowToPlayScreen(this))
+        addScreen(OptionsScreen(this))
+
         setScreen<MenuScreen>()
     }
     override fun dispose() {
