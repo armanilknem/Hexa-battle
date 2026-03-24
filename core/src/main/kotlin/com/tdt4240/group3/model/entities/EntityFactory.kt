@@ -1,16 +1,25 @@
 package com.tdt4240.group3.model.entities
 
-import com.tdt4240.group3.model.components.Team
+import com.tdt4240.group3.model.components.PlayerComponent
 import com.badlogic.ashley.core.Engine
-import com.tdt4240.group3.model.components.*
+import com.tdt4240.group3.model.components.CityComponent
+import com.tdt4240.group3.model.components.PositionComponent
+import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.model.components.TroopsComponent
 import com.badlogic.ashley.core.Entity
+import com.tdt4240.group3.model.components.HexComponent
+import com.tdt4240.group3.model.components.TileComponent
 import ktx.ashley.entity
 import ktx.ashley.with
 
-
 class EntityFactory(private val engine: Engine) {
 
-    // Method to create the entire grid at once
+    fun createPlayer(name: String) = engine.entity {
+        with<PlayerComponent > {
+            this.name = name
+        }
+    }
+
     fun generateRectangularGrid(width: Int, height: Int) {
         for (r in 0 until height) {
             val rOffset = Math.floor(r / 2.0).toInt()
@@ -18,6 +27,46 @@ class EntityFactory(private val engine: Engine) {
                 createTile(q, r, TileComponent.TileType.GRASS)
             }
         }
+    }
+
+    fun createTroop( team: TeamComponent.TeamName, strength: Int, q: Int, r: Int) = engine.entity {
+        with<HexComponent> { this.q = q; this.r = r }
+        with<TroopsComponent> {
+            this.strength = strength
+            this.isMoved = false
+            this.isClicked = false
+        }
+        with<PositionComponent> {
+            val coords = hexToPixel(q, r)
+            this.q = coords.first.toInt()
+            this.r = coords.second.toInt()
+            this.zIndex = 2 // Top layer
+        }
+        with<TeamComponent> {
+            this.team = team
+        }
+    }
+    fun createCity(name: String, isCapital: Boolean, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
+        with<CityComponent> {
+            this.name = name
+            this.baseProduction = baseProduction
+            this.isCapital = isCapital
+        }
+        with<PositionComponent> {
+            val coords = hexToPixel(q, r)
+            this.q = coords.first.toInt()
+            this.r = coords.second.toInt()
+            this.zIndex = 1 // Middle layer
+        }
+        with<TeamComponent> {
+            this.team = team
+        }
+    }
+    private fun hexToPixel(q: Int, r: Int): Pair<Float, Float> {
+        val size = 32f // The radius of your hex sprite
+        val x = size * (Math.sqrt(3.0).toFloat() * q + Math.sqrt(3.0).toFloat() / 2f * r)
+        val y = size * (3f / 2f * r)
+        return Pair(x, y)
     }
 
     fun createTile(q: Int, r: Int, type: TileComponent.TileType): Entity = engine.entity {
@@ -31,63 +80,9 @@ class EntityFactory(private val engine: Engine) {
         with<PositionComponent> {
             // We convert Hex(q,r) to Pixel(x,y) here for the View to use
             val coords = hexToPixel(q, r)
-            this.x = coords.first.toInt()
-            this.y = coords.second.toInt()
+            this.q = coords.first.toInt() //var this.x
+            this.r = coords.second.toInt() //var this.y
             this.zIndex = 0 // Bottom layer
-        }
-    }
-
-    fun createCity(
-        name: String,
-        isCapital: Boolean,
-        baseProduction: Int,
-        q: Int,
-        r: Int,
-        team: TeamComponent.TeamName
-    ): Entity = engine.entity {
-        with<HexComponent> {
-            this.q = q; this.r = r
-        }
-        with<CityComponent> {
-            this.name = name
-            this.isCapital = isCapital
-            this.baseProduction = baseProduction
-        }
-        with<PositionComponent> {
-            val coords = hexToPixel(q, r)
-            this.x = coords.first.toInt()
-            this.y = coords.second.toInt()
-            this.zIndex = 1 // Middle layer
-        }
-        with<TeamComponent> {
-            this.team = team
-        }
-    }
-
-    fun createTroop(q: Int, r: Int, team: Team, strength: Int): Entity = engine.entity {
-        with<HexComponent> { this.q = q; this.r = r }
-        with<TroopsComponent> {
-            this.team = team
-            this.strength = strength
-        }
-        with<PositionComponent> {
-            val coords = hexToPixel(q, r)
-            this.x = coords.first.toInt()
-            this.y = coords.second.toInt()
-            this.zIndex = 2 // Top layer
-        }
-    }
-
-    private fun hexToPixel(q: Int, r: Int): Pair<Float, Float> {
-        val size = 32f // The radius of your hex sprite
-        val x = size * (Math.sqrt(3.0).toFloat() * q + Math.sqrt(3.0).toFloat() / 2f * r)
-        val y = size * (3f / 2f * r)
-        return Pair(x, y)
-    }
-
-    fun createPlayer(name: String) = engine.entity {
-        with<PlayerComponent > {
-            this.name = name
         }
     }
 }

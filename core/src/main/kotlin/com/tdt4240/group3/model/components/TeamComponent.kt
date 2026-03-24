@@ -6,8 +6,8 @@ import ktx.ashley.mapperFor
 
 class TeamComponent : Component, Pool.Poolable {
     enum class TeamName {
-        P1,
-        P2,
+        RED,
+        BLUE,
         NONE
     }
     var team = TeamName.NONE

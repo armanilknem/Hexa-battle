@@ -9,12 +9,14 @@ import com.tdt4240.group3.model.systems.TileRenderSystem
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.CityRenderSystem
 import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.screens.HowToPlayScreen
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
 import com.tdt4240.group3.screens.MenuScreen
 import com.tdt4240.group3.screens.PlayScreen
 import com.tdt4240.group3.screens.LobbyScreen
+import com.tdt4240.group3.screens.OptionsScreen
 import ktx.assets.disposeSafely
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
@@ -42,33 +44,21 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         // 1. Initialize the Ashley Engine
         engine = Engine()
 
-        // 2. Initialize the EntityFactory
-        val factory = EntityFactory(engine)
-
-        // 3. Create screens first to get camera correct
-        val playScreen = PlayScreen(this, engine)
-        addScreen(MenuScreen(this))
-        addScreen(playScreen)
-        addScreen(LobbyScreen(this))
-
-        // 4. Add the systems in draw order
+        // 2. Add the systems to the engine
         engine.addSystem(PlayerSystem())
+        val playScreen = PlayScreen(this, engine)
         engine.addSystem(TileRenderSystem(shapeRenderer, playScreen.camera))
         cityRenderSystem = CityRenderSystem(batch, playScreen.camera)
         engine.addSystem(cityRenderSystem)
 
+        // 3. Initialize the EntityFactory
+        val factory = EntityFactory(engine)
 
-        // 5. Create a test player to verify functionality
+        // 4. Create a test player to verify functionality
         factory.createPlayer("Sander")
-
-        // 6. Generate grid
         factory.generateRectangularGrid(12, 11)
 
-        // 7. Pass the engine to the screen so it can be updated
-//        addScreen(FirstScreen(engine))
-//        setScreen<FirstScreen>()
-
-        // 8. Create a test city
+        // 5. Create a test city
         factory.createCity(
             name = "Manchester",
             isCapital = true,
@@ -78,7 +68,12 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
             team = TeamComponent.TeamName.P1
         )
 
-        // 9. Start the game
+        addScreen(MenuScreen(this))
+        addScreen(playScreen)
+        addScreen(LobbyScreen(this))
+        addScreen(HowToPlayScreen(this))
+        addScreen(OptionsScreen(this))
+
         setScreen<MenuScreen>()
     }
     override fun dispose() {
