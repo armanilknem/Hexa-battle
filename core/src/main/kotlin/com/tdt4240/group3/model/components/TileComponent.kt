@@ -8,6 +8,7 @@ class TileComponent : Component, Poolable{
     enum class TileType { GRASS, WATER }
 
     var type: TileType = TileType.GRASS
+    var isHighlighted: Boolean = false
 
     override fun reset() {
         type = TileType.GRASS // Reset to a safe default

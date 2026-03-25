@@ -5,11 +5,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.tdt4240.group3.model.systems.PlayerSystem
-import com.tdt4240.group3.model.systems.TileRenderSystem
 import com.tdt4240.group3.model.entities.EntityFactory
-import com.tdt4240.group3.model.systems.CityRenderSystem
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.screens.HowToPlayScreen
+import com.tdt4240.group3.view.systems.RenderSystem
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
@@ -21,7 +20,7 @@ import ktx.assets.disposeSafely
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
     private lateinit var engine: Engine
-    private lateinit var cityRenderSystem: CityRenderSystem
+    private lateinit var renderSystem: RenderSystem
     private lateinit var shapeRenderer: ShapeRenderer
 
     companion object {
@@ -34,6 +33,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
     lateinit var font: BitmapFont private set
 
 
+
     override fun create() {
         KtxAsync.initiate()
 
@@ -41,46 +41,27 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         font = BitmapFont()
         shapeRenderer = ShapeRenderer()
 
-        // 1. Initialize the Ashley Engine
         engine = Engine()
-
-        // 2. Add the systems to the engine
         engine.addSystem(PlayerSystem())
+
         val playScreen = PlayScreen(this, engine)
-        engine.addSystem(TileRenderSystem(shapeRenderer, playScreen.camera))
-        cityRenderSystem = CityRenderSystem(batch, playScreen.camera)
-        engine.addSystem(cityRenderSystem)
 
-        // 3. Initialize the EntityFactory
-        val factory = EntityFactory(engine)
-
-        // 4. Create a test player to verify functionality
-        factory.createPlayer("Sander")
-        factory.generateRectangularGrid(12, 11)
-
-        // 5. Create a test city
-        factory.createCity(
-            name = "Manchester",
-            isCapital = true,
-            baseProduction = 20,
-            q = 5,
-            r = 5,
-            team = TeamComponent.TeamName.RED
-        )
+        // Single unified render system — no TileRenderSystem, no CityRenderSystem
+        renderSystem = RenderSystem(batch, shapeRenderer, playScreen.camera)
+        engine.addSystem(renderSystem)
 
         addScreen(MenuScreen(this))
         addScreen(playScreen)
         addScreen(LobbyScreen(this))
         addScreen(HowToPlayScreen(this))
         addScreen(OptionsScreen(this))
-
         setScreen<MenuScreen>()
     }
     override fun dispose() {
         font.disposeSafely()
         batch.disposeSafely()
         shapeRenderer.disposeSafely()
-        cityRenderSystem.disposeSafely()
+        renderSystem.disposeSafely()
         super.dispose()
     }
 }

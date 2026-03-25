@@ -5,7 +5,7 @@ import com.badlogic.gdx.utils.Pool
 import ktx.ashley.mapperFor
 
 
-class TroopsComponent : Component, Pool.Poolable {
+class TroopComponent : Component, Pool.Poolable {
     var strength: Int = 0
     var isMoved: Boolean = false
     var isClicked: Boolean = false
@@ -29,6 +29,6 @@ class TroopsComponent : Component, Pool.Poolable {
     }
 
     companion object {
-        val mapper = mapperFor<TroopsComponent>()
+        val mapper = mapperFor<TroopComponent>()
     }
 }

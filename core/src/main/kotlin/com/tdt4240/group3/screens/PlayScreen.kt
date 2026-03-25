@@ -2,10 +2,17 @@ package com.tdt4240.group3.screens
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.InputAdapter
+import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.math.Vector3
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.game.playstate.PlaySubState
+import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.model.components.TroopComponent
+import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.model.systems.SelectionSystem
 import com.tdt4240.group3.states.playstate.PlayerTurnState
 import ktx.app.KtxScreen
 import ktx.graphics.use
@@ -19,11 +26,31 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
     init {
         camera.setToOrtho(false, Hexa_Battle.WIDTH.toFloat(), Hexa_Battle.HEIGHT.toFloat())
-        camera.position.set(
-            Hexa_Battle.WIDTH / 2f,
-            Hexa_Battle.HEIGHT / 2f,
-            0f
+        camera.position.set(Hexa_Battle.WIDTH / 2f, Hexa_Battle.HEIGHT / 2f, 0f)
+
+        val factory = EntityFactory(engine)
+        factory.generateRectangularGrid(12, 11)
+        factory.createCity(
+            name = "Manchester", isCapital = true, baseProduction = 20,
+            q = 3, r = 3, team = TeamComponent.TeamName.RED
         )
+        factory.createTroop(
+            team = TeamComponent.TeamName.BLUE,
+            strength = 10, q = 5, r = 5
+        )
+        val selectionSystem = SelectionSystem()
+        engine.addSystem(selectionSystem)
+
+        val inputMultiplexer = InputMultiplexer()
+        inputMultiplexer.addProcessor(object : InputAdapter() {
+            override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                val worldCoords = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
+                selectionSystem.handleTouch(worldCoords.x, worldCoords.y)
+                return true
+            }
+        })
+        Gdx.input.inputProcessor = inputMultiplexer
+
         currentState.enter(this)
     }
 
