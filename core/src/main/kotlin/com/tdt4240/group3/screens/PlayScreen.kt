@@ -19,10 +19,10 @@ import ktx.graphics.use
 
 class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : KtxScreen  {
 
-    private var currentState : PlaySubState = PlayerTurnState()
-    private var previousState : PlaySubState = PlayerTurnState()
+    private var currentState: PlaySubState = PlayerTurnState()
+    private var previousState: PlaySubState = PlayerTurnState()
     val camera = OrthographicCamera()
-
+    private val selectionSystem = SelectionSystem()
 
     init {
         camera.setToOrtho(false, Hexa_Battle.WIDTH.toFloat(), Hexa_Battle.HEIGHT.toFloat())
@@ -38,20 +38,20 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
             team = TeamComponent.TeamName.BLUE,
             strength = 10, q = 5, r = 5
         )
-        val selectionSystem = SelectionSystem()
-        engine.addSystem(selectionSystem)
 
-        val inputMultiplexer = InputMultiplexer()
-        inputMultiplexer.addProcessor(object : InputAdapter() {
+        engine.addSystem(selectionSystem)
+        currentState.enter(this)
+    }
+
+    // Move input setup here — runs every time this screen becomes active
+    override fun show() {
+        Gdx.input.inputProcessor = object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
                 val worldCoords = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
                 selectionSystem.handleTouch(worldCoords.x, worldCoords.y)
                 return true
             }
-        })
-        Gdx.input.inputProcessor = inputMultiplexer
-
-        currentState.enter(this)
+        }
     }
 
     override fun render(delta: Float) {
@@ -62,8 +62,6 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         camera.update()
         currentState.handleInput(this)
         currentState.update(this, delta)
-        // 6. Update the Ashley engine every frame
-        // This will trigger PlayerSystem.processEntity()
         engine.update(delta)
 
         game.batch.projectionMatrix = camera.combined

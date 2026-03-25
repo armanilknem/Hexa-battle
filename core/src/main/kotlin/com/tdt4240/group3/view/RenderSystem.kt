@@ -73,8 +73,21 @@ class RenderSystem(
         val tile = entity[TileComponent.mapper] ?: return
         if (!tile.isHighlighted) return
         val pos = entity[PositionComponent.mapper] ?: return
-        shapeRenderer.color = Color(1f, 1f, 1f, 0.25f)
-        shapeRenderer.circle(pos.x.toFloat(), pos.y.toFloat(), 28f, 6)
+
+        shapeRenderer.color = Color(1f, 1f, 1f, 0.3f)
+        val size = 30f
+        val x = pos.x.toFloat()
+        val y = pos.y.toFloat()
+
+        for (i in 0 until 6) {
+            val angle1 = (PI / 180) * (60 * i - 30)
+            val angle2 = (PI / 180) * (60 * (i + 1) - 30)
+            shapeRenderer.triangle(
+                x, y,
+                x + size * cos(angle1).toFloat(), y + size * sin(angle1).toFloat(),
+                x + size * cos(angle2).toFloat(), y + size * sin(angle2).toFloat()
+            )
+        }
     }
 
     private fun drawTile(entity: Entity) {

@@ -60,9 +60,6 @@ class SelectionSystem : EntitySystem() {
     }
 
     private fun moveTroop(troop: Entity, targetTile: Entity) {
-        val troopComp = troop[TroopComponent.mapper] ?: return
-        if (troopComp.isMoved) return
-
         val targetPos = targetTile[PositionComponent.mapper] ?: return
         val targetHex = targetTile[HexComponent.mapper] ?: return
         val troopPos  = troop[PositionComponent.mapper] ?: return
@@ -72,7 +69,6 @@ class SelectionSystem : EntitySystem() {
         troopPos.y = targetPos.y
         troopHex.q = targetHex.q
         troopHex.r = targetHex.r
-        troopComp.hasBeenMoved()
     }
 
     private fun clearHighlights() {
@@ -82,11 +78,20 @@ class SelectionSystem : EntitySystem() {
     }
 
     private fun findTroopAt(worldX: Float, worldY: Float): Entity? {
+        // Log ALL entities to see what's actually in the engine
+        engine.entities.forEach { entity ->
+            val pos = entity[PositionComponent.mapper]
+            Gdx.app.log("SelectionSystem", "entity: pos=${pos?.x},${pos?.y} " +
+                "troopMatch=${troopFamily.matches(entity)}")
+        }
+
         return engine.entities.firstOrNull { entity ->
             if (!troopFamily.matches(entity)) return@firstOrNull false
             val pos = entity[PositionComponent.mapper] ?: return@firstOrNull false
-            Gdx.app.log("SelectionSystem", "troop at ${pos.x}, ${pos.y}")
-            Math.abs(pos.x - worldX) < 32f && Math.abs(pos.y - worldY) < 32f
+            val dx = Math.abs(pos.x.toFloat() - worldX)
+            val dy = Math.abs(pos.y.toFloat() - worldY)
+            Gdx.app.log("SelectionSystem", "troop at ${pos.x},${pos.y} | touch at $worldX,$worldY | dx=$dx dy=$dy")
+            dx < 32f && dy < 32f
         }
     }
 
