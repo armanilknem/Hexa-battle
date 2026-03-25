@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.utils.Disposable
 import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
+import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent // add when ready
 import ktx.ashley.allOf
@@ -34,6 +35,10 @@ class RenderSystem(
 
     private val cityTexture  = Texture(Gdx.files.internal("Manchester_City_FC_badge.svg.png"))
     private val troopTexture = Texture(Gdx.files.internal("troop.png"))
+
+    private val redTroopTexture = Texture(Gdx.files.internal("red_troop.png"))
+
+    private val blueTroopTexture = Texture(Gdx.files.internal("blue_troop.png"))
 
     override fun update(deltaTime: Float) {
         val entities = engine.entities
@@ -114,7 +119,15 @@ class RenderSystem(
 
     private fun drawTroop(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
-        batch.draw(troopTexture, pos.x - 16f, pos.y - 16f, 32f, 32f)
+
+        val team = entity[TeamComponent.mapper] ?: return
+
+        if (team.team == TeamComponent.TeamName.RED) {
+            batch.draw(redTroopTexture, pos.x - 16f, pos.y - 16f, 32f, 32f)
+        } else if (team.team == TeamComponent.TeamName.BLUE) {
+            batch.draw(blueTroopTexture, pos.x - 16f, pos.y - 16f, 32f, 32f)
+        }
+
     }
 
     override fun dispose() {

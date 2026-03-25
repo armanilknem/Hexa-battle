@@ -10,6 +10,8 @@ class TroopComponent : Component, Pool.Poolable {
     var isMoved: Boolean = false
     var isClicked: Boolean = false
 
+
+
     fun isAttacked(attackPower: Int){
         this.strength -= attackPower
     }
@@ -21,6 +23,7 @@ class TroopComponent : Component, Pool.Poolable {
     fun hasBeenClicked(){
         this.isClicked = true
     }
+
 
 
     override fun reset() {

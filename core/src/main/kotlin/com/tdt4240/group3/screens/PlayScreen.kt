@@ -13,16 +13,20 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.SelectionSystem
+import com.tdt4240.group3.model.systems.TurnSystem
+import com.tdt4240.group3.states.playstate.EnemyTurnState
 import com.tdt4240.group3.states.playstate.PlayerTurnState
 import ktx.app.KtxScreen
 import ktx.graphics.use
 
-class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : KtxScreen  {
+class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : KtxScreen {
 
     private var currentState: PlaySubState = PlayerTurnState()
     private var previousState: PlaySubState = PlayerTurnState()
     val camera = OrthographicCamera()
-    private val selectionSystem = SelectionSystem()
+
+    private val turnSystem      = TurnSystem()
+    private val selectionSystem = SelectionSystem(turnSystem)
 
     init {
         camera.setToOrtho(false, Hexa_Battle.WIDTH.toFloat(), Hexa_Battle.HEIGHT.toFloat())
@@ -34,16 +38,22 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
             name = "Manchester", isCapital = true, baseProduction = 20,
             q = 3, r = 3, team = TeamComponent.TeamName.RED
         )
-        factory.createTroop(
-            team = TeamComponent.TeamName.BLUE,
-            strength = 10, q = 5, r = 5
-        )
+        factory.createTroop(team = TeamComponent.TeamName.BLUE, strength = 10, q = 5, r = 5)
+        factory.createTroop(team = TeamComponent.TeamName.RED,  strength = 10, q = 3, r = 7)
 
+        engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
+
+        selectionSystem.onTurnEnd = {
+            when (turnSystem.currentTeam) {
+                TeamComponent.TeamName.BLUE -> changeState(PlayerTurnState())
+                TeamComponent.TeamName.RED  -> changeState(EnemyTurnState())
+                else -> {}
+            }
+        }
         currentState.enter(this)
     }
 
-    // Move input setup here — runs every time this screen becomes active
     override fun show() {
         Gdx.input.inputProcessor = object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
@@ -66,31 +76,26 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
         game.batch.projectionMatrix = camera.combined
         game.batch.use {
+            // Display whose turn it is
+            game.font.draw(
+                game.batch,
+                "Turn: ${turnSystem.currentTeam}",
+                10f, Hexa_Battle.HEIGHT - 10f
+            )
             currentState.render(this@PlayScreen)
         }
     }
 
-    fun changeState(newState : PlaySubState) {
+    fun changeState(newState: PlaySubState) {
         currentState.exit(this)
         previousState = currentState
         currentState = newState
         currentState.enter(this)
     }
 
-    fun goToMenu() {
-        game.setScreen<MenuScreen>()
-    }
-
-//    fun goToLobby() {
-//        game.setScreen<LobbyScreen>()
-//    }
-
+    fun goToMenu() { game.setScreen<MenuScreen>() }
     fun getBatch() = game.batch
-    fun getFont() = game.font
-//    fun getPreviousState() = previousState
-//    fun getCurrentState() = currentState
+    fun getFont()  = game.font
 
-    override fun dispose() {
-        super.dispose()
-    }
+    override fun dispose() { super.dispose() }
 }
