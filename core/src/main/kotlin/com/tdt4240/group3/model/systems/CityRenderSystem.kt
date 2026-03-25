@@ -31,8 +31,8 @@ class CityRenderSystem(
 
     override fun processEntity(entity: Entity, deltaTime: Float) {
         val pos = entity[PositionComponent.mapper] ?: return
-        val drawX = pos.x - 32f
-        val drawY = pos.y - 32f
+        val drawX = pos.q - 32f
+        val drawY = pos.r - 32f
         batch.draw(cityTexture, drawX, drawY, 64f, 64f)
 
     }

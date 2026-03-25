@@ -65,7 +65,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
             baseProduction = 20,
             q = 5,
             r = 5,
-            team = TeamComponent.TeamName.P1
+            team = TeamComponent.TeamName.RED
         )
 
         addScreen(MenuScreen(this))

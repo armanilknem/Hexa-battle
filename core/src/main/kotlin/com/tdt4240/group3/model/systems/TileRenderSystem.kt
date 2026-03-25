@@ -26,7 +26,7 @@ class TileRenderSystem(private val shapeRenderer: ShapeRenderer, private val cam
 
     override fun processEntity(entity: Entity, deltaTime: Float) {
         val pos = entity[PositionComponent.mapper] ?: return
-        drawHexagon(pos.x.toFloat(), pos.y.toFloat(), 32f)
+        drawHexagon(pos.q.toFloat(), pos.r.toFloat(), 32f)
     }
 
     private fun drawHexagon(x: Float, y: Float, size: Float) {
