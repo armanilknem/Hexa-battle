@@ -3,8 +3,10 @@ package com.tdt4240.group3
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
-import com.tdt4240.group3.model.entities.EntityFactory
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.tdt4240.group3.model.systems.PlayerSystem
+import com.tdt4240.group3.model.systems.TileRenderSystem
+import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.CityRenderSystem
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.screens.HowToPlayScreen
@@ -20,7 +22,7 @@ import ktx.assets.disposeSafely
 class Hexa_Battle : KtxGame<KtxScreen>() {
     private lateinit var engine: Engine
     private lateinit var cityRenderSystem: CityRenderSystem
-
+    private lateinit var shapeRenderer: ShapeRenderer
 
     companion object {
         const val WIDTH = 640
@@ -37,13 +39,16 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
 
         batch = SpriteBatch()
         font = BitmapFont()
+        shapeRenderer = ShapeRenderer()
 
         // 1. Initialize the Ashley Engine
         engine = Engine()
 
         // 2. Add the systems to the engine
         engine.addSystem(PlayerSystem())
-        cityRenderSystem = CityRenderSystem(batch)
+        val playScreen = PlayScreen(this, engine)
+        engine.addSystem(TileRenderSystem(shapeRenderer, playScreen.camera))
+        cityRenderSystem = CityRenderSystem(batch, playScreen.camera)
         engine.addSystem(cityRenderSystem)
 
         // 3. Initialize the EntityFactory
@@ -51,19 +56,20 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
 
         // 4. Create a test player to verify functionality
         factory.createPlayer("Sander")
+        factory.generateRectangularGrid(12, 11)
 
         // 5. Create a test city
         factory.createCity(
             name = "Manchester",
             isCapital = true,
             baseProduction = 20,
-            x = 100,
-            y = 100,
-            team = TeamComponent.TeamName.P1
+            q = 5,
+            r = 5,
+            team = TeamComponent.TeamName.RED
         )
 
         addScreen(MenuScreen(this))
-        addScreen(PlayScreen(this, engine))
+        addScreen(playScreen)
         addScreen(LobbyScreen(this))
         addScreen(HowToPlayScreen(this))
         addScreen(OptionsScreen(this))
@@ -71,9 +77,10 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         setScreen<MenuScreen>()
     }
     override fun dispose() {
-        super.dispose()
         font.disposeSafely()
-        batch.dispose()
+        batch.disposeSafely()
+        shapeRenderer.disposeSafely()
         cityRenderSystem.disposeSafely()
+        super.dispose()
     }
 }
