@@ -11,6 +11,8 @@ import com.tdt4240.group3.model.components.HexComponent
 import com.tdt4240.group3.model.components.TileComponent
 import ktx.ashley.entity
 import ktx.ashley.with
+import kotlin.math.floor
+import kotlin.math.sqrt
 
 class EntityFactory(private val engine: Engine) {
 
@@ -22,7 +24,7 @@ class EntityFactory(private val engine: Engine) {
 
     fun generateRectangularGrid(width: Int, height: Int) {
         for (r in 0 until height) {
-            val rOffset = Math.floor(r / 2.0).toInt()
+            val rOffset = floor(r / 2.0).toInt()
             for (q in -rOffset until width - rOffset) {
                 createTile(q, r, TileComponent.TileType.GRASS)
             }
@@ -38,8 +40,8 @@ class EntityFactory(private val engine: Engine) {
         }
         with<PositionComponent> {
             val coords = hexToPixel(q, r)
-            this.q = coords.first.toInt()
-            this.r = coords.second.toInt()
+            this.x = coords.first.toInt()
+            this.y = coords.second.toInt()
             this.zIndex = 2 // Top layer
         }
         with<TeamComponent> {
@@ -54,8 +56,8 @@ class EntityFactory(private val engine: Engine) {
         }
         with<PositionComponent> {
             val coords = hexToPixel(q, r)
-            this.q = coords.first.toInt()
-            this.r = coords.second.toInt()
+            this.x = coords.first.toInt()
+            this.y = coords.second.toInt()
             this.zIndex = 1 // Middle layer
         }
         with<TeamComponent> {
@@ -64,7 +66,7 @@ class EntityFactory(private val engine: Engine) {
     }
     private fun hexToPixel(q: Int, r: Int): Pair<Float, Float> {
         val size = 32f // The radius of your hex sprite
-        val x = size * (Math.sqrt(3.0).toFloat() * q + Math.sqrt(3.0).toFloat() / 2f * r)
+        val x = size * (sqrt(3.0).toFloat() * q + sqrt(3.0).toFloat() / 2f * r)
         val y = size * (3f / 2f * r)
         return Pair(x, y)
     }
@@ -80,8 +82,8 @@ class EntityFactory(private val engine: Engine) {
         with<PositionComponent> {
             // We convert Hex(q,r) to Pixel(x,y) here for the View to use
             val coords = hexToPixel(q, r)
-            this.q = coords.first.toInt() //var this.x
-            this.r = coords.second.toInt() //var this.y
+            this.x = coords.first.toInt()
+            this.y = coords.second.toInt()
             this.zIndex = 0 // Bottom layer
         }
     }

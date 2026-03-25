@@ -5,13 +5,13 @@ import com.badlogic.gdx.utils.Pool
 import ktx.ashley.mapperFor
 
 class PositionComponent : Component, Pool.Poolable {
-    var q: Int = 0
-    var r: Int = 0
+    var x: Int = 0
+    var y: Int = 0
     var zIndex: Int = 0
 
     override fun reset() {
-        q = 0
-        r = 0
+        x = 0
+        y = 0
         zIndex = 0
     }
 
