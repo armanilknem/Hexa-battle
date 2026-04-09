@@ -17,6 +17,6 @@ class TeamComponent : Component, Pool.Poolable {
     }
 
     companion object {
-        val mapper = mapperFor<PositionComponent>()
+        val mapper = mapperFor<TeamComponent>()
     }
 }
