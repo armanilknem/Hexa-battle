@@ -22,7 +22,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-class RenderSystem(
+class View(
     private val batch: SpriteBatch,
     private val shapeRenderer: ShapeRenderer,
     private val camera: OrthographicCamera

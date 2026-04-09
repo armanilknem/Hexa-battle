@@ -3,15 +3,23 @@ package com.tdt4240.group3.model.components
 import com.badlogic.ashley.core.Component
 import com.badlogic.gdx.utils.Pool
 import ktx.ashley.mapperFor
+import kotlin.math.sqrt
 
 class PositionComponent : Component, Pool.Poolable {
-    var x: Int = 0
-    var y: Int = 0
+
+    val size = 32f
+    var q: Int = 0
+    var r: Int = 0
     var zIndex: Int = 0
 
+    val x: Float get() = size * (sqrt(3.0).toFloat() * q + sqrt(3.0).toFloat() / 2f * r)
+    val y: Float get() = size * (3f / 2f * r)
+    // Cube coordinate S is derived: s = -q - r
+    val s: Int get() = -q - r
+
     override fun reset() {
-        x = 0
-        y = 0
+        q = 0
+        r = 0
         zIndex = 0
     }
 
