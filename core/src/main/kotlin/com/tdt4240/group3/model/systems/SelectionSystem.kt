@@ -76,7 +76,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         return engine.entities.firstOrNull { entity ->
             if (!troopFamily.matches(entity)) return@firstOrNull false
             val pos = entity[PositionComponent.mapper] ?: return@firstOrNull false
-            Math.abs(pos.x.toFloat() - worldX) < 32f && Math.abs(pos.y.toFloat() - worldY) < 32f
+            Math.abs(pos.x.toFloat() - worldX) < 16f && Math.abs(pos.y.toFloat() - worldY) < 16f
         }
     }
 
@@ -91,7 +91,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             }
             ?.takeIf { entity ->
                 val pos = entity[PositionComponent.mapper] ?: return@takeIf false
-                Math.abs(pos.x.toFloat() - worldX) < 32f && Math.abs(pos.y.toFloat() - worldY) < 32f
+                Math.abs(pos.x.toFloat() - worldX) < 16f && Math.abs(pos.y.toFloat() - worldY) < 16f
             }
     }
 

@@ -80,9 +80,9 @@ class View(
         val pos = entity[PositionComponent.mapper] ?: return
 
         shapeRenderer.color = Color(1f, 1f, 1f, 0.3f)
-        val size = 30f
-        val x = pos.x.toFloat()
-        val y = pos.y.toFloat()
+        val size = 14f          // 16f - 2f
+        val x = pos.x
+        val y = pos.y
 
         for (i in 0 until 6) {
             val angle1 = (PI / 180) * (60 * i - 30)
@@ -99,7 +99,7 @@ class View(
         val pos = entity[PositionComponent.mapper] ?: return
         val x = pos.x.toFloat()
         val y = pos.y.toFloat()
-        val size = 32f
+        val size = 16f
         for (i in 0 until 6) {
             val angle1 = (PI / 180) * (60 * i - 30)
             val angle2 = (PI / 180) * (60 * (i + 1) - 30)
@@ -114,7 +114,7 @@ class View(
 
     private fun drawCity(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
-        batch.draw(cityTexture, pos.x - 16f, pos.y - 16f, 32f, 32f)
+        batch.draw(cityTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
     }
 
     private fun drawTroop(entity: Entity) {
@@ -123,9 +123,9 @@ class View(
         val team = entity[TeamComponent.mapper] ?: return
 
         if (team.team == TeamComponent.TeamName.RED) {
-            batch.draw(redTroopTexture, pos.x - 16f, pos.y - 16f, 32f, 32f)
+            batch.draw(redTroopTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
         } else if (team.team == TeamComponent.TeamName.BLUE) {
-            batch.draw(blueTroopTexture, pos.x - 16f, pos.y - 16f, 32f, 32f)
+            batch.draw(blueTroopTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
         }
 
     }
