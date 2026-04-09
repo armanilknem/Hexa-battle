@@ -24,18 +24,16 @@ class EntityFactoryTest {
     fun `createTile adds entity with correct components`() {
         val tile = factory.createTile(1, 2, TileComponent.TileType.GRASS)
 
-        val hex = tile[HexComponent.mapper]
         val tileComp = tile[TileComponent.mapper]
         val pos = tile[PositionComponent.mapper]
 
-        assertNotNull(hex)
-        assertNotNull(tileComp)
         assertNotNull(pos)
+        assertNotNull(tileComp)
 
-        assertEquals(1, hex!!.q)
-        assertEquals(2, hex.r)
+        assertEquals(1, pos!!.q)
+        assertEquals(2, pos.r)
         assertEquals(TileComponent.TileType.GRASS, tileComp!!.type)
-        println("createTile: HexComponent(q=${hex.q}, r=${hex.r}), TileType=${tileComp.type}, Position(x=${pos!!.x}, y=${pos.y})")
+        println("createTile: PositionComponent(q=${pos.q}, r=${pos.r}), TileType=${tileComp.type}")
     }
 
     @Test
@@ -53,7 +51,9 @@ class EntityFactoryTest {
         val pos = tile[PositionComponent.mapper]
 
         assertNotNull(pos)
-        assertTrue(pos!!.x != 0 || pos.y != 0)
-        println("createTile pixel position: Position(x=${pos.x}, y=${pos.y})")
+        val x = pos!!.x
+        val y = pos.y
+        assertTrue(x != 0f || y != 0f)
+        println("createTile pixel position: Position(x=$x, y=$y)")
     }
 }
