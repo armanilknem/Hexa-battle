@@ -4,7 +4,6 @@ import com.tdt4240.group3.game.playstate.PlaySubState
 import com.tdt4240.group3.screens.PlayScreen
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
-import ktx.app.clearScreen
 
 class PlayerTurnState : PlaySubState {
     override val backgroundColor = Triple(0.1f, 0.35f, 0.1f)  // green
@@ -14,7 +13,7 @@ class PlayerTurnState : PlaySubState {
             screen.changeState(PauseState())
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
-            screen.changeState(EnemyTurnState())
+            endTurn(screen)
         }
     }
 
@@ -26,5 +25,9 @@ class PlayerTurnState : PlaySubState {
 //        clearScreen(0.1f, 0.35f, 0.1f, 1f)
         screen.getFont().draw(screen.getBatch(), "Play State", 100f, 150f)
         screen.getFont().draw(screen.getBatch(), "Player Turn Substate", 100f, 100f)
+    }
+
+    fun endTurn(screen: PlayScreen) {
+        screen.changeState(EnemyTurnState())
     }
 }

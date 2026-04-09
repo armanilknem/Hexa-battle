@@ -8,6 +8,8 @@ import ktx.ashley.mapperFor
 class PlayerComponent : Component, Pool.Poolable {
     var name: String = ""
 
+    var hasTurn: Boolean = false
+
     override fun reset() {
         name = ""
     }
