@@ -13,6 +13,7 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.SelectionSystem
+import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.states.playstate.EnemyTurnState
 import com.tdt4240.group3.states.playstate.PlayerTurnState
@@ -27,6 +28,8 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
     private val turnSystem      = TurnSystem()
     private val selectionSystem = SelectionSystem(turnSystem)
+
+    private val troopCreationSystem = TroopCreationSystem(engine)
 
     init {
         camera.setToOrtho(false, Hexa_Battle.WIDTH.toFloat(), Hexa_Battle.HEIGHT.toFloat())
@@ -43,8 +46,13 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
+        engine.addSystem(troopCreationSystem)
+
+        troopCreationSystem.createTroopsForTeam(turnSystem.currentTeam)
+
 
         selectionSystem.onTurnEnd = {
+            troopCreationSystem.createTroopsForTeam(turnSystem.currentTeam)
             when (turnSystem.currentTeam) {
                 TeamComponent.TeamName.BLUE -> changeState(PlayerTurnState())
                 TeamComponent.TeamName.RED  -> changeState(EnemyTurnState())
