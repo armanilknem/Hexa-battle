@@ -21,9 +21,8 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
     }
 
     fun createTroopsForTeam(team: TeamComponent.TeamName) {
-        engine.entities
-            .filter { cityFamily.matches(it) }
-            .filter { TeamComponent.mapper.get(it)?.team == team }
-            .forEach { createTroopFromCity(it) }
+    engine.getEntitiesFor(cityFamily)
+        .filter { TeamComponent.mapper.get(it)?.team == team }
+        .forEach { createTroopFromCity(it) }
     }
 }
