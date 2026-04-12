@@ -21,6 +21,7 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.SelectionSystem
+import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.states.playstate.EnemyTurnState
 import com.tdt4240.group3.states.playstate.PauseState
@@ -39,6 +40,8 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
     private val turnController = TurnController(turnSystem, this)
     private val selectionSystem = SelectionSystem(turnSystem)
+
+    private val troopCreationSystem = TroopCreationSystem(engine)
 
     private val pauseController = PauseController(turnSystem, this)
 
@@ -59,8 +62,15 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
+        engine.addSystem(troopCreationSystem)
 
-        selectionSystem.onTurnEnd = { turnController.endTurn() }
+        troopCreationSystem.createTroopsForTeam(turnSystem.currentTeam)
+
+
+        selectionSystem.onTurnEnd = {
+            turnController.endTurn()
+            troopCreationSystem.createTroopsForTeam(turnSystem.currentTeam)
+        }
         currentState.enter(this)
     }
 
@@ -97,7 +107,6 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         })
         Gdx.input.inputProcessor = inputMultiplexer
     }
-
 
     override fun render(delta: Float) {
         val (r, g, b) = currentState.backgroundColor

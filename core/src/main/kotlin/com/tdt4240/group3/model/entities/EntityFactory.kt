@@ -62,7 +62,12 @@ class EntityFactory(private val engine: Engine) {
             this.team = team
         }
     }
-
+    fun createTroopFromCity(cityEntity: com.badlogic.ashley.core.Entity): com.badlogic.ashley.core.Entity {
+        val city = CityComponent.mapper.get(cityEntity)
+        val position = PositionComponent.mapper.get(cityEntity)
+        val team = TeamComponent.mapper.get(cityEntity)
+        return createTroop(team.team, city.baseProduction, position.q, position.r)
+    }
 
     fun createTile(q: Int, r: Int, type: TileComponent.TileType): Entity = engine.entity {
         with<TileComponent> {
