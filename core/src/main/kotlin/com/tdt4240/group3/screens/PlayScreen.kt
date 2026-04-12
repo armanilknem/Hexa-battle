@@ -15,6 +15,7 @@ import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PauseController
+import com.tdt4240.group3.controller.TroopCreationController
 import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.game.playstate.PlaySubState
 import com.tdt4240.group3.model.components.TeamComponent
@@ -37,11 +38,14 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
     val camera = OrthographicCamera()
 
     private val turnSystem      = TurnSystem()
+    private val troopCreationSystem = TroopCreationSystem(engine)
 
-    private val turnController = TurnController(turnSystem, this)
+    private val troopCreationController = TroopCreationController(troopCreationSystem, turnSystem)
+
+
+    private val turnController = TurnController(turnSystem, this, troopCreationController)
     private val selectionSystem = SelectionSystem(turnSystem)
 
-    private val troopCreationSystem = TroopCreationSystem(engine)
 
     private val pauseController = PauseController(turnSystem, this)
 
@@ -69,7 +73,6 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
         selectionSystem.onTurnEnd = {
             turnController.endTurn()
-            troopCreationSystem.createTroopsForTeam(turnSystem.currentTeam)
         }
         currentState.enter(this)
     }

@@ -1,24 +1,29 @@
 package com.tdt4240.group3.controller
 
 import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.screens.PlayScreen
 import com.tdt4240.group3.states.playstate.EnemyTurnState
 import com.tdt4240.group3.states.playstate.PlayerTurnState
+import ktx.ashley.allOf
 
 class TurnController(
-    private val turnSystem: TurnSystem,   // reads/advances the model
-    private val playScreen: PlayScreen    // tells the view to react
+    private val turnSystem: TurnSystem,
+    private val playScreen: PlayScreen,
+    private val troopCreationController: TroopCreationController
 ) {
     fun endTurn() {
-        turnSystem.endTurn()  // 1. model goes first
+        turnSystem.endTurn()        // model advances
+        troopCreationController.createTroopsForCurrentTeam()  // spawn for new team
+        playScreen.updateLabel()    // view updates
 
-        playScreen.updateLabel()  // 2. view updates label
-
-        when (turnSystem.currentTeam) {  // 3. view switches state
+        when (turnSystem.currentTeam) {
             TeamComponent.TeamName.BLUE -> playScreen.changeState(PlayerTurnState())
             TeamComponent.TeamName.RED  -> playScreen.changeState(EnemyTurnState())
-            else -> throw IllegalStateException("currentTeam should never be NONE")
+            TeamComponent.TeamName.NONE -> throw IllegalStateException("currentTeam should never be NONE")
         }
     }
+
+
 }

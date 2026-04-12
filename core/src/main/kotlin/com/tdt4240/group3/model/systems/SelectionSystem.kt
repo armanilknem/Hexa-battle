@@ -35,7 +35,6 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true -> {
                 selectedTroop?.let {
                     moveTroop(it, clickedTile)
-                    onTurnEnd?.invoke()  // notify PlayScreen to change state
                 }
 
                 clearHighlights()
@@ -65,6 +64,18 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
 
         troopPos.q = targetPos.q
         troopPos.r = targetPos.r
+
+        troop[TroopComponent.mapper]?.hasBeenMoved()
+
+        if (allTroopsMoved()) {
+            onTurnEnd?.invoke()
+        }
+    }
+    private fun allTroopsMoved(): Boolean {
+        val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
+        return engine.getEntitiesFor(troopFamily)
+            .filter { TeamComponent.mapper.get(it)?.team == turnSystem.currentTeam }
+            .all { TroopComponent.mapper.get(it)?.isMoved == true }
     }
 
     private fun clearHighlights() {
