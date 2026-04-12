@@ -2,7 +2,6 @@ package com.tdt4240.group3.model.systems
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
-import com.badlogic.gdx.Gdx
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
@@ -10,7 +9,7 @@ import com.tdt4240.group3.model.components.TroopComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 
-class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
+class SelectionSystem(private val turnSystem: TurnSystem, private val territorySystem: TerritorySystem) : EntitySystem() {
 
     var onTurnEnd: (() -> Unit)? = null  // PlayScreen sets this
     var selectedTroop: Entity? = null
@@ -34,6 +33,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true -> {
                 selectedTroop?.let {
                     moveTroop(it, clickedTile)
+                    territorySystem.claimTerritory(clickedTile, it[TeamComponent.mapper]?.team ?: return)
                     turnSystem.endTurn()
                     onTurnEnd?.invoke()  // notify PlayScreen to change state
                 }
@@ -64,6 +64,8 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
 
         troopPos.q = targetPos.q
         troopPos.r = targetPos.r
+
+        troop[TroopComponent.mapper]?.hasBeenMoved()
     }
 
     private fun clearHighlights() {

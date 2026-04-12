@@ -78,5 +78,8 @@ class EntityFactory(private val engine: Engine) {
             this.r = r
             this.zIndex = 0 // Bottom layer
         }
+        with<TeamComponent> {
+            this.team = TeamComponent.TeamName.NONE
+        }
     }
 }

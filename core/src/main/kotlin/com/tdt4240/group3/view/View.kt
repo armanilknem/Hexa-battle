@@ -21,6 +21,7 @@ import ktx.graphics.use
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import com.badlogic.gdx.graphics.GL20
 
 class View(
     private val batch: SpriteBatch,
@@ -42,19 +43,26 @@ class View(
     private val blueTroopTexture = Texture(Gdx.files.internal("blue_troop.png"))
 
     override fun update(deltaTime: Float) {
-        val entities = engine.entities
+        val entities = engine.entities.toList()
 
-        batch.projectionMatrix = batch.projectionMatrix.idt() // identity projection
+        batch.projectionMatrix = batch.projectionMatrix.idt() // identity projection. vet ikke om det er beste måten å gjøre det på:(
         batch.use {
             drawBackground()
         }
 
         shapeRenderer.projectionMatrix = camera.combined
 
-        // Pass 1a — filled highlights
+        // enable blending
+        Gdx.gl.glEnable(GL20.GL_BLEND)
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+
+        // Pass 1a — filled highlights and territory
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
             entities.forEach { entity ->
-                if (tileFamily.matches(entity)) drawTileHighlight(entity)
+                if (tileFamily.matches(entity)) {
+                    drawTerritory(entity)
+                    drawTileHighlight(entity)
+                }
             }
         }
 
@@ -90,6 +98,10 @@ class View(
         val x = pos.x.toFloat()
         val y = pos.y.toFloat()
 
+        this.drawFullHexTile(x, y, size)
+    }
+
+    private fun drawFullHexTile(x: Float, y: Float, size: Float) {
         for (i in 0 until 6) {
             val angle1 = (PI / 180) * (60 * i - 30)
             val angle2 = (PI / 180) * (60 * (i + 1) - 30)
@@ -101,11 +113,32 @@ class View(
         }
     }
 
+    private fun drawTerritory(entity: Entity) {
+        val team = entity[TeamComponent.mapper]?.team ?: return
+        if (team == TeamComponent.TeamName.NONE) return
+
+        val pos = entity[PositionComponent.mapper] ?: return
+        val x = pos.x.toFloat()
+        val y = pos.y.toFloat()
+        val size = 32f
+
+        shapeRenderer.color = when (team) {
+            TeamComponent.TeamName.RED -> Color(1f, 0f, 0f, 0.4f)  // 40% opacity red
+            TeamComponent.TeamName.BLUE -> Color(0f, 0f, 1f, 0.4f) // 40% opacity blue
+            else -> return
+        }
+
+        this.drawFullHexTile(x, y, size)
+    }
+
+
     private fun drawTile(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
         val x = pos.x.toFloat()
         val y = pos.y.toFloat()
         val size = 32f
+        shapeRenderer.color = Color.WHITE // måtte sette til hvit så den ikke byttet mellom rød og blå hele tiden
+
         for (i in 0 until 6) {
             val angle1 = (PI / 180) * (60 * i - 30)
             val angle2 = (PI / 180) * (60 * (i + 1) - 30)

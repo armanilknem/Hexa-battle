@@ -13,11 +13,13 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.SelectionSystem
+import com.tdt4240.group3.model.systems.TerritorySystem
 import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.states.playstate.EnemyTurnState
 import com.tdt4240.group3.states.playstate.PlayerTurnState
 import ktx.app.KtxScreen
+import ktx.ashley.add
 import ktx.graphics.use
 
 class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : KtxScreen {
@@ -27,7 +29,8 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
     val camera = OrthographicCamera()
 
     private val turnSystem      = TurnSystem()
-    private val selectionSystem = SelectionSystem(turnSystem)
+    private val territorySystem = TerritorySystem()
+    private val selectionSystem = SelectionSystem(turnSystem, territorySystem)
 
     private val troopCreationSystem = TroopCreationSystem(engine)
 
@@ -45,6 +48,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         factory.createTroop(team = TeamComponent.TeamName.RED,  strength = 10, q = 3, r = 7)
 
         engine.addSystem(turnSystem)
+        engine.addSystem(territorySystem)
         engine.addSystem(selectionSystem)
         engine.addSystem(troopCreationSystem)
 
