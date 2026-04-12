@@ -3,6 +3,7 @@ package com.tdt4240.group3.model.systems
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
 import com.badlogic.gdx.Gdx
+import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
@@ -34,9 +35,8 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true -> {
                 selectedTroop?.let {
                     moveTroop(it, clickedTile)
-                    turnSystem.endTurn()
-                    onTurnEnd?.invoke()  // notify PlayScreen to change state
                 }
+
                 clearHighlights()
                 selectedTroop = null
             }
@@ -64,6 +64,18 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
 
         troopPos.q = targetPos.q
         troopPos.r = targetPos.r
+
+        troop[TroopComponent.mapper]?.hasBeenMoved()
+
+        if (allTroopsMoved()) {
+            onTurnEnd?.invoke()
+        }
+    }
+    private fun allTroopsMoved(): Boolean {
+        val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
+        return engine.getEntitiesFor(troopFamily)
+            .filter { TeamComponent.mapper.get(it)?.team == turnSystem.currentTeam }
+            .all { TroopComponent.mapper.get(it)?.isMoved == true }
     }
 
     private fun clearHighlights() {
@@ -76,7 +88,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         return engine.entities.firstOrNull { entity ->
             if (!troopFamily.matches(entity)) return@firstOrNull false
             val pos = entity[PositionComponent.mapper] ?: return@firstOrNull false
-            Math.abs(pos.x.toFloat() - worldX) < 32f && Math.abs(pos.y.toFloat() - worldY) < 32f
+            Math.abs(pos.x.toFloat() - worldX) < 16f && Math.abs(pos.y.toFloat() - worldY) < 16f
         }
     }
 
@@ -91,7 +103,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             }
             ?.takeIf { entity ->
                 val pos = entity[PositionComponent.mapper] ?: return@takeIf false
-                Math.abs(pos.x.toFloat() - worldX) < 32f && Math.abs(pos.y.toFloat() - worldY) < 32f
+                Math.abs(pos.x.toFloat() - worldX) < 16f && Math.abs(pos.y.toFloat() - worldY) < 16f
             }
     }
 

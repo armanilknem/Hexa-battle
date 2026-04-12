@@ -7,7 +7,7 @@ import kotlin.math.sqrt
 
 class PositionComponent : Component, Pool.Poolable {
 
-    val size = 32f
+    val size = 16f
     var q: Int = 0
     var r: Int = 0
     var zIndex: Int = 0
@@ -19,7 +19,7 @@ class PositionComponent : Component, Pool.Poolable {
 
     override fun reset() {
         q = 0
-        r = 0
+        r = 1
         zIndex = 0
     }
 
