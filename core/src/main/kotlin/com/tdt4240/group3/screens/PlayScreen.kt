@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputMultiplexer
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.Vector3
@@ -86,6 +87,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         val root = Table().apply { setFillParent(true) }
 
         turnLabel  = VisLabel("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}")  // now a field
+        turnLabel.setFontScale(2f)
         val pauseBtn   = VisTextButton("PAUSE")
         val endTurnBtn = VisTextButton("END TURN")
 

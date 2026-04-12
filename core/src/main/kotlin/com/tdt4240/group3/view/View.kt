@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
@@ -51,12 +52,14 @@ class View(
 
         shapeRenderer.projectionMatrix = camera.combined
 
-        // Pass 1a — filled highlights
+        Gdx.gl.glEnable(GL20.GL_BLEND)
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
             entities.forEach { entity ->
                 if (tileFamily.matches(entity)) drawTileHighlight(entity)
             }
         }
+        Gdx.gl.glDisable(GL20.GL_BLEND)
 
         // Pass 1b — hex outlines
         shapeRenderer.use(ShapeRenderer.ShapeType.Line) {
@@ -85,8 +88,8 @@ class View(
         if (!tile.isHighlighted) return
         val pos = entity[PositionComponent.mapper] ?: return
 
-        shapeRenderer.color = Color(1f, 1f, 1f, 0.3f)
-        val size = 14f          // 16f - 2f
+        shapeRenderer.color = Color(1f, 1f, 1f, 0.5f)
+        val size = 16f
         val x = pos.x
         val y = pos.y
 
@@ -106,6 +109,10 @@ class View(
         val x = pos.x.toFloat()
         val y = pos.y.toFloat()
         val size = 16f
+
+        shapeRenderer.color = Color.BLACK
+        Gdx.gl.glLineWidth(2f)
+
         for (i in 0 until 6) {
             val angle1 = (PI / 180) * (60 * i - 30)
             val angle2 = (PI / 180) * (60 * (i + 1) - 30)
