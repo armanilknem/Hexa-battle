@@ -45,7 +45,7 @@ class View(
     override fun update(deltaTime: Float) {
         val entities = engine.entities.toList()
 
-        batch.projectionMatrix = batch.projectionMatrix.idt() // identity projection. vet ikke om det er beste måten å gjøre det på:(
+        batch.projectionMatrix = batch.projectionMatrix.idt()
         batch.use {
             drawBackground()
         }
