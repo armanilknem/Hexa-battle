@@ -61,9 +61,10 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
             name = "Manchester", isCapital = true, baseProduction = 20,
             q = 3, r = 3, team = TeamComponent.TeamName.RED
         )
-        factory.createTroop(team = TeamComponent.TeamName.BLUE, strength = 10, q = 5, r = 5)
-        factory.createTroop(team = TeamComponent.TeamName.RED,  strength = 10, q = 3, r = 7)
-
+        factory.createCity(
+            name = "Bikini Buttom", isCapital = true, baseProduction = 20,
+            q = 8, r = 7, team = TeamComponent.TeamName.BLUE
+        )
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
         engine.addSystem(troopCreationSystem)
