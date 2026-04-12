@@ -3,6 +3,7 @@ package com.tdt4240.group3.model.systems
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
 import com.badlogic.gdx.Gdx
+import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
@@ -34,9 +35,9 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true -> {
                 selectedTroop?.let {
                     moveTroop(it, clickedTile)
-                    turnSystem.endTurn()
                     onTurnEnd?.invoke()  // notify PlayScreen to change state
                 }
+
                 clearHighlights()
                 selectedTroop = null
             }
