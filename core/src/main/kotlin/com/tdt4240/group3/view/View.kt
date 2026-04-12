@@ -27,6 +27,7 @@ class View(
     private val shapeRenderer: ShapeRenderer,
     private val camera: OrthographicCamera
 ) : EntitySystem(), Disposable {
+    private val backgroundTexture = Texture(Gdx.files.internal("hexaBackground.png"))
 
     // Three distinct families — one per entity type
     private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
@@ -42,6 +43,11 @@ class View(
 
     override fun update(deltaTime: Float) {
         val entities = engine.entities
+
+        batch.projectionMatrix = batch.projectionMatrix.idt() // identity projection
+        batch.use {
+            drawBackground()
+        }
 
         shapeRenderer.projectionMatrix = camera.combined
 
@@ -130,8 +136,15 @@ class View(
 
     }
 
+    private fun drawBackground() {
+        batch.draw(backgroundTexture, -1f, -1f, 2f, 2f) // Using identity projection: drawing from (-1, -1) to (1, 1) fills the entire screen
+    }
+
     override fun dispose() {
         cityTexture.disposeSafely()
-        troopTexture.disposeSafely()  // was missing before
+        troopTexture.disposeSafely()
+        backgroundTexture.disposeSafely()
+        redTroopTexture.disposeSafely()
+        blueTroopTexture.disposeSafely()
     }
 }
