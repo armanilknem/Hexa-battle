@@ -136,6 +136,9 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
     fun updateLabel() {
         turnLabel.setText("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}")
     }
+    override fun resize(width: Int, height: Int) {
+        stage.viewport.update(width, height, true)
+    }
 
     fun changeState(newState: PlaySubState) {
         currentState.exit(this)

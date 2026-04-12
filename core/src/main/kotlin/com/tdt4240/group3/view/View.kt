@@ -147,6 +147,8 @@ class View(
         batch.draw(backgroundTexture, -1f, -1f, 2f, 2f) // Using identity projection: drawing from (-1, -1) to (1, 1) fills the entire screen
     }
 
+
+
     override fun dispose() {
         cityTexture.disposeSafely()
         troopTexture.disposeSafely()
