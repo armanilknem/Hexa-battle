@@ -76,6 +76,11 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         selectionSystem.onTurnEnd = {
             turnController.endTurn()
         }
+
+        selectionSystem.onTroopMoved = {
+            updateLabel()
+        }
+
         currentState.enter(this)
     }
 
@@ -86,7 +91,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
         val root = Table().apply { setFillParent(true) }
 
-        turnLabel  = VisLabel("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}")  // now a field
+        turnLabel  = VisLabel("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}   Movements Left: ${selectionSystem.movesLeft}")  // now a field
         turnLabel.setFontScale(2f)
         val pauseBtn   = VisTextButton("PAUSE")
         val endTurnBtn = VisTextButton("END TURN")
@@ -134,7 +139,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         stage.draw()
     }
     fun updateLabel() {
-        turnLabel.setText("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}")
+        turnLabel.setText("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}   Movements Left: ${selectionSystem.movesLeft}")
     }
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)

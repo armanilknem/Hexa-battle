@@ -10,21 +10,27 @@ import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
+import kotlin.math.max
 
 class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
 
     var onTurnEnd: (() -> Unit)? = null  // PlayScreen sets this
+
+    var onTroopMoved: (() -> Unit)? = null
     var selectedTroop: Entity? = null
         private set
 
-    private var troopsMoved = 0;
-    private val maxMoves = 5;
+    private val maxMoves = 5
+
+    var movesLeft: Int = maxMoves
+        private set
+
 
     private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
 
     fun resetMovesCounter(){
-        troopsMoved = 0;
+        movesLeft = maxMoves
     }
     fun handleTouch(worldX: Float, worldY: Float) {
         val clickedTroop = findTroopAt(worldX, worldY)
@@ -72,8 +78,12 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         troopPos.r = targetPos.r
 
         troop[TroopComponent.mapper]?.hasBeenMoved()
-        troopsMoved++
-        if (allTroopsMoved() || troopsMoved >= maxMoves) {
+        movesLeft--
+
+        onTroopMoved?.invoke()
+
+        if (allTroopsMoved() || movesLeft < 1) {
+            movesLeft = maxMoves
             onTurnEnd?.invoke()
         }
     }

@@ -19,7 +19,6 @@ class TurnController(
         turnSystem.endTurn()        // model advances
         troopCreationController.createTroopsForCurrentTeam()  // spawn for new team
         playScreen.updateLabel()    // view updates
-        selectionSystem.resetMovesCounter()
 
         when (turnSystem.currentTeam) {
             TeamComponent.TeamName.BLUE -> playScreen.changeState(PlayerTurnState())
