@@ -4,7 +4,6 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.Vector3
@@ -20,14 +19,11 @@ import com.tdt4240.group3.controller.TroopCreationController
 import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.game.playstate.PlaySubState
 import com.tdt4240.group3.model.components.TeamComponent
-import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.entities.EntityFactory
-import com.tdt4240.group3.model.systems.MovementSystem
-import com.tdt4240.group3.model.systems.SelectionSystem
-import com.tdt4240.group3.model.systems.TroopCreationSystem
-import com.tdt4240.group3.model.systems.TurnSystem
-import com.tdt4240.group3.states.playstate.EnemyTurnState
-import com.tdt4240.group3.states.playstate.PauseState
+import com.tdt4240.group3.controller.systems.MovementSystem
+import com.tdt4240.group3.controller.systems.SelectionSystem
+import com.tdt4240.group3.controller.systems.TroopCreationSystem
+import com.tdt4240.group3.controller.systems.TurnSystem
 import com.tdt4240.group3.states.playstate.PlayerTurnState
 import ktx.actors.onClick
 import ktx.app.KtxScreen

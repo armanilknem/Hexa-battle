@@ -1,4 +1,4 @@
-package com.tdt4240.group3.model.systems
+package com.tdt4240.group3.controller.systems
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity

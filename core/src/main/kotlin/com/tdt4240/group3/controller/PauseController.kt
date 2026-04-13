@@ -1,7 +1,7 @@
 package com.tdt4240.group3.controller
 
 import com.tdt4240.group3.game.playstate.PlaySubState
-import com.tdt4240.group3.model.systems.TurnSystem
+import com.tdt4240.group3.controller.systems.TurnSystem
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.screens.PlayScreen
 import com.tdt4240.group3.states.playstate.PauseState

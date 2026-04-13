@@ -1,12 +1,10 @@
 package com.tdt4240.group3.controller
 
 import com.tdt4240.group3.model.components.TeamComponent
-import com.tdt4240.group3.model.components.TroopComponent
-import com.tdt4240.group3.model.systems.TurnSystem
+import com.tdt4240.group3.controller.systems.TurnSystem
 import com.tdt4240.group3.screens.PlayScreen
 import com.tdt4240.group3.states.playstate.EnemyTurnState
 import com.tdt4240.group3.states.playstate.PlayerTurnState
-import ktx.ashley.allOf
 
 class TurnController(
     private val turnSystem: TurnSystem,
