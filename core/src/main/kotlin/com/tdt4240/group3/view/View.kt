@@ -37,7 +37,7 @@ class View(
     private val cityFamily  = allOf(PositionComponent::class, CityComponent::class).get()
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class).get()
 
-    private val cityTexture  = Texture(Gdx.files.internal("Manchester_City_FC_badge.svg.png"))
+    private val cityTexture  = Texture(Gdx.files.internal("CapitalCity.png"))
     private val troopTexture = Texture(Gdx.files.internal("troop.png"))
 
     private val redTroopTexture = Texture(Gdx.files.internal("red_troop.png"))
@@ -129,9 +129,18 @@ class View(
 
     private fun drawCity(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
-        batch.draw(cityTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
+        val city = entity[CityComponent.mapper] ?: return
+        val width = 42f
+        val height = 42f
+        val yOffset = 5.5f
+        val xOffset = 1f
+        batch.draw(cityTexture, pos.x - width / 2f + xOffset, pos.y - height / 2f + yOffset, width, height)
+        if (city.isCapital) {
+            font.data.setScale(0.7f)
+            font.draw(batch, city.name, pos.x - width / 2f + 5f, pos.y - height / 2f + yOffset)
+            font.data.setScale(1f)
+        }
     }
-
     private fun drawTroop(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
         val team = entity[TeamComponent.mapper] ?: return

@@ -64,12 +64,12 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         val factory = EntityFactory(engine)
         factory.generateRectangularGrid(18, 15)
         factory.createCity(
-            name = "Manchester", isCapital = true, baseProduction = 20,
-            q = 3, r = 3, team = TeamComponent.TeamName.RED
+            name = "Oslo", isCapital = true, baseProduction = 20,
+            q = 1, r = 2, team = TeamComponent.TeamName.RED
         )
         factory.createCity(
-            name = "Bikini Buttom", isCapital = true, baseProduction = 20,
-            q = 8, r = 7, team = TeamComponent.TeamName.BLUE
+            name = "Bergen", isCapital = true, baseProduction = 20,
+            q = 10, r = 11, team = TeamComponent.TeamName.BLUE
         )
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
