@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
@@ -21,7 +22,6 @@ import ktx.graphics.use
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import com.badlogic.gdx.graphics.GL20
 
 class View(
     private val batch: SpriteBatch,
@@ -45,18 +45,16 @@ class View(
     override fun update(deltaTime: Float) {
         val entities = engine.entities.toList()
 
-        batch.projectionMatrix = batch.projectionMatrix.idt()
+        batch.projectionMatrix = batch.projectionMatrix.idt() // identity projection
         batch.use {
             drawBackground()
         }
 
         shapeRenderer.projectionMatrix = camera.combined
 
-        // enable blending
+        // Pass 1a — filled highlights and territory
         Gdx.gl.glEnable(GL20.GL_BLEND)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
-
-        // Pass 1a — filled highlights and territory
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
             entities.forEach { entity ->
                 if (tileFamily.matches(entity)) {
@@ -65,6 +63,7 @@ class View(
                 }
             }
         }
+        Gdx.gl.glDisable(GL20.GL_BLEND)
 
         // Pass 1b — hex outlines
         shapeRenderer.use(ShapeRenderer.ShapeType.Line) {
@@ -93,10 +92,10 @@ class View(
         if (!tile.isHighlighted) return
         val pos = entity[PositionComponent.mapper] ?: return
 
-        shapeRenderer.color = Color(1f, 1f, 1f, 0.3f)
-        val size = 30f
-        val x = pos.x.toFloat()
-        val y = pos.y.toFloat()
+        shapeRenderer.color = Color(1f, 1f, 1f, 0.5f)
+        val size = 16f
+        val x = pos.x
+        val y = pos.y
 
         this.drawFullHexTile(x, y, size)
     }
@@ -136,8 +135,9 @@ class View(
         val pos = entity[PositionComponent.mapper] ?: return
         val x = pos.x.toFloat()
         val y = pos.y.toFloat()
-        val size = 32f
-        shapeRenderer.color = Color.WHITE // måtte sette til hvit så den ikke byttet mellom rød og blå hele tiden
+        val size = 16f
+        shapeRenderer.color = Color.BLACK
+        Gdx.gl.glLineWidth(2f)
 
         for (i in 0 until 6) {
             val angle1 = (PI / 180) * (60 * i - 30)
@@ -153,7 +153,7 @@ class View(
 
     private fun drawCity(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
-        batch.draw(cityTexture, pos.x - 16f, pos.y - 16f, 32f, 32f)
+        batch.draw(cityTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
     }
 
     private fun drawTroop(entity: Entity) {
@@ -162,9 +162,9 @@ class View(
         val team = entity[TeamComponent.mapper] ?: return
 
         if (team.team == TeamComponent.TeamName.RED) {
-            batch.draw(redTroopTexture, pos.x - 16f, pos.y - 16f, 32f, 32f)
+            batch.draw(redTroopTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
         } else if (team.team == TeamComponent.TeamName.BLUE) {
-            batch.draw(blueTroopTexture, pos.x - 16f, pos.y - 16f, 32f, 32f)
+            batch.draw(blueTroopTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
         }
 
     }

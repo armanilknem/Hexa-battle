@@ -24,7 +24,5 @@ class PlayerTurnState : PlaySubState {
 
     override fun render(screen: PlayScreen) {
 //        clearScreen(0.1f, 0.35f, 0.1f, 1f)
-        screen.getFont().draw(screen.getBatch(), "Play State", 100f, 150f)
-        screen.getFont().draw(screen.getBatch(), "Player Turn Substate", 100f, 100f)
-    }
+       }
 }

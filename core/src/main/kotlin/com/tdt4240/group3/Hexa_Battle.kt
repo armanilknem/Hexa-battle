@@ -15,6 +15,7 @@ import com.tdt4240.group3.screens.PlayScreen
 import com.tdt4240.group3.screens.LobbyScreen
 import com.tdt4240.group3.screens.OptionsScreen
 import ktx.assets.disposeSafely
+import kotlin.math.sqrt
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
     private lateinit var engine: Engine
@@ -43,7 +44,14 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         engine.addSystem(PlayerSystem())
 
         val playScreen = PlayScreen(this, engine)
+        // Center camera on grid
+        val cols = 12f
+        val rows = 11f
+        val centerX = 16f * (sqrt(3.0).toFloat() * (cols / 2f) + sqrt(3.0).toFloat() / 2f * (rows / 2f))
+        val centerY = 16f * (3f / 2f * (rows / 2f)) + 36f
 
+        playScreen.camera.position.set(centerX, centerY, 0f)
+        playScreen.camera.update()
         // Single unified render system — no TileRenderSystem, no CityRenderSystem
         view = View(batch, shapeRenderer, playScreen.camera)
         engine.addSystem(view)
