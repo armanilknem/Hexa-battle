@@ -17,9 +17,15 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
     var selectedTroop: Entity? = null
         private set
 
+    private var troopsMoved = 0;
+    private val maxMoves = 5;
+
     private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
 
+    fun resetMovesCounter(){
+        troopsMoved = 0;
+    }
     fun handleTouch(worldX: Float, worldY: Float) {
         val clickedTroop = findTroopAt(worldX, worldY)
         val clickedTile  = findTileAt(worldX, worldY)
@@ -66,8 +72,8 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         troopPos.r = targetPos.r
 
         troop[TroopComponent.mapper]?.hasBeenMoved()
-
-        if (allTroopsMoved()) {
+        troopsMoved++
+        if (allTroopsMoved() || troopsMoved >= maxMoves) {
             onTurnEnd?.invoke()
         }
     }

@@ -43,9 +43,9 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
     private val troopCreationController = TroopCreationController(troopCreationSystem, turnSystem)
 
-
-    private val turnController = TurnController(turnSystem, this, troopCreationController)
     private val selectionSystem = SelectionSystem(turnSystem)
+
+    private val turnController = TurnController(turnSystem, this, troopCreationController, selectionSystem)
 
 
     private val pauseController = PauseController(turnSystem, this)
