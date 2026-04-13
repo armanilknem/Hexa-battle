@@ -2,8 +2,6 @@ package com.tdt4240.group3.model.systems
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
-import com.badlogic.gdx.Gdx
-import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
@@ -11,9 +9,7 @@ import com.tdt4240.group3.model.components.TroopComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 
-class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
-
-    var onTurnEnd: (() -> Unit)? = null  // PlayScreen sets this
+class SelectionSystem(private val turnSystem: TurnSystem, private val movementSystem: MovementSystem) : EntitySystem() {
     var selectedTroop: Entity? = null
         private set
 
@@ -34,7 +30,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             }
             clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true -> {
                 selectedTroop?.let {
-                    moveTroop(it, clickedTile)
+                    movementSystem.moveTroop(it, clickedTile)
                 }
 
                 clearHighlights()
@@ -56,26 +52,6 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
                 entity[TileComponent.mapper]?.isHighlighted = true
             }
         }
-    }
-
-    private fun moveTroop(troop: Entity, targetTile: Entity) {
-        val targetPos = targetTile[PositionComponent.mapper] ?: return
-        val troopPos  = troop[PositionComponent.mapper] ?: return
-
-        troopPos.q = targetPos.q
-        troopPos.r = targetPos.r
-
-        troop[TroopComponent.mapper]?.hasBeenMoved()
-
-        if (allTroopsMoved()) {
-            onTurnEnd?.invoke()
-        }
-    }
-    private fun allTroopsMoved(): Boolean {
-        val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
-        return engine.getEntitiesFor(troopFamily)
-            .filter { TeamComponent.mapper.get(it)?.team == turnSystem.currentTeam }
-            .all { TroopComponent.mapper.get(it)?.isMoved == true }
     }
 
     private fun clearHighlights() {
