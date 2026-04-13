@@ -19,6 +19,7 @@ import com.tdt4240.group3.controller.PauseController
 import com.tdt4240.group3.controller.TroopCreationController
 import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.game.playstate.PlaySubState
+import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.entities.EntityFactory
@@ -31,6 +32,7 @@ import com.tdt4240.group3.states.playstate.PauseState
 import com.tdt4240.group3.states.playstate.PlayerTurnState
 import ktx.actors.onClick
 import ktx.app.KtxScreen
+import ktx.ashley.get
 import ktx.graphics.use
 
 class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : KtxScreen {
@@ -39,7 +41,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
     private var previousState: PlaySubState = PlayerTurnState()
     val camera = OrthographicCamera()
 
-    private val turnSystem      = TurnSystem()
+    private val turnSystem = TurnSystem()
     private val troopCreationSystem = TroopCreationSystem(engine)
 
     private val troopCreationController = TroopCreationController(troopCreationSystem, turnSystem)
@@ -54,6 +56,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
     private lateinit var stage: Stage
     private lateinit var turnLabel: VisLabel
+    private lateinit var tooltipLabel: VisLabel
 
     init {
         camera.setToOrtho(false, Hexa_Battle.WIDTH.toFloat(), Hexa_Battle.HEIGHT.toFloat())
@@ -89,12 +92,13 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
         val root = Table().apply { setFillParent(true) }
 
-        turnLabel  = VisLabel("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}")  // now a field
+        turnLabel =
+            VisLabel("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}")  // now a field
         turnLabel.setFontScale(2f)
-        val pauseBtn   = VisTextButton("PAUSE")
+        val pauseBtn = VisTextButton("PAUSE")
         val endTurnBtn = VisTextButton("END TURN")
 
-        pauseBtn.onClick   { pauseController.togglePause(currentState) }
+        pauseBtn.onClick { pauseController.togglePause(currentState) }
         endTurnBtn.onClick { turnController.endTurn() }
 
         root.top()
@@ -105,17 +109,52 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
         stage.addActor(root)
 
+        setupTooltip()
+
         val inputMultiplexer = InputMultiplexer()
         inputMultiplexer.addProcessor(stage)
         inputMultiplexer.addProcessor(object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                val worldCoords = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
+                val worldCoords =
+                    camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
                 selectionSystem.handleTouch(worldCoords.x, worldCoords.y)
                 return true
+            }
+
+            override fun mouseMoved(screenX: Int, screenY: Int): Boolean {
+                updateTooltip(screenX, screenY)
+                return false
             }
         })
         Gdx.input.inputProcessor = inputMultiplexer
     }
+
+    private fun setupTooltip() {
+        tooltipLabel = VisLabel("").apply {
+            isVisible = false
+            setFontScale(1.2f)
+            color = Color.BLACK
+        }
+        stage.addActor(tooltipLabel)
+    }
+
+    private fun updateTooltip(screenX: Int, screenY: Int) {
+        val worldCoords = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
+        val tile = selectionSystem.findTileAt(worldCoords.x, worldCoords.y)
+        val pos = tile?.get(PositionComponent.mapper)
+        if (pos != null) {
+            tooltipLabel.setText("q: ${pos.q}, r: ${pos.r}")
+            tooltipLabel.pack()
+            tooltipLabel.setPosition(
+                screenX.toFloat() + 12f,
+                stage.viewport.screenHeight - screenY.toFloat() + 12f
+            )
+            tooltipLabel.isVisible = true
+        } else {
+            tooltipLabel.isVisible = false
+        }
+    }
+
 
     override fun render(delta: Float) {
         val (r, g, b) = currentState.backgroundColor
@@ -136,9 +175,11 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         stage.act(delta)
         stage.draw()
     }
+
     fun updateLabel() {
         turnLabel.setText("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}")
     }
+
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)
     }
@@ -150,9 +191,14 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         currentState.enter(this)
     }
 
-    fun goToMenu() { game.setScreen<MenuScreen>() }
-    fun getBatch() = game.batch
-    fun getFont()  = game.font
+    fun goToMenu() {
+        game.setScreen<MenuScreen>()
+    }
 
-    override fun dispose() { super.dispose() }
+    fun getBatch() = game.batch
+    fun getFont() = game.font
+
+    override fun dispose() {
+        super.dispose()
+    }
 }

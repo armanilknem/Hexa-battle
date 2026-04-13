@@ -17,12 +17,13 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
     var selectedTroop: Entity? = null
         private set
 
-    private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
-    private val troopFamily = allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
+    private val tileFamily = allOf(PositionComponent::class, TileComponent::class).get()
+    private val troopFamily =
+        allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
 
     fun handleTouch(worldX: Float, worldY: Float) {
         val clickedTroop = findTroopAt(worldX, worldY)
-        val clickedTile  = findTileAt(worldX, worldY)
+        val clickedTile = findTileAt(worldX, worldY)
 
         if (selectedTroop != null && clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true) {
             moveTroop(selectedTroop!!, clickedTile)
@@ -40,6 +41,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
                 selectedTroop = clickedTroop
                 highlightReachableTiles(clickedTroop)
             }
+
             else -> {
                 clearHighlights()
                 selectedTroop = null
@@ -60,7 +62,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
 
     private fun moveTroop(troop: Entity, targetTile: Entity) {
         val targetPos = targetTile[PositionComponent.mapper] ?: return
-        val troopPos  = troop[PositionComponent.mapper] ?: return
+        val troopPos = troop[PositionComponent.mapper] ?: return
 
         troopPos.prevQ = troopPos.q
         troopPos.prevR = troopPos.r
@@ -76,6 +78,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             onTurnEnd?.invoke()
         }
     }
+
     private fun allTroopsMoved(): Boolean {
         val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
         return engine.getEntitiesFor(troopFamily)
@@ -97,7 +100,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         }
     }
 
-    private fun findTileAt(worldX: Float, worldY: Float): Entity? {
+    fun findTileAt(worldX: Float, worldY: Float): Entity? {
         return engine.entities
             .filter { tileFamily.matches(it) }
             .minByOrNull { entity ->
