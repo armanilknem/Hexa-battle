@@ -35,6 +35,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             clickedTroop != null -> {
                 val team = clickedTroop[TeamComponent.mapper]?.team ?: return
                 if (!turnSystem.isCurrentTeam(team)) return
+                if (clickedTroop[TroopComponent.mapper]?.isMoved == true) return
                 clearHighlights()
                 selectedTroop = clickedTroop
                 highlightReachableTiles(clickedTroop)
