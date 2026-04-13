@@ -53,7 +53,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         playScreen.camera.position.set(centerX, centerY, 0f)
         playScreen.camera.update()
         // Single unified render system — no TileRenderSystem, no CityRenderSystem
-        view = View(batch, shapeRenderer, playScreen.camera)
+        view = View(batch, shapeRenderer, playScreen.camera, font)
         engine.addSystem(view)
 
         addScreen(MenuScreen(this))

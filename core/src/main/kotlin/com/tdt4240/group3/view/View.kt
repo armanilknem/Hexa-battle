@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.utils.Disposable
@@ -14,7 +15,7 @@ import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
-import com.tdt4240.group3.model.components.TroopComponent // add when ready
+import com.tdt4240.group3.model.components.TroopComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely
@@ -26,7 +27,8 @@ import kotlin.math.sin
 class View(
     private val batch: SpriteBatch,
     private val shapeRenderer: ShapeRenderer,
-    private val camera: OrthographicCamera
+    private val camera: OrthographicCamera,
+    private val font: BitmapFont
 ) : EntitySystem(), Disposable {
     private val backgroundTexture = Texture(Gdx.files.internal("hexaBackground.png"))
 
@@ -132,8 +134,8 @@ class View(
 
     private fun drawTroop(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
-
         val team = entity[TeamComponent.mapper] ?: return
+        val troop = entity[TroopComponent.mapper] ?: return
 
         if (team.team == TeamComponent.TeamName.RED) {
             batch.draw(redTroopTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
@@ -141,6 +143,12 @@ class View(
             batch.draw(blueTroopTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
         }
 
+        font.draw(
+            batch,
+            troop.strength.toString(),
+            pos.x - 6f,
+            pos.y + 20f
+        )
     }
 
     private fun drawBackground() {

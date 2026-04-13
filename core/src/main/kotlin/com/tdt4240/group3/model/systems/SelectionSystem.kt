@@ -24,6 +24,13 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         val clickedTroop = findTroopAt(worldX, worldY)
         val clickedTile  = findTileAt(worldX, worldY)
 
+        if (selectedTroop != null && clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true) {
+            moveTroop(selectedTroop!!, clickedTile)
+            clearHighlights()
+            selectedTroop = null
+            return
+        }
+
         when {
             clickedTroop != null -> {
                 val team = clickedTroop[TeamComponent.mapper]?.team ?: return
@@ -31,14 +38,6 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
                 clearHighlights()
                 selectedTroop = clickedTroop
                 highlightReachableTiles(clickedTroop)
-            }
-            clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true -> {
-                selectedTroop?.let {
-                    moveTroop(it, clickedTile)
-                }
-
-                clearHighlights()
-                selectedTroop = null
             }
             else -> {
                 clearHighlights()
@@ -62,10 +61,15 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         val targetPos = targetTile[PositionComponent.mapper] ?: return
         val troopPos  = troop[PositionComponent.mapper] ?: return
 
+        troopPos.prevQ = troopPos.q
+        troopPos.prevR = troopPos.r
+
         troopPos.q = targetPos.q
         troopPos.r = targetPos.r
 
-        troop[TroopComponent.mapper]?.hasBeenMoved()
+        val troopComp = troop[TroopComponent.mapper]
+        troopComp?.hasBeenMoved()
+        troopComp?.colliding()
 
         if (allTroopsMoved()) {
             onTurnEnd?.invoke()

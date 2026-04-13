@@ -22,6 +22,7 @@ import com.tdt4240.group3.game.playstate.PlaySubState
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.model.systems.CollisionSystem
 import com.tdt4240.group3.model.systems.SelectionSystem
 import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TurnSystem
@@ -46,6 +47,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
     private val turnController = TurnController(turnSystem, this, troopCreationController)
     private val selectionSystem = SelectionSystem(turnSystem)
+    private val collisionSystem = CollisionSystem()
 
 
     private val pauseController = PauseController(turnSystem, this)
@@ -68,10 +70,11 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         )
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
+        engine.addSystem(collisionSystem)
         engine.addSystem(troopCreationSystem)
 
-        troopCreationSystem.createTroopsForTeam(turnSystem.currentTeam)
-
+        troopCreationSystem.createTroopsForTeam(TeamComponent.TeamName.BLUE)
+        troopCreationSystem.createTroopsForTeam(TeamComponent.TeamName.RED)
 
         selectionSystem.onTurnEnd = {
             turnController.endTurn()
