@@ -6,7 +6,6 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.tdt4240.group3.model.systems.PlayerSystem
 import com.tdt4240.group3.screens.HowToPlayScreen
-import com.tdt4240.group3.view.systems.View
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
@@ -19,8 +18,6 @@ import kotlin.math.sqrt
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
     private lateinit var engine: Engine
-    private lateinit var view: View
-    private lateinit var shapeRenderer: ShapeRenderer
 
     companion object {
         const val WIDTH = 640
@@ -30,6 +27,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
 
     lateinit var batch: SpriteBatch private set
     lateinit var font: BitmapFont private set
+    lateinit var shapeRenderer: ShapeRenderer private set
 
 
 
@@ -53,8 +51,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         playScreen.camera.position.set(centerX, centerY, 0f)
         playScreen.camera.update()
         // Single unified render system — no TileRenderSystem, no CityRenderSystem
-        view = View(batch, shapeRenderer, playScreen.camera)
-        engine.addSystem(view)
+
 
         addScreen(MenuScreen(this))
         addScreen(playScreen)
@@ -67,7 +64,6 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         font.disposeSafely()
         batch.disposeSafely()
         shapeRenderer.disposeSafely()
-        view.disposeSafely()
         super.dispose()
     }
 }

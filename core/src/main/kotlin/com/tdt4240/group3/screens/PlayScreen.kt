@@ -29,9 +29,11 @@ import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.states.playstate.EnemyTurnState
 import com.tdt4240.group3.states.playstate.PauseState
 import com.tdt4240.group3.states.playstate.PlayerTurnState
+import com.tdt4240.group3.view.systems.View
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.ashley.add
+import ktx.assets.disposeSafely
 import ktx.graphics.use
 
 class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : KtxScreen {
@@ -56,8 +58,13 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
     private lateinit var stage: Stage
     private lateinit var turnLabel: VisLabel
+    private lateinit var view: View
 
     init {
+        engine.addSystem(turnSystem)
+        view = View(game.batch, game.shapeRenderer, camera, turnSystem)
+        engine.addSystem(view)
+
         camera.setToOrtho(false, Hexa_Battle.WIDTH.toFloat(), Hexa_Battle.HEIGHT.toFloat())
         camera.position.set(Hexa_Battle.WIDTH / 2f, Hexa_Battle.HEIGHT / 2f, 0f)
         val factory = EntityFactory(engine)
@@ -70,7 +77,6 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
             name = "Bikini Buttom", isCapital = true, baseProduction = 20,
             q = 8, r = 7, team = TeamComponent.TeamName.BLUE
         )
-        engine.addSystem(turnSystem)
         engine.addSystem(territorySystem)
         engine.addSystem(selectionSystem)
         engine.addSystem(troopCreationSystem)
@@ -156,5 +162,10 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
     fun getBatch() = game.batch
     fun getFont()  = game.font
 
-    override fun dispose() { super.dispose() }
+    override fun dispose() {
+        super.dispose()
+        view.disposeSafely()
+        stage.disposeSafely()
+        VisUI.dispose()
+    }
 }

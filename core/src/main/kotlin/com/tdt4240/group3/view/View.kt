@@ -15,6 +15,7 @@ import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent // add when ready
+import com.tdt4240.group3.model.systems.TurnSystem
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely
@@ -26,7 +27,8 @@ import kotlin.math.sin
 class View(
     private val batch: SpriteBatch,
     private val shapeRenderer: ShapeRenderer,
-    private val camera: OrthographicCamera
+    private val camera: OrthographicCamera,
+    private val turnSystem: TurnSystem
 ) : EntitySystem(), Disposable {
     private val backgroundTexture = Texture(Gdx.files.internal("hexaBackground.png"))
 
@@ -116,16 +118,28 @@ class View(
         val team = entity[TeamComponent.mapper]?.team ?: return
         if (team == TeamComponent.TeamName.NONE) return
 
+        val isCurrentTeam = team == turnSystem.currentTeam // check if its current players turn
+
         val pos = entity[PositionComponent.mapper] ?: return
         val x = pos.x.toFloat()
         val y = pos.y.toFloat()
         val size = 16f
 
-        shapeRenderer.color = when (team) {
-            TeamComponent.TeamName.RED -> Color(1f, 0f, 0f, 0.4f)  // 40% opacity red
-            TeamComponent.TeamName.BLUE -> Color(0f, 0f, 1f, 0.4f) // 40% opacity blue
-            else -> return
+        // stronger color when current players turn
+        if (isCurrentTeam) {
+            shapeRenderer.color = when (team) {
+                TeamComponent.TeamName.RED -> Color(1f, 0f, 0f, 0.4f)
+                TeamComponent.TeamName.BLUE -> Color(0f, 0f, 1f, 0.4f)
+                else -> return
+            }
+        } else {
+            shapeRenderer.color = when (team) {
+                TeamComponent.TeamName.RED -> Color(1f, 0f, 0f, 0.2f)
+                TeamComponent.TeamName.BLUE -> Color(0f, 0f, 1f, 0.2f)
+                else -> return
+            }
         }
+
 
         this.drawFullHexTile(x, y, size)
     }
