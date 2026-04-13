@@ -62,9 +62,6 @@ class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionCom
         troop.isColliding = false
     }
 
-    /**
-     * Returns true if movingEntity was removed (fully merged)
-     */
     private fun handleMerge(movingEntity: Entity, movingTroop: TroopComponent, stationaryEntity: Entity, stationaryTroop: TroopComponent): Boolean {
         val total = movingTroop.strength + stationaryTroop.strength
 
@@ -85,9 +82,6 @@ class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionCom
         }
     }
 
-    /**
-     * Returns true if the moving troop survives the encounter
-     */
     private fun handleCombat(movingEntity: Entity, movingTroop: TroopComponent, enemyEntity: Entity, enemyTroop: TroopComponent): Boolean {
         val diff = movingTroop.strength - enemyTroop.strength
 
