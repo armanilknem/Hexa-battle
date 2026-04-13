@@ -119,7 +119,7 @@ class View(
         val pos = entity[PositionComponent.mapper] ?: return
         val x = pos.x.toFloat()
         val y = pos.y.toFloat()
-        val size = 32f
+        val size = 16f
 
         shapeRenderer.color = when (team) {
             TeamComponent.TeamName.RED -> Color(1f, 0f, 0f, 0.4f)  // 40% opacity red

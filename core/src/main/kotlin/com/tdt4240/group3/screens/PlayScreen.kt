@@ -40,9 +40,8 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
     private var previousState: PlaySubState = PlayerTurnState()
     val camera = OrthographicCamera()
 
-    private val turnSystem      = TurnSystem()
+    private val turnSystem = TurnSystem()
     private val territorySystem = TerritorySystem()
-    private val selectionSystem = SelectionSystem(turnSystem, territorySystem)
 
     private val troopCreationSystem = TroopCreationSystem(engine)
 
@@ -50,7 +49,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
 
     private val turnController = TurnController(turnSystem, this, troopCreationController)
-    private val selectionSystem = SelectionSystem(turnSystem)
+    private val selectionSystem = SelectionSystem(turnSystem, territorySystem)
 
 
     private val pauseController = PauseController(turnSystem, this)
