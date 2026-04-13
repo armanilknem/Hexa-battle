@@ -7,13 +7,12 @@ import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.badlogic.ashley.core.Entity
-import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.tdt4240.group3.model.components.TileComponent
 import ktx.ashley.entity
 import ktx.ashley.with
+import kotlin.math.abs
 import kotlin.math.floor
-import kotlin.math.sqrt
+import kotlin.random.Random
 
 class EntityFactory(private val engine: Engine) {
 
@@ -47,7 +46,7 @@ class EntityFactory(private val engine: Engine) {
             this.team = team
         }
     }
-    fun createCity(name: String, isCapital: Boolean, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
+    fun createCapitalCity(name: String, isCapital: Boolean, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
         with<CityComponent> {
             this.name = name
             this.baseProduction = baseProduction
@@ -78,5 +77,46 @@ class EntityFactory(private val engine: Engine) {
             this.r = r
             this.zIndex = 0 // Bottom layer
         }
+    }
+
+    fun generateNormalCities(count: Int, capitalPositions: List<Pair<Int, Int>>) {
+        val cityNames = MapData.CITY_NAMES.toMutableList()
+            .also { it.shuffle(Random(System.currentTimeMillis())) }
+
+        val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
+        val allTiles = engine.getEntitiesFor(tileFamily).map { entity ->
+            val pos = PositionComponent.mapper.get(entity)
+            Pair(pos.q, pos.r)
+        }
+
+        val candidateTiles = allTiles.filter { it !in MapData.WATER_TILES && it !in capitalPositions }
+
+        val placedCities = mutableListOf<Pair<Int, Int>>()
+
+        val shuffled = candidateTiles.shuffled(Random(System.currentTimeMillis()))
+        for (tile in shuffled) {
+            if (placedCities.size >= count) break
+            val tooClose = placedCities.any { placed ->
+                hexDistance(placed.first, placed.second, tile.first, tile.second) < 2
+            } || capitalPositions.any { cap ->
+                hexDistance(cap.first, cap.second, tile.first, tile.second) < 2
+            }
+            if (!tooClose) {
+                placedCities.add(tile)
+                val name = cityNames.getOrElse(placedCities.size - 1) { "City ${placedCities.size}" }
+                createCapitalCity(
+                    name = name,
+                    isCapital = false,
+                    baseProduction = 10,
+                    q = tile.first,
+                    r = tile.second,
+                    team = TeamComponent.TeamName.NONE
+                )
+            }
+        }
+    }
+
+    private fun hexDistance(q1: Int, r1: Int, q2: Int, r2: Int): Int {
+        return (abs(q1 - q2) + abs(q1 + r1 - q2 - r2) + abs(r1 - r2)) / 2
     }
 }

@@ -19,16 +19,14 @@ import com.tdt4240.group3.controller.PauseController
 import com.tdt4240.group3.controller.TroopCreationController
 import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.game.playstate.PlaySubState
+import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
-import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.CollisionSystem
 import com.tdt4240.group3.model.systems.SelectionSystem
 import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TurnSystem
-import com.tdt4240.group3.states.playstate.EnemyTurnState
-import com.tdt4240.group3.states.playstate.PauseState
 import com.tdt4240.group3.states.playstate.PlayerTurnState
 import ktx.actors.onClick
 import ktx.app.KtxScreen
@@ -63,13 +61,17 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         camera.position.set(Hexa_Battle.WIDTH / 2f, Hexa_Battle.HEIGHT / 2f, 0f)
         val factory = EntityFactory(engine)
         factory.generateRectangularGrid(18, 15)
-        factory.createCity(
+        factory.createCapitalCity(
             name = "Oslo", isCapital = true, baseProduction = 20,
             q = 1, r = 2, team = TeamComponent.TeamName.RED
         )
-        factory.createCity(
+        factory.createCapitalCity(
             name = "Bergen", isCapital = true, baseProduction = 20,
             q = 10, r = 11, team = TeamComponent.TeamName.BLUE
+        )
+        factory.generateNormalCities(
+            count = 20,
+            capitalPositions = listOf(Pair(1, 2), Pair(10, 11))
         )
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
@@ -143,7 +145,11 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         val tile = selectionSystem.findTileAt(worldCoords.x, worldCoords.y)
         val pos = tile?.get(PositionComponent.mapper)
         if (pos != null) {
-            tooltipLabel.setText("q: ${pos.q}, r: ${pos.r}")
+            val city = selectionSystem.findCityAt(worldCoords.x, worldCoords.y)
+            val cityName = city?.get(CityComponent.mapper)?.name
+            val text = if (cityName != null) "q: ${pos.q}, r: ${pos.r}\n$cityName"
+            else "q: ${pos.q}, r: ${pos.r}"
+            tooltipLabel.setText(text)
             tooltipLabel.pack()
             tooltipLabel.setPosition(
                 screenX.toFloat() + 12f,

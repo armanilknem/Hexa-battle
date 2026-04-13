@@ -37,7 +37,9 @@ class View(
     private val cityFamily  = allOf(PositionComponent::class, CityComponent::class).get()
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class).get()
 
-    private val cityTexture  = Texture(Gdx.files.internal("CapitalCity.png"))
+    private val capitalCityTexture  = Texture(Gdx.files.internal("CapitalCity.png"))
+    private val normalCityTexture = Texture(Gdx.files.internal("NormalCity.png"))
+
     private val troopTexture = Texture(Gdx.files.internal("troop.png"))
 
     private val redTroopTexture = Texture(Gdx.files.internal("red_troop.png"))
@@ -78,7 +80,11 @@ class View(
                 .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
                 .forEach { entity ->
                     when {
-                        cityFamily.matches(entity)  -> drawCity(entity)
+                        cityFamily.matches(entity) -> {
+                            val city = entity[CityComponent.mapper]
+                            if (city?.isCapital == true) drawCapitalCity(entity)
+                            else drawNormalCity(entity)
+                        }
                         troopFamily.matches(entity) -> drawTroop(entity)
                     }
                 }
@@ -127,19 +133,26 @@ class View(
         }
     }
 
-    private fun drawCity(entity: Entity) {
+    private fun drawCapitalCity(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
         val city = entity[CityComponent.mapper] ?: return
         val width = 42f
         val height = 42f
         val yOffset = 5.5f
         val xOffset = 1f
-        batch.draw(cityTexture, pos.x - width / 2f + xOffset, pos.y - height / 2f + yOffset, width, height)
-        if (city.isCapital) {
-            font.data.setScale(0.7f)
-            font.draw(batch, city.name, pos.x - width / 2f + 5f, pos.y - height / 2f + yOffset)
-            font.data.setScale(1f)
-        }
+        batch.draw(capitalCityTexture, pos.x - width / 2f + xOffset, pos.y - height / 2f + yOffset, width, height)
+        font.data.setScale(0.7f)
+        font.draw(batch, city.name, pos.x - width / 2f + 5f, pos.y - height / 2f + yOffset)
+        font.data.setScale(1f)
+    }
+
+    private fun drawNormalCity(entity: Entity) {
+        val pos = entity[PositionComponent.mapper] ?: return
+        val width = 68.5f
+        val height = 72f
+        val yOffset = 1.5f
+        val xOffset = 0f
+        batch.draw(normalCityTexture, pos.x - width / 2f + xOffset, pos.y - height / 2f + yOffset, width, height)
     }
     private fun drawTroop(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
@@ -167,7 +180,8 @@ class View(
 
 
     override fun dispose() {
-        cityTexture.disposeSafely()
+        capitalCityTexture.disposeSafely()
+        normalCityTexture.disposeSafely()
         troopTexture.disposeSafely()
         backgroundTexture.disposeSafely()
         redTroopTexture.disposeSafely()
