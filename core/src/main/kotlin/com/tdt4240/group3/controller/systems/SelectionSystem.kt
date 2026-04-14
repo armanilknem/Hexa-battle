@@ -7,6 +7,7 @@ import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent
+import com.tdt4240.group3.model.components.marker.CollidingComponent
 import com.tdt4240.group3.model.components.marker.HighlightedComponent
 import com.tdt4240.group3.model.components.marker.MoveIntentComponent
 import com.tdt4240.group3.model.components.marker.SelectableComponent
@@ -34,6 +35,10 @@ class SelectionSystem() : EntitySystem() {
                 intent.targetQ = tilePos.q
                 intent.targetR = tilePos.r
                 selectedTroop.add(intent)
+                if (selectedTroop != clickedTroop && clickedTroop != null) {
+                    selectedTroop.add(engine.createComponent(CollidingComponent::class.java))
+                    clickedTroop.add(engine.createComponent(CollidingComponent::class.java))
+                }
                 clearSelectedTroops()
                 clearHighlights()
             }

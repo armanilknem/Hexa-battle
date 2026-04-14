@@ -14,7 +14,6 @@ class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionCom
 
     override fun processEntity(movingEntity: Entity, deltaTime: Float) {
         val troop = movingEntity[TroopComponent.mapper]!!
-
         val pos = movingEntity[PositionComponent.mapper]!!
         val team = movingEntity[TeamComponent.mapper]!!
 
