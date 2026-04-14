@@ -24,6 +24,7 @@ import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.SelectionSystem
 import com.tdt4240.group3.model.systems.TroopCreationSystem
+import com.tdt4240.group3.model.systems.TroopHighlightSystem
 import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.states.playstate.EnemyTurnState
 import com.tdt4240.group3.states.playstate.PauseState
@@ -40,6 +41,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
     private val turnSystem      = TurnSystem()
     private val troopCreationSystem = TroopCreationSystem(engine)
+    private val troopHighlightSystem = TroopHighlightSystem(turnSystem)
 
     private val troopCreationController = TroopCreationController(troopCreationSystem, turnSystem)
 
@@ -69,6 +71,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
         engine.addSystem(troopCreationSystem)
+        engine.addSystem(troopHighlightSystem)
 
         troopCreationSystem.createTroopsForTeam(turnSystem.currentTeam)
 

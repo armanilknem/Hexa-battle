@@ -14,7 +14,7 @@ import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
-import com.tdt4240.group3.model.components.TroopComponent // add when ready
+import com.tdt4240.group3.model.components.TroopComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely
@@ -28,6 +28,7 @@ class View(
     private val shapeRenderer: ShapeRenderer,
     private val camera: OrthographicCamera
 ) : EntitySystem(), Disposable {
+    private var stateTime = 0f
     private val backgroundTexture = Texture(Gdx.files.internal("hexaBackground.png"))
 
     // Three distinct families — one per entity type
@@ -43,6 +44,7 @@ class View(
     private val blueTroopTexture = Texture(Gdx.files.internal("blue_troop.png"))
 
     override fun update(deltaTime: Float) {
+        stateTime += deltaTime
         val entities = engine.entities
 
         batch.projectionMatrix = batch.projectionMatrix.idt() // identity projection
@@ -67,6 +69,16 @@ class View(
                 if (tileFamily.matches(entity)) drawTile(entity)
             }
         }
+
+        // Pass 1c — unmoved troop highlights (drawn before sprites so they appear under troops)
+        Gdx.gl.glEnable(GL20.GL_BLEND)
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+        shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
+            entities.forEach { entity ->
+                if (troopFamily.matches(entity)) drawUnmovedTroopHighlight(entity)
+            }
+        }
+        Gdx.gl.glDisable(GL20.GL_BLEND)
 
         // Pass 2 — sprites
         batch.projectionMatrix = camera.combined
@@ -93,6 +105,31 @@ class View(
         val x = pos.x
         val y = pos.y
 
+        for (i in 0 until 6) {
+            val angle1 = (PI / 180) * (60 * i - 30)
+            val angle2 = (PI / 180) * (60 * (i + 1) - 30)
+            shapeRenderer.triangle(
+                x, y,
+                x + size * cos(angle1).toFloat(), y + size * sin(angle1).toFloat(),
+                x + size * cos(angle2).toFloat(), y + size * sin(angle2).toFloat()
+            )
+        }
+    }
+
+    private fun drawUnmovedTroopHighlight(entity: Entity) {
+        val troop = entity[TroopComponent.mapper] ?: return
+        if (!troop.isHighlighted) return
+
+        val pos = entity[PositionComponent.mapper] ?: return
+        val alpha = if (troop.isClicked)
+            0.55f + 0.25f * sin(stateTime * 4.0).toFloat()
+        else
+            0.6f
+        shapeRenderer.color = Color(1f, 0.85f, 0f, alpha)
+
+        val size = 18f
+        val x = pos.x
+        val y = pos.y
         for (i in 0 until 6) {
             val angle1 = (PI / 180) * (60 * i - 30)
             val angle2 = (PI / 180) * (60 * (i + 1) - 30)

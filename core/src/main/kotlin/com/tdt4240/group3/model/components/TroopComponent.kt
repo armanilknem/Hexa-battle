@@ -9,6 +9,7 @@ class TroopComponent : Component, Pool.Poolable {
     var strength: Int = 0
     var isMoved: Boolean = false
     var isClicked: Boolean = false
+    var isHighlighted: Boolean = false
 
 
 
@@ -29,6 +30,7 @@ class TroopComponent : Component, Pool.Poolable {
     override fun reset() {
         isMoved = false
         isClicked = false
+        isHighlighted = false
     }
 
     companion object {
