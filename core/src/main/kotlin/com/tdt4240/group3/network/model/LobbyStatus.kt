@@ -8,5 +8,6 @@ enum class LobbyStatus {
     @SerialName("open") OPEN,
     @SerialName("closed") CLOSED,
     @SerialName("playing") PLAYING,
-    @SerialName("finished") FINISHED
+    @SerialName("finished") FINISHED,
+    @SerialName("abandoned") ABANDONED
 }
