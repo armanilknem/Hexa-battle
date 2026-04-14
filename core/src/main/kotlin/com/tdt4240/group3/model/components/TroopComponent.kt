@@ -9,12 +9,12 @@ class TroopComponent : Component, Pool.Poolable {
     var strength: Int = 0
     var isMoved: Boolean = false
     var isClicked: Boolean = false
+    var isColliding: Boolean = false
     var isHighlighted: Boolean = false
 
 
-
-    fun isAttacked(attackPower: Int){
-        this.strength -= attackPower
+    fun colliding(){
+        this.isColliding = true
     }
 
     fun hasBeenMoved(){
@@ -28,10 +28,19 @@ class TroopComponent : Component, Pool.Poolable {
 
 
     override fun reset() {
+        strength = 0
         isMoved = false
         isClicked = false
+        isColliding = false
+    }
+
+    fun resetForNewTurn(){
+        isMoved = false
+        isClicked = false
+        isColliding = false
         isHighlighted = false
     }
+
 
     companion object {
         val mapper = mapperFor<TroopComponent>()

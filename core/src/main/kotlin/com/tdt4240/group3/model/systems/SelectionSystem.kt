@@ -24,22 +24,24 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         val clickedTroop = findTroopAt(worldX, worldY)
         val clickedTile  = findTileAt(worldX, worldY)
 
+        if (selectedTroop != null && clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true) {
+            selectedTroop?.get(TroopComponent.mapper)?.isClicked = false
+            moveTroop(selectedTroop!!, clickedTile)
+            clearHighlights()
+            selectedTroop = null
+            return
+        }
+
         when {
             clickedTroop != null -> {
                 val team = clickedTroop[TeamComponent.mapper]?.team ?: return
                 if (!turnSystem.isCurrentTeam(team)) return
                 selectedTroop?.get(TroopComponent.mapper)?.isClicked = false
+                if (clickedTroop[TroopComponent.mapper]?.isMoved == true) return
                 clearHighlights()
                 selectedTroop = clickedTroop
                 clickedTroop[TroopComponent.mapper]?.hasBeenClicked()
                 highlightReachableTiles(clickedTroop)
-            }
-            clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true -> {
-                selectedTroop?.let {
-                    moveTroop(it, clickedTile)
-                }
-                clearHighlights()
-                selectedTroop = null
             }
             else -> {
                 selectedTroop?.get(TroopComponent.mapper)?.isClicked = false
@@ -64,11 +66,16 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         val targetPos = targetTile[PositionComponent.mapper] ?: return
         val troopPos  = troop[PositionComponent.mapper] ?: return
 
+        troopPos.prevQ = troopPos.q
+        troopPos.prevR = troopPos.r
+
         troopPos.q = targetPos.q
         troopPos.r = targetPos.r
 
-        troop[TroopComponent.mapper]?.hasBeenMoved()
-        troop[TroopComponent.mapper]?.isClicked = false
+        val troopComp = troop[TroopComponent.mapper]
+        troopComp?.hasBeenMoved()
+        troopComp?.isClicked = false
+        troopComp?.colliding()
 
         if (allTroopsMoved()) {
             onTurnEnd?.invoke()

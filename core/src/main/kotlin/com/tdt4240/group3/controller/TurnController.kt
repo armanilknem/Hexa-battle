@@ -14,8 +14,8 @@ class TurnController(
     private val troopCreationController: TroopCreationController
 ) {
     fun endTurn() {
+        troopCreationController.createTroopsForCurrentTeam()  // spawn for this team
         turnSystem.endTurn()        // model advances
-        troopCreationController.createTroopsForCurrentTeam()  // spawn for new team
         playScreen.updateLabel()    // view updates
 
         when (turnSystem.currentTeam) {

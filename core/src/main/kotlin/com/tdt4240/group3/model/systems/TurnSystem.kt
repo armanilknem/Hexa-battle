@@ -16,7 +16,6 @@ class TurnSystem : EntitySystem() {
     private val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
 
     fun endTurn() {
-        resetTroopMoves()
         currentTeam = when (currentTeam) {
             TeamComponent.TeamName.BLUE -> TeamComponent.TeamName.RED
             TeamComponent.TeamName.RED  -> TeamComponent.TeamName.BLUE
@@ -25,6 +24,7 @@ class TurnSystem : EntitySystem() {
         if (currentTeam == TeamComponent.TeamName.BLUE){
             turnCount++
         }
+        resetTroopMoves() // reset moves for the new current team
     }
 
     private fun resetTroopMoves() {
