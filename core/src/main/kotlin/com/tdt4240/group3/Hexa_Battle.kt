@@ -5,11 +5,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.tdt4240.group3.model.systems.PlayerSystem
-import com.tdt4240.group3.model.systems.TileRenderSystem
-import com.tdt4240.group3.model.entities.EntityFactory
-import com.tdt4240.group3.model.systems.CityRenderSystem
-import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.screens.HowToPlayScreen
+import com.tdt4240.group3.view.systems.View
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
@@ -18,10 +15,11 @@ import com.tdt4240.group3.screens.PlayScreen
 import com.tdt4240.group3.screens.LobbyScreen
 import com.tdt4240.group3.screens.OptionsScreen
 import ktx.assets.disposeSafely
+import kotlin.math.sqrt
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
     private lateinit var engine: Engine
-    private lateinit var cityRenderSystem: CityRenderSystem
+    private lateinit var view: View
     private lateinit var shapeRenderer: ShapeRenderer
 
     companion object {
@@ -34,6 +32,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
     lateinit var font: BitmapFont private set
 
 
+
     override fun create() {
         KtxAsync.initiate()
 
@@ -41,46 +40,34 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         font = BitmapFont()
         shapeRenderer = ShapeRenderer()
 
-        // 1. Initialize the Ashley Engine
         engine = Engine()
-
-        // 2. Add the systems to the engine
         engine.addSystem(PlayerSystem())
+
         val playScreen = PlayScreen(this, engine)
-        engine.addSystem(TileRenderSystem(shapeRenderer, playScreen.camera))
-        cityRenderSystem = CityRenderSystem(batch, playScreen.camera)
-        engine.addSystem(cityRenderSystem)
+        // Center camera on grid
+        val cols = 12f
+        val rows = 11f
+        val centerX = 16f * (sqrt(3.0).toFloat() * (cols / 2f) + sqrt(3.0).toFloat() / 2f * (rows / 2f))
+        val centerY = 16f * (3f / 2f * (rows / 2f)) + 36f
 
-        // 3. Initialize the EntityFactory
-        val factory = EntityFactory(engine)
-
-        // 4. Create a test player to verify functionality
-        factory.createPlayer("Sander")
-        factory.generateRectangularGrid(12, 11)
-
-        // 5. Create a test city
-        factory.createCity(
-            name = "Manchester",
-            isCapital = true,
-            baseProduction = 20,
-            q = 5,
-            r = 5,
-            team = TeamComponent.TeamName.RED
-        )
+        playScreen.camera.position.set(centerX, centerY, 0f)
+        playScreen.camera.update()
+        // Single unified render system — no TileRenderSystem, no CityRenderSystem
+        view = View(batch, shapeRenderer, playScreen.camera, font)
+        engine.addSystem(view)
 
         addScreen(MenuScreen(this))
         addScreen(playScreen)
         addScreen(LobbyScreen(this))
         addScreen(HowToPlayScreen(this))
         addScreen(OptionsScreen(this))
-
         setScreen<MenuScreen>()
     }
     override fun dispose() {
         font.disposeSafely()
         batch.disposeSafely()
         shapeRenderer.disposeSafely()
-        cityRenderSystem.disposeSafely()
+        view.disposeSafely()
         super.dispose()
     }
 }
