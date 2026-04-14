@@ -1,4 +1,4 @@
-package com.tdt4240.group3.screens
+package com.tdt4240.group3.view.screens
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx
@@ -24,7 +24,7 @@ import com.tdt4240.group3.controller.systems.MovementSystem
 import com.tdt4240.group3.controller.systems.SelectionSystem
 import com.tdt4240.group3.controller.systems.TroopCreationSystem
 import com.tdt4240.group3.controller.systems.TurnSystem
-import com.tdt4240.group3.states.playstate.PlayerTurnState
+import com.tdt4240.group3.view.states.PlayerTurnState
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.graphics.use

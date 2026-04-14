@@ -5,15 +5,15 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.tdt4240.group3.controller.systems.PlayerSystem
-import com.tdt4240.group3.screens.HowToPlayScreen
+import com.tdt4240.group3.view.screens.HowToPlayScreen
 import com.tdt4240.group3.view.systems.View
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
-import com.tdt4240.group3.screens.MenuScreen
-import com.tdt4240.group3.screens.PlayScreen
-import com.tdt4240.group3.screens.LobbyScreen
-import com.tdt4240.group3.screens.OptionsScreen
+import com.tdt4240.group3.view.screens.MenuScreen
+import com.tdt4240.group3.view.screens.PlayScreen
+import com.tdt4240.group3.view.screens.LobbyScreen
+import com.tdt4240.group3.view.screens.OptionsScreen
 import ktx.assets.disposeSafely
 import kotlin.math.sqrt
 

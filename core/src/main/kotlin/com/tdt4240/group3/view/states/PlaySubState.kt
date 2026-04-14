@@ -1,6 +1,6 @@
 package com.tdt4240.group3.game.playstate
 
-import com.tdt4240.group3.screens.PlayScreen
+import com.tdt4240.group3.view.screens.PlayScreen
 
 interface PlaySubState {
     val backgroundColor: Triple<Float, Float, Float>
