@@ -10,12 +10,14 @@ import com.tdt4240.group3.model.systems.TileRenderSystem
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.CityRenderSystem
 import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.network.PlayerService
 import com.tdt4240.group3.screens.*
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
 import ktx.assets.disposeSafely
 import java.util.UUID
+import kotlinx.coroutines.launch
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
     private lateinit var engine: Engine
@@ -23,6 +25,8 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
     private lateinit var shapeRenderer: ShapeRenderer
 
     var myPlayerId: String = ""
+        private set
+    var myPlayerName: String = ""
         private set
 
     companion object {
@@ -42,24 +46,17 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         font = BitmapFont()
         shapeRenderer = ShapeRenderer()
 
-        // 1. Initialize the Ashley Engine
         engine = Engine()
 
-        // 2. Add the systems to the engine
         engine.addSystem(PlayerSystem())
         val playScreen = PlayScreen(this, engine)
         engine.addSystem(TileRenderSystem(shapeRenderer, playScreen.camera))
         cityRenderSystem = CityRenderSystem(batch, playScreen.camera)
         engine.addSystem(cityRenderSystem)
 
-        // 3. Initialize the EntityFactory
         val factory = EntityFactory(engine)
-
-        // 4. Create a test player to verify functionality
         factory.createPlayer("Sander")
         factory.generateRectangularGrid(12, 11)
-
-        // 5. Create a test city
         factory.createCity(
             name = "Manchester",
             isCapital = true,
@@ -75,20 +72,30 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         addScreen(HowToPlayScreen(this))
         addScreen(OptionsScreen(this))
 
-        // Start at Menu
         setScreen<MenuScreen>()
     }
 
     private fun setupPlayerIdentity() {
         val prefs = Gdx.app.getPreferences("HexaBattlePrefs")
-        var savedId = prefs.getString("player_id", "")
+        val savedId = prefs.getString("player_id", "")
 
-        if (savedId.isEmpty()) {
-            savedId = UUID.randomUUID().toString()
-            prefs.putString("player_id", savedId)
-            prefs.flush()
+        KtxAsync.launch {
+            if (savedId.isEmpty()) {
+                // First time — generate ID and create player in DB
+                val newId = UUID.randomUUID().toString()
+                val defaultName = "Guest${(1000..9999).random()}"
+                val player = PlayerService.getOrCreatePlayer(newId, defaultName)
+                prefs.putString("player_id", newId)
+                prefs.flush()
+                myPlayerId = newId
+                myPlayerName = player?.displayName ?: defaultName
+            } else {
+                // Returning player — fetch name from DB
+                val player = PlayerService.getOrCreatePlayer(savedId)
+                myPlayerId = savedId
+                myPlayerName = player?.displayName ?: "Guest"
+            }
         }
-        myPlayerId = savedId
     }
 
     override fun dispose() {

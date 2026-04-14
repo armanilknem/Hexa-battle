@@ -10,7 +10,7 @@ import com.kotcrab.vis.ui.widget.VisTextButton
 import com.kotcrab.vis.ui.widget.VisTextField
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.network.LobbyService
-import com.tdt4240.group3.network.LobbyResult
+import com.tdt4240.group3.network.model.LobbyResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,7 +42,7 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
 
         createBtn.onClick {
             statusLabel.setText("Creating...")
-            scope.launch { handleResult(LobbyService.createLobby(game.myPlayerId)) }
+            scope.launch { handleResult(LobbyService.getOrCreateLobby(game.myPlayerId)) }
         }
 
         joinBtn.onClick {
@@ -93,7 +93,17 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
         stage.draw()
     }
 
-    override fun resize(width: Int, height: Int) = stage.viewport.update(width, height, true)
-    override fun hide() { Gdx.input.inputProcessor = null }
-    override fun dispose() { stage.dispose(); scope.cancel() }
+    override fun resize(width: Int, height: Int) {
+        stage.viewport.update(width, height, true)
+    }
+
+    override fun hide() {
+        Gdx.input.inputProcessor = null
+    }
+
+    override fun dispose() {
+        stage.dispose()
+        if (VisUI.isLoaded()) VisUI.dispose()
+        scope.cancel()
+    }
 }

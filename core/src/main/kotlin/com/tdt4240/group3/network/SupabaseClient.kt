@@ -11,8 +11,6 @@ object SupabaseClient {
             supabaseUrl = "https://wbubvspwwbxhucokvflo.supabase.co",
             supabaseKey = "sb_publishable_1oIBGk7uexuWhZ6tULmb4g_Pu7rI9fS"
         ) {
-            httpEngine = CIO.create()
-
             install(Realtime)
             install(Postgrest)
         }
