@@ -7,13 +7,18 @@ import ktx.ashley.mapperFor
 
 class TroopComponent : Component, Pool.Poolable {
     var strength: Int = 0
+    var isColliding: Boolean = false
 
-
-    fun isAttacked(attackPower: Int){
-        this.strength -= attackPower
+    fun colliding(){
+        this.isColliding = true
     }
 
     override fun reset() {
+        isColliding = false
+    }
+
+    fun resetForNewTurn(){
+        isColliding = false
     }
 
     companion object {

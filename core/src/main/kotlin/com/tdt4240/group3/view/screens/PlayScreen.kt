@@ -17,6 +17,7 @@ import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PauseController
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.model.systems.CollisionSystem
 import com.tdt4240.group3.controller.systems.MovementSystem
 import com.tdt4240.group3.controller.systems.SelectionSystem
 import com.tdt4240.group3.controller.systems.TroopCreationSystem
@@ -24,6 +25,8 @@ import com.tdt4240.group3.controller.systems.TurnSystem
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PlayerTurnState
+import com.tdt4240.group3.view.states.EnemyTurnState
+import com.tdt4240.group3.view.states.PauseState
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.ashley.allOf
@@ -40,6 +43,10 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
     private val movementSystem = MovementSystem()
     private val troopCreationSystem = TroopCreationSystem(engine)
     private val selectionSystem = SelectionSystem()
+    private val selectionSystem = SelectionSystem(turnSystem)
+    private val collisionSystem = CollisionSystem()
+
+
     private val pauseController = PauseController(turnSystem, this)
 
     private lateinit var stage: Stage
@@ -61,8 +68,12 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         factory.createGameState()
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
+        engine.addSystem(collisionSystem)
         engine.addSystem(troopCreationSystem)
         engine.addSystem(movementSystem)
+
+        troopCreationSystem.createTroopsForTeam(TeamComponent.TeamName.BLUE)
+        troopCreationSystem.createTroopsForTeam(TeamComponent.TeamName.RED)
 
         val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
         val gs = gameState?.get(GameStateComponent.mapper)!!
