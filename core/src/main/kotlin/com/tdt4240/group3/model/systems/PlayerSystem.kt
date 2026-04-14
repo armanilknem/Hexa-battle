@@ -1,4 +1,4 @@
-package com.tdt4240.group3.controller.systems
+package com.tdt4240.group3.model.systems
 
 import com.tdt4240.group3.model.components.PlayerComponent
 import com.badlogic.ashley.systems.IteratingSystem
