@@ -56,7 +56,7 @@ class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionCom
             }
         }
 
-        // Remove colliding component
+        // Remove collidingComponent
         movingEntity.remove(CollidingComponent::class.java)
     }
 

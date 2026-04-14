@@ -67,9 +67,9 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         factory.createGameState()
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
+        engine.addSystem(movementSystem)
         engine.addSystem(collisionSystem)
         engine.addSystem(troopCreationSystem)
-        engine.addSystem(movementSystem)
 
         troopCreationSystem.createTroopsForTeam(TeamComponent.TeamName.BLUE)
 

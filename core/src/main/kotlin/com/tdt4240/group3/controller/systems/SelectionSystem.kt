@@ -2,10 +2,10 @@ package com.tdt4240.group3.controller.systems
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
-import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
+import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.components.marker.CollidingComponent
 import com.tdt4240.group3.model.components.marker.HighlightedComponent
@@ -14,7 +14,6 @@ import com.tdt4240.group3.model.components.marker.SelectableComponent
 import com.tdt4240.group3.model.components.marker.SelectedComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
-import ktx.ashley.mapperFor
 
 class SelectionSystem() : EntitySystem() {
 
@@ -32,13 +31,33 @@ class SelectionSystem() : EntitySystem() {
                 != null && selectedTroop != null -> {
                 val intent = engine.createComponent(MoveIntentComponent::class.java)
                 val tilePos = clickedTile.getComponent(PositionComponent::class.java) ?: return
+
                 intent.targetQ = tilePos.q
                 intent.targetR = tilePos.r
                 selectedTroop.add(intent)
-                if (selectedTroop != clickedTroop && clickedTroop != null) {
-                    selectedTroop.add(engine.createComponent(CollidingComponent::class.java))
-                    clickedTroop.add(engine.createComponent(CollidingComponent::class.java))
+
+                val targetTroop = engine.getEntitiesFor(troopFamily).firstOrNull { troop ->
+                    if (troop == selectedTroop) return@firstOrNull false
+                    val pos = troop[PositionComponent.mapper] ?: return@firstOrNull false
+                    pos.q == tilePos.q && pos.r == tilePos.r
                 }
+
+                val targetCity = engine.entities.firstOrNull { entity ->
+                    entity.getComponent(CityComponent::class.java) != null &&
+                        entity[PositionComponent.mapper]?.q == tilePos.q &&
+                        entity[PositionComponent.mapper]?.r == tilePos.r
+                }
+
+                if (targetTroop != null || targetCity != null) {
+                    selectedTroop.add(engine.createComponent(CollidingComponent::class.java))
+                }
+
+                if (targetTroop != null) {
+                    targetTroop.remove(SelectableComponent::class.java)
+                }
+
+                selectedTroop.remove(SelectableComponent::class.java)
+
                 clearSelectedTroops()
                 clearHighlights()
             }
