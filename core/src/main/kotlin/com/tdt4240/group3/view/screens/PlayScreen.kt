@@ -15,18 +15,19 @@ import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PauseController
-import com.tdt4240.group3.controller.TroopCreationController
-import com.tdt4240.group3.controller.TurnController
-import com.tdt4240.group3.game.playstate.PlaySubState
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.controller.systems.MovementSystem
 import com.tdt4240.group3.controller.systems.SelectionSystem
 import com.tdt4240.group3.controller.systems.TroopCreationSystem
 import com.tdt4240.group3.controller.systems.TurnSystem
+import com.tdt4240.group3.model.components.GameStateComponent
+import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PlayerTurnState
 import ktx.actors.onClick
 import ktx.app.KtxScreen
+import ktx.ashley.allOf
+import ktx.ashley.get
 import ktx.graphics.use
 
 class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : KtxScreen {
@@ -36,12 +37,9 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
     val camera = OrthographicCamera()
 
     private val turnSystem      = TurnSystem()
-    private val movementSystem = MovementSystem(turnSystem)
+    private val movementSystem = MovementSystem()
     private val troopCreationSystem = TroopCreationSystem(engine)
-    private val selectionSystem = SelectionSystem(turnSystem, movementSystem)
-
-    private val troopCreationController = TroopCreationController(troopCreationSystem, turnSystem)
-    private val turnController = TurnController(turnSystem, this, troopCreationController)
+    private val selectionSystem = SelectionSystem()
     private val pauseController = PauseController(turnSystem, this)
 
     private lateinit var stage: Stage
@@ -60,17 +58,16 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
             name = "Bikini Buttom", isCapital = true, baseProduction = 20,
             q = 8, r = 7, team = TeamComponent.TeamName.BLUE
         )
+        factory.createGameState()
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
         engine.addSystem(troopCreationSystem)
         engine.addSystem(movementSystem)
 
-        troopCreationSystem.createTroopsForTeam(turnSystem.currentTeam)
+        val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
+        val gs = gameState?.get(GameStateComponent.mapper)!!
+        troopCreationSystem.createTroopsForTeam(gs.currentTeam)
 
-
-        movementSystem.onTurnEnd = {
-            turnController.endTurn()
-        }
         currentState.enter(this)
     }
 
@@ -81,13 +78,16 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
 
         val root = Table().apply { setFillParent(true) }
 
-        turnLabel  = VisLabel("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}")  // now a field
+        val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
+        val gs = gameState?.get(GameStateComponent.mapper)!!
+
+        turnLabel  = VisLabel("Team: ${gs.currentTeam}   Turn: ${gs.turnCount}")  // now a field
         turnLabel.setFontScale(2f)
         val pauseBtn   = VisTextButton("PAUSE")
         val endTurnBtn = VisTextButton("END TURN")
 
         pauseBtn.onClick   { pauseController.togglePause(currentState) }
-        endTurnBtn.onClick { turnController.endTurn() }
+        endTurnBtn.onClick { turnSystem.endTurn() }
 
         root.top()
         root.add(turnLabel).expandX().left().pad(8f)
@@ -124,12 +124,16 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
             currentState.render(this@PlayScreen)
         }
 
+        updateLabel()
+
         // Stage draws on top of the game world — must be outside batch.use
         stage.act(delta)
         stage.draw()
     }
     fun updateLabel() {
-        turnLabel.setText("Team: ${turnSystem.currentTeam}   Turn: ${turnSystem.turnCount}")
+        val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
+        val gs = gameState?.get(GameStateComponent.mapper)!!
+        turnLabel.setText("Team: ${gs.currentTeam}   Turn: ${gs.turnCount}")
     }
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)

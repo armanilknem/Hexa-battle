@@ -15,6 +15,7 @@ import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent // add when ready
+import com.tdt4240.group3.model.components.marker.HighlightedComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely
@@ -85,7 +86,7 @@ class View(
 
     private fun drawTileHighlight(entity: Entity) {
         val tile = entity[TileComponent.mapper] ?: return
-        if (!tile.isHighlighted) return
+        if (entity.getComponent(HighlightedComponent::class.java) == null) {return}
         val pos = entity[PositionComponent.mapper] ?: return
 
         shapeRenderer.color = Color(1f, 1f, 1f, 0.5f)

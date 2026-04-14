@@ -1,37 +1,58 @@
 package com.tdt4240.group3.controller.systems
 
+import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
+import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
+import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
+import com.tdt4240.group3.model.components.marker.SelectableComponent
 import ktx.ashley.allOf
+import ktx.ashley.get
 
 class TurnSystem : EntitySystem() {
+    private val gameStateFamily = allOf(GameStateComponent::class).get()
 
-    var currentTeam: TeamComponent.TeamName = TeamComponent.TeamName.BLUE
-        private set
+    override fun update(deltaTime: Float) {
+        val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
 
-    var turnCount: Int = 1
-        private set
+        if (gameStateEntity.getComponent(NeedsTroopSpawnComponent::class.java) != null) {
+            return
+        }
 
-    private val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
+        val selectableTroops = engine.getEntitiesFor(allOf(SelectableComponent::class).get()).toList()
+
+        if (selectableTroops.isEmpty()) {
+            endTurn()
+        }
+    }
 
     fun endTurn() {
-        resetTroopMoves()
-        currentTeam = when (currentTeam) {
+        val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
+        val gs = gameState[GameStateComponent.mapper] ?: return
+
+        gs.currentTeam = when (gs.currentTeam) {
             TeamComponent.TeamName.BLUE -> TeamComponent.TeamName.RED
-            TeamComponent.TeamName.RED  -> TeamComponent.TeamName.BLUE
+            TeamComponent.TeamName.RED -> TeamComponent.TeamName.BLUE
             else -> throw IllegalStateException("currentTeam should never be NONE")
         }
-        if (currentTeam == TeamComponent.TeamName.BLUE){
-            turnCount++
+
+        if (gs.currentTeam == TeamComponent.TeamName.BLUE) {
+            gs.turnCount++
+        }
+        requestTroopSpawn(gameState)
+    }
+
+    fun isCurrentTeam(team: TeamComponent.TeamName): Boolean {
+        val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return false
+        val gs = gameState[GameStateComponent.mapper] ?: return false
+        return gs.currentTeam == team
+    }
+
+    private fun requestTroopSpawn(gameStateEntity: Entity) {
+        if (gameStateEntity.getComponent(NeedsTroopSpawnComponent::class.java) == null) {
+            gameStateEntity.add(engine.createComponent(NeedsTroopSpawnComponent::class.java))
         }
     }
 
-    private fun resetTroopMoves() {
-        engine.getEntitiesFor(troopFamily)
-            .filter { TeamComponent.mapper.get(it)?.team == currentTeam }
-            .forEach { TroopComponent.mapper.get(it)?.isMoved = false }
-    }
-
-    fun isCurrentTeam(team: TeamComponent.TeamName) = team == currentTeam
 }

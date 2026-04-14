@@ -1,4 +1,4 @@
-package com.tdt4240.group3.game.playstate
+package com.tdt4240.group3.view.states
 
 import com.tdt4240.group3.view.screens.PlayScreen
 

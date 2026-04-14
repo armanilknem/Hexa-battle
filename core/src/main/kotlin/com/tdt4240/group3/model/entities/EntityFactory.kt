@@ -9,6 +9,7 @@ import com.tdt4240.group3.model.components.TroopComponent
 import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
+import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.TileComponent
 import ktx.ashley.entity
 import ktx.ashley.with
@@ -35,8 +36,6 @@ class EntityFactory(private val engine: Engine) {
     fun createTroop( team: TeamComponent.TeamName, strength: Int, q: Int, r: Int) = engine.entity {
         with<TroopComponent> {
             this.strength = strength
-            this.isMoved = false
-            this.isClicked = false
         }
         with<PositionComponent> {
             this.q = q
@@ -78,5 +77,9 @@ class EntityFactory(private val engine: Engine) {
             this.r = r
             this.zIndex = 0 // Bottom layer
         }
+    }
+
+    fun createGameState() = engine.entity {
+        with<GameStateComponent>()
     }
 }

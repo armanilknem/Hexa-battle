@@ -2,45 +2,65 @@ package com.tdt4240.group3.controller.systems
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
+import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent
+import com.tdt4240.group3.model.components.marker.HighlightedComponent
+import com.tdt4240.group3.model.components.marker.MoveIntentComponent
+import com.tdt4240.group3.model.components.marker.SelectableComponent
+import com.tdt4240.group3.model.components.marker.SelectedComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
+import ktx.ashley.mapperFor
 
-class SelectionSystem(private val turnSystem: TurnSystem, private val movementSystem: MovementSystem) : EntitySystem() {
-    var selectedTroop: Entity? = null
-        private set
+class SelectionSystem() : EntitySystem() {
 
     private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
 
     fun handleTouch(worldX: Float, worldY: Float) {
         val clickedTroop = findTroopAt(worldX, worldY)
-        val clickedTile  = findTileAt(worldX, worldY)
+        val clickedTile = findTileAt(worldX, worldY)
+        val selectedTroop = findSelectedTroop()
 
         when {
-            clickedTroop != null -> {
-                val team = clickedTroop[TeamComponent.mapper]?.team ?: return
-                if (!turnSystem.isCurrentTeam(team)) return
+            // show highlighted area when selecting troop
+            clickedTroop != null && clickedTroop.getComponent(SelectableComponent::class.java) != null -> {
+                clearSelectedTroops()
                 clearHighlights()
-                selectedTroop = clickedTroop
+                clickedTroop.add(engine.createComponent(SelectedComponent::class.java))
                 highlightReachableTiles(clickedTroop)
             }
-            clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true -> {
-                selectedTroop?.let {
-                    movementSystem.moveTroop(it, clickedTile)
-                }
 
+            // moving a troop to a tile
+            clickedTile != null && clickedTile.getComponent(HighlightedComponent::class.java)
+                        != null && selectedTroop != null -> {
+                val intent = engine.createComponent(MoveIntentComponent::class.java)
+                val tilePos = clickedTile.getComponent(PositionComponent::class.java) ?: return
+                intent.targetQ = tilePos.q
+                intent.targetR = tilePos.r
+                selectedTroop.add(intent)
+                clearSelectedTroops()
                 clearHighlights()
-                selectedTroop = null
             }
+
+            // unselect when clicking outside or on same troop twice //FIX:
             else -> {
+                clearSelectedTroops()
                 clearHighlights()
-                selectedTroop = null
             }
         }
+    }
+
+    private fun findSelectedTroop(): Entity? {
+        return engine.getEntitiesFor(allOf(SelectedComponent::class, TroopComponent::class).get()).firstOrNull()
+    }
+
+    private fun clearSelectedTroops() {
+        val selected = engine.getEntitiesFor(allOf(SelectedComponent::class).get())
+        selected.toList().forEach { it.remove(SelectedComponent::class.java) }
     }
 
     private fun highlightReachableTiles(troop: Entity) {
@@ -49,15 +69,14 @@ class SelectionSystem(private val turnSystem: TurnSystem, private val movementSy
             if (!tileFamily.matches(entity)) return@forEach
             val hex = entity[PositionComponent.mapper] ?: return@forEach
             if (hexDistance(troopPos.q, troopPos.r, hex.q, hex.r) <= 2) {
-                entity[TileComponent.mapper]?.isHighlighted = true
+                entity.add(engine.createComponent(HighlightedComponent::class.java))
             }
         }
     }
 
     private fun clearHighlights() {
-        engine.entities.forEach { entity ->
-            entity[TileComponent.mapper]?.isHighlighted = false
-        }
+        val highlighted = engine.getEntitiesFor(allOf(HighlightedComponent::class).get())
+        highlighted.toList().forEach { it.remove(HighlightedComponent::class.java) }
     }
 
     private fun findTroopAt(worldX: Float, worldY: Float): Entity? {

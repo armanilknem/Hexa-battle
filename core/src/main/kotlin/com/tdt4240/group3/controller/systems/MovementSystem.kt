@@ -2,34 +2,28 @@ package com.tdt4240.group3.controller.systems
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
+import com.badlogic.ashley.systems.IteratingSystem
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent
+import com.tdt4240.group3.model.components.marker.MoveIntentComponent
+import com.tdt4240.group3.model.components.marker.SelectableComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 
-class MovementSystem(private val turnSystem: TurnSystem) : EntitySystem() {
+class MovementSystem : IteratingSystem(
+    allOf(PositionComponent::class, TeamComponent::class, TroopComponent::class, MoveIntentComponent::class,
+        SelectableComponent::class).get()
+) {
+    override fun processEntity(entity: Entity, deltaTime: Float) {
+        val pos = entity[PositionComponent.mapper] ?: return
+        val intent = entity[MoveIntentComponent.mapper] ?: return
 
-    var onTurnEnd: (() -> Unit)? = null  // PlayScreen sets this
-    private val troopFamily = allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
+        pos.q = intent.targetQ
+        pos.r = intent.targetR
 
-    fun moveTroop(troop: Entity, targetTile: Entity) {
-        val targetPos = targetTile[PositionComponent.mapper] ?: return
-        val troopPos  = troop[PositionComponent.mapper] ?: return
-
-        troopPos.q = targetPos.q
-        troopPos.r = targetPos.r
-
-        troop[TroopComponent.mapper]?.hasBeenMoved()
-
-        if (allTroopsMoved()) {
-            onTurnEnd?.invoke()
-        }
+        entity.remove(SelectableComponent::class.java)
+        entity.remove(MoveIntentComponent::class.java)
     }
-    private fun allTroopsMoved(): Boolean {
-        return engine.getEntitiesFor(troopFamily)
-            .filter { TeamComponent.mapper.get(it)?.team == turnSystem.currentTeam }
-            .all { TroopComponent.mapper.get(it)?.isMoved == true }
-    }
-
 }
