@@ -26,17 +26,9 @@ class SelectionSystem() : EntitySystem() {
         val selectedTroop = findSelectedTroop()
 
         when {
-            // show highlighted area when selecting troop
-            clickedTroop != null && clickedTroop.getComponent(SelectableComponent::class.java) != null -> {
-                clearSelectedTroops()
-                clearHighlights()
-                clickedTroop.add(engine.createComponent(SelectedComponent::class.java))
-                highlightReachableTiles(clickedTroop)
-            }
-
             // moving a troop to a tile
             clickedTile != null && clickedTile.getComponent(HighlightedComponent::class.java)
-                        != null && selectedTroop != null -> {
+                != null && selectedTroop != null -> {
                 val intent = engine.createComponent(MoveIntentComponent::class.java)
                 val tilePos = clickedTile.getComponent(PositionComponent::class.java) ?: return
                 intent.targetQ = tilePos.q
@@ -44,6 +36,14 @@ class SelectionSystem() : EntitySystem() {
                 selectedTroop.add(intent)
                 clearSelectedTroops()
                 clearHighlights()
+            }
+
+            // show highlighted area when selecting troop
+            clickedTroop != null && clickedTroop.getComponent(SelectableComponent::class.java) != null -> {
+                clearSelectedTroops()
+                clearHighlights()
+                clickedTroop.add(engine.createComponent(SelectedComponent::class.java))
+                highlightReachableTiles(clickedTroop)
             }
 
             // unselect when clicking outside or on same troop twice //FIX:
