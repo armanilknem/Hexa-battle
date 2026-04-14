@@ -44,6 +44,7 @@ class LobbyScreen(
 
     // playerId -> displayName
     private val connectedPlayers = mutableMapOf<String, String>()
+    private lateinit var backBtn: VisTextButton
 
     private lateinit var codeLabel: VisLabel
     private lateinit var countLabel: VisLabel
@@ -53,6 +54,7 @@ class LobbyScreen(
     override fun show() {
         if (!VisUI.isLoaded()) VisUI.load()
 
+        backBtn = VisTextButton("BACK")
         codeLabel = VisLabel("CODE: ${lobby.lobbyCode}")
         countLabel = VisLabel("PLAYERS: 0/${lobby.maxPlayerCount}")
         playerTable = Table()
@@ -68,6 +70,11 @@ class LobbyScreen(
         val root = Table().apply {
             setFillParent(true)
             center()
+        }
+
+        root.add(backBtn).left().pad(10f).row()
+        backBtn.onClick {
+            game.setScreen<LobbySelectScreen>()
         }
 
         root.add(codeLabel).padBottom(10f).row()
@@ -88,6 +95,7 @@ class LobbyScreen(
 
         stage.addActor(root)
     }
+
 
     private fun connectToChannel() {
         val channel = SupabaseClient.client.channel("lobby_${lobby.id}")
