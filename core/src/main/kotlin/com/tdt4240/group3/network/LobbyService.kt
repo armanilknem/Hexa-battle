@@ -3,7 +3,6 @@ package com.tdt4240.group3.network
 import com.tdt4240.group3.network.model.Lobby
 import com.tdt4240.group3.network.model.LobbyPlayer
 import com.tdt4240.group3.network.model.LobbyResult
-import com.tdt4240.group3.network.model.LobbyStatus
 import io.github.jan.supabase.postgrest.postgrest
 
 object LobbyService {
@@ -52,7 +51,7 @@ object LobbyService {
     suspend fun closeLobby(lobbyId: Int): Boolean {
         return try {
             postgrest["lobbies"].update({
-                set("status", LobbyStatus.CLOSED)
+                set("status", "closed")
             }) {
                 filter { eq("id", lobbyId) }
             }

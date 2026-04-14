@@ -12,18 +12,25 @@ import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.SupabaseClient
 import com.tdt4240.group3.network.model.Lobby
 import com.tdt4240.group3.network.model.LobbyStatus
+import com.tdt4240.group3.network.model.PresenceState
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.decodeRecord
 import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.postgresSingleDataFlow
+import io.github.jan.supabase.realtime.presenceDataFlow
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import ktx.actors.onClick
 import ktx.app.KtxScreen
@@ -88,59 +95,30 @@ class LobbyScreen(
     }
 
     private fun connectToChannel() {
-        val ch = SupabaseClient.client.channel("lobby_${lobby.id}") {
-            presence { key = game.myPlayerId }
-        }
-        channel = ch
+        val channel = SupabaseClient.client.channel("lobby_${lobby.id}")
+        this.channel = channel
 
-        ch.postgresChangeFlow<PostgresAction.Update>(schema = "public") {
-            table = "lobbies"
-            filter("id", FilterOperator.EQ, "${lobby.id}")
-        }
-            .onEach { action ->
-                lobby = action.decodeRecord()
-
-                if (lobby.status == LobbyStatus.PLAYING) {
-                    Gdx.app.postRunnable {
-                        game.setScreen<PlayScreen>()
-                    }
-                }
+        val presenceFlow = channel.presenceDataFlow<PresenceState>()
+        presenceFlow.onEach {
+            connectedPlayers.clear()
+            for (presence in it) {
+                connectedPlayers[presence.playerId] = presence.playerName
             }
-            .launchIn(scope)
+            refreshPlayerList()
+        }.launchIn(scope)
 
-        // Presence updates (joins/leaves only)
-        ch.presenceChangeFlow()
-            .onEach { action ->
-
-                // Joins
-                action.joins.forEach { (key, presence) ->
-                    val name = presence.state["playerName"]
-                        ?.let { it as? JsonPrimitive }
-                        ?.contentOrNull
-                        ?: key
-
-                    connectedPlayers[key] = name
-                }
-
-                // Leaves
-                action.leaves.keys.forEach { key ->
-                    connectedPlayers.remove(key)
-                }
-
-                refreshPlayerList()
-            }
-            .launchIn(scope)
-
-        // --- Now subscribe and track ---
         scope.launch {
-            ch.subscribe(blockUntilSubscribed = true)
-
-            ch.track(
-                buildJsonObject {
-                    put("playerId", game.myPlayerId)
-                    put("playerName", game.myPlayerName)
+            val lobbyFlow = channel.postgresSingleDataFlow(schema="public", table="lobbies", primaryKey=Lobby::id) {
+                eq("id", lobby.id!!)
+            }
+            lobbyFlow.onEach {
+                if (it.status === LobbyStatus.PLAYING) {
+                    game.setScreen<PlayScreen>()
                 }
-            )
+            }.launchIn(scope)
+
+            channel.subscribe(blockUntilSubscribed = true)
+            channel.track(Json.encodeToJsonElement(PresenceState(game.myPlayerId, game.myPlayerName)).jsonObject)
         }
     }
 
