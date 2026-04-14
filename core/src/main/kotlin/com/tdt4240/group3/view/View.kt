@@ -133,26 +133,31 @@ class View(
         }
     }
 
-    private fun drawCapitalCity(entity: Entity) {
+    private fun drawCity(
+        entity: Entity,
+        texture: Texture,
+        width: Float,
+        height: Float,
+        xOffset: Float,
+        yOffset: Float,
+        cityName: String? = null
+    ) {
         val pos = entity[PositionComponent.mapper] ?: return
+        batch.draw(texture, pos.x - width / 2f + xOffset, pos.y - height / 2f + yOffset, width, height)
+        if (cityName != null) {
+            font.data.setScale(0.7f)
+            font.draw(batch, cityName, pos.x - width / 2f + 5f, pos.y - height / 2f + yOffset)
+            font.data.setScale(1f)
+        }
+    }
+
+    private fun drawCapitalCity(entity: Entity) {
         val city = entity[CityComponent.mapper] ?: return
-        val width = 42f
-        val height = 42f
-        val yOffset = 5.5f
-        val xOffset = 1f
-        batch.draw(capitalCityTexture, pos.x - width / 2f + xOffset, pos.y - height / 2f + yOffset, width, height)
-        font.data.setScale(0.7f)
-        font.draw(batch, city.name, pos.x - width / 2f + 5f, pos.y - height / 2f + yOffset)
-        font.data.setScale(1f)
+        drawCity(entity, capitalCityTexture, width = 42f, height = 42f, xOffset = 1f, yOffset = 5.5f, cityName = city.name)
     }
 
     private fun drawNormalCity(entity: Entity) {
-        val pos = entity[PositionComponent.mapper] ?: return
-        val width = 68.5f
-        val height = 72f
-        val yOffset = 1.5f
-        val xOffset = 0f
-        batch.draw(normalCityTexture, pos.x - width / 2f + xOffset, pos.y - height / 2f + yOffset, width, height)
+        drawCity(entity, normalCityTexture, width = 68.5f, height = 72f, xOffset = 0f, yOffset = 1.5f)
     }
     private fun drawTroop(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
