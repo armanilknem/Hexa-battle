@@ -116,7 +116,9 @@ class LobbyScreen(
             }
             lobbyFlow.onEach {
                 if (it.status === LobbyStatus.PLAYING) {
-                    game.setScreen<PlayScreen>()
+                    Gdx.app.postRunnable {
+                        game.setScreen<PlayScreen>()
+                    }
                 }
             }.launchIn(scope)
 

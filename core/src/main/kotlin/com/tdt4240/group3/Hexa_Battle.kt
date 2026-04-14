@@ -6,22 +6,23 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.tdt4240.group3.model.systems.PlayerSystem
-import com.tdt4240.group3.model.systems.TileRenderSystem
-import com.tdt4240.group3.model.entities.EntityFactory
-import com.tdt4240.group3.model.systems.CityRenderSystem
-import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.network.PlayerService
 import com.tdt4240.group3.screens.*
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
+import com.tdt4240.group3.screens.MenuScreen
+import com.tdt4240.group3.screens.PlayScreen
+import com.tdt4240.group3.screens.OptionsScreen
+import com.tdt4240.group3.view.systems.View
 import ktx.assets.disposeSafely
+import kotlin.math.sqrt
 import java.util.UUID
 import kotlinx.coroutines.launch
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
     private lateinit var engine: Engine
-    private lateinit var cityRenderSystem: CityRenderSystem
+    private lateinit var view: View
     private lateinit var shapeRenderer: ShapeRenderer
 
     var myPlayerId: String = ""
@@ -38,6 +39,8 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
     lateinit var batch: SpriteBatch private set
     lateinit var font: BitmapFont private set
 
+
+
     override fun create() {
         KtxAsync.initiate()
         setupPlayerIdentity()
@@ -47,24 +50,19 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         shapeRenderer = ShapeRenderer()
 
         engine = Engine()
-
         engine.addSystem(PlayerSystem())
-        val playScreen = PlayScreen(this, engine)
-        engine.addSystem(TileRenderSystem(shapeRenderer, playScreen.camera))
-        cityRenderSystem = CityRenderSystem(batch, playScreen.camera)
-        engine.addSystem(cityRenderSystem)
 
-        val factory = EntityFactory(engine)
-        factory.createPlayer("Sander")
-        factory.generateRectangularGrid(12, 11)
-        factory.createCity(
-            name = "Manchester",
-            isCapital = true,
-            baseProduction = 20,
-            q = 5,
-            r = 5,
-            team = TeamComponent.TeamName.RED
-        )
+        val playScreen = PlayScreen(this, engine)
+        val cols = 12f
+        val rows = 11f
+        val centerX = 16f * (sqrt(3.0).toFloat() * (cols / 2f) + sqrt(3.0).toFloat() / 2f * (rows / 2f))
+        val centerY = 16f * (3f / 2f * (rows / 2f)) + 36f
+
+        playScreen.camera.position.set(centerX, centerY, 0f)
+        playScreen.camera.update()
+        // Single unified render system — no TileRenderSystem, no CityRenderSystem
+        view = View(batch, shapeRenderer, playScreen.camera, font)
+        engine.addSystem(view)
 
         addScreen(MenuScreen(this))
         addScreen(playScreen)
@@ -102,7 +100,6 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         font.disposeSafely()
         batch.disposeSafely()
         shapeRenderer.disposeSafely()
-        cityRenderSystem.disposeSafely()
         super.dispose()
     }
 }

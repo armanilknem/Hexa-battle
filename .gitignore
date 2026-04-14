@@ -1,3 +1,5 @@
+.claude/worktrees/
+
 ## Gradle:
 .gradle/
 gradle-app.setting
