@@ -61,11 +61,11 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         camera.position.set(Hexa_Battle.WIDTH / 2f, Hexa_Battle.HEIGHT / 2f, 0f)
         val factory = EntityFactory(engine)
         factory.generateRectangularGrid(18, 15)
-        factory.createCapitalCity(
+        factory.createCity(
             name = "Oslo", isCapital = true, baseProduction = 20,
             q = 1, r = 2, team = TeamComponent.TeamName.RED
         )
-        factory.createCapitalCity(
+        factory.createCity(
             name = "Bergen", isCapital = true, baseProduction = 20,
             q = 10, r = 11, team = TeamComponent.TeamName.BLUE
         )

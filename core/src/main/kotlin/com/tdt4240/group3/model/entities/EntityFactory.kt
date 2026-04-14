@@ -46,7 +46,7 @@ class EntityFactory(private val engine: Engine) {
             this.team = team
         }
     }
-    fun createCapitalCity(name: String, isCapital: Boolean, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
+    fun createCity(name: String, isCapital: Boolean, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
         with<CityComponent> {
             this.name = name
             this.baseProduction = baseProduction
@@ -104,7 +104,7 @@ class EntityFactory(private val engine: Engine) {
             if (!tooClose) {
                 placedCities.add(tile)
                 val name = cityNames.getOrElse(placedCities.size - 1) { "City ${placedCities.size}" }
-                createCapitalCity(
+                createCity(
                     name = name,
                     isCapital = false,
                     baseProduction = 10,
