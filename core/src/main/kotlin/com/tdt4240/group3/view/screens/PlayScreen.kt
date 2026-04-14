@@ -43,7 +43,6 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
     private val movementSystem = MovementSystem()
     private val troopCreationSystem = TroopCreationSystem(engine)
     private val selectionSystem = SelectionSystem()
-    private val selectionSystem = SelectionSystem(turnSystem)
     private val collisionSystem = CollisionSystem()
 
 
@@ -73,11 +72,6 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         engine.addSystem(movementSystem)
 
         troopCreationSystem.createTroopsForTeam(TeamComponent.TeamName.BLUE)
-        troopCreationSystem.createTroopsForTeam(TeamComponent.TeamName.RED)
-
-        val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
-        val gs = gameState?.get(GameStateComponent.mapper)!!
-        troopCreationSystem.createTroopsForTeam(gs.currentTeam)
 
         currentState.enter(this)
     }

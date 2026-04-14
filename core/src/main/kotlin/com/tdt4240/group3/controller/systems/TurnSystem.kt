@@ -4,7 +4,6 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.TeamComponent
-import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
 import com.tdt4240.group3.model.components.marker.SelectableComponent
 import ktx.ashley.allOf

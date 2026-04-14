@@ -6,16 +6,14 @@ import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
+import com.tdt4240.group3.model.components.marker.CollidingComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 
-class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionComponent::class, TeamComponent::class).get()){
+class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionComponent::class, TeamComponent::class, CollidingComponent::class).get()){
 
     override fun processEntity(movingEntity: Entity, deltaTime: Float) {
         val troop = movingEntity[TroopComponent.mapper]!!
-
-        // Only process if the troop has actually moved this turn
-        if (!troop.isColliding) return
 
         val pos = movingEntity[PositionComponent.mapper]!!
         val team = movingEntity[TeamComponent.mapper]!!
@@ -59,7 +57,8 @@ class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionCom
             }
         }
 
-        troop.isColliding = false
+        // Remove colliding component
+        movingEntity.remove(CollidingComponent::class.java)
     }
 
     private fun handleMerge(movingEntity: Entity, movingTroop: TroopComponent, stationaryEntity: Entity, stationaryTroop: TroopComponent): Boolean {
