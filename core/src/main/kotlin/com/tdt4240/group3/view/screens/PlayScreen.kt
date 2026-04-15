@@ -39,6 +39,9 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     private lateinit var turnLabel: VisLabel
     private lateinit var tooltipLabel: VisLabel
 
+    private val troopHighlightSystem = TroopHighlightSystem(turnSystem)
+
+
     init {
         setUpCamera()
         currentState.enter(this)
