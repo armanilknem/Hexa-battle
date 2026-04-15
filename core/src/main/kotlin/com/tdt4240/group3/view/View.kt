@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.utils.Disposable
 import com.tdt4240.group3.model.components.CityComponent
+import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
@@ -37,6 +38,7 @@ class View(
     private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
     private val cityFamily  = allOf(PositionComponent::class, CityComponent::class).get()
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class).get()
+    private val gameStateFamily = allOf(GameStateComponent::class).get()
 
     private val capitalCityTexture  = Texture(Gdx.files.internal("CapitalCity.png"))
     private val normalCityTexture = Texture(Gdx.files.internal("NormalCity.png"))
@@ -192,13 +194,20 @@ class View(
         val y = pos.y.toFloat()
         val size = 16f
 
-        shapeRenderer.color = when (team) {
-            TeamComponent.TeamName.RED -> Color(1f, 0f, 0f, 0.4f)  // 40% opacity red
-            TeamComponent.TeamName.BLUE -> Color(0f, 0f, 1f, 0.4f) // 40% opacity blue
-            else -> return
-        }
+        val alpha = if (team == getCurrentTeam()) 0.6f else 0.3f
 
+        shapeRenderer.color = when (team) {
+            TeamComponent.TeamName.RED -> Color(1f, 0.2f, 0.2f, alpha)
+            TeamComponent.TeamName.BLUE -> Color(0.2f, 0.45f, 1f, alpha)
+            TeamComponent.TeamName.NONE -> return
+        }
         this.drawFullHexTile(x, y, size)
+    }
+
+    private fun getCurrentTeam(): TeamComponent.TeamName {
+        val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull()
+        return gameState?.get(GameStateComponent.mapper)?.currentTeam
+            ?: TeamComponent.TeamName.NONE
     }
 
     private fun drawFullHexTile(x: Float, y: Float, size: Float) {
