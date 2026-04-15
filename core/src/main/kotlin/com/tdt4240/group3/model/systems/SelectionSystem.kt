@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
 import com.badlogic.gdx.Gdx
 import com.tdt4240.group3.controller.TurnController
+import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
@@ -17,12 +18,16 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
     var selectedTroop: Entity? = null
         private set
 
-    private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
-    private val troopFamily = allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
+    private val tileFamily = allOf(PositionComponent::class, TileComponent::class).get()
+
+    private val cityFamily  = allOf(PositionComponent::class, CityComponent::class).get()
+
+    private val troopFamily =
+        allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
 
     fun handleTouch(worldX: Float, worldY: Float) {
         val clickedTroop = findTroopAt(worldX, worldY)
-        val clickedTile  = findTileAt(worldX, worldY)
+        val clickedTile = findTileAt(worldX, worldY)
 
         if (selectedTroop != null && clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true) {
             selectedTroop?.get(TroopComponent.mapper)?.isClicked = false
@@ -43,6 +48,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
                 clickedTroop[TroopComponent.mapper]?.hasBeenClicked()
                 highlightReachableTiles(clickedTroop)
             }
+
             else -> {
                 selectedTroop?.get(TroopComponent.mapper)?.isClicked = false
                 clearHighlights()
@@ -64,7 +70,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
 
     private fun moveTroop(troop: Entity, targetTile: Entity) {
         val targetPos = targetTile[PositionComponent.mapper] ?: return
-        val troopPos  = troop[PositionComponent.mapper] ?: return
+        val troopPos = troop[PositionComponent.mapper] ?: return
 
         troopPos.prevQ = troopPos.q
         troopPos.prevR = troopPos.r
@@ -81,6 +87,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             onTurnEnd?.invoke()
         }
     }
+
     private fun allTroopsMoved(): Boolean {
         val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
         return engine.getEntitiesFor(troopFamily)
@@ -102,7 +109,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         }
     }
 
-    private fun findTileAt(worldX: Float, worldY: Float): Entity? {
+    fun findTileAt(worldX: Float, worldY: Float): Entity? {
         return engine.entities
             .filter { tileFamily.matches(it) }
             .minByOrNull { entity ->
@@ -115,6 +122,14 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
                 val pos = entity[PositionComponent.mapper] ?: return@takeIf false
                 Math.abs(pos.x.toFloat() - worldX) < 16f && Math.abs(pos.y.toFloat() - worldY) < 16f
             }
+    }
+
+    fun findCityAt(worldX: Float, worldY: Float): Entity? {
+        return engine.entities.firstOrNull { entity ->
+            if (!cityFamily.matches(entity)) return@firstOrNull false
+            val pos = entity[PositionComponent.mapper] ?: return@firstOrNull false
+            Math.abs(pos.x - worldX) < 16f && Math.abs(pos.y - worldY) < 16f
+        }
     }
 
     private fun hexDistance(q1: Int, r1: Int, q2: Int, r2: Int): Int {
