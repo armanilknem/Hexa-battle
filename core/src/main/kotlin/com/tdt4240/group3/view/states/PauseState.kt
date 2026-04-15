@@ -1,9 +1,8 @@
-package com.tdt4240.group3.states.playstate
+package com.tdt4240.group3.view.states
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
-import com.tdt4240.group3.game.playstate.PlaySubState
-import com.tdt4240.group3.screens.PlayScreen
+import com.tdt4240.group3.view.screens.PlayScreen
 import ktx.app.clearScreen
 
 class PauseState : PlaySubState {
