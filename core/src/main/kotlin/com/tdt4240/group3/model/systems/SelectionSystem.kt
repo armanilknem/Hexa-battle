@@ -56,10 +56,6 @@ class SelectionSystem() : EntitySystem() {
                     selectedTroop.add(engine.createComponent(CollidingComponent::class.java))
                 }
 
-                if (targetTroop != null) {
-                    targetTroop.remove(SelectableComponent::class.java)
-                }
-
                 selectedTroop.remove(SelectableComponent::class.java)
 
                 clearSelectedTroops()
