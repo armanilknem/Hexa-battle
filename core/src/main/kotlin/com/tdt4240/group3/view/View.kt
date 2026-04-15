@@ -30,6 +30,7 @@ class View(
     private val camera: OrthographicCamera,
     private val font: BitmapFont
 ) : EntitySystem(), Disposable {
+    private var stateTime = 0f
     private val backgroundTexture = Texture(Gdx.files.internal("hexaBackground.png"))
 
     // Three distinct families — one per entity type
@@ -47,6 +48,7 @@ class View(
     private val blueTroopTexture = Texture(Gdx.files.internal("blue_troop.png"))
 
     override fun update(deltaTime: Float) {
+        stateTime += deltaTime
         val entities = engine.entities
 
         batch.projectionMatrix = batch.projectionMatrix.idt() // identity projection
@@ -72,22 +74,36 @@ class View(
             }
         }
 
-        // Pass 2 — sprites
+        // Pass 2a — city sprites
         batch.projectionMatrix = camera.combined
         batch.use {
             entities
-                .filter { cityFamily.matches(it) || troopFamily.matches(it) }
+                .filter { cityFamily.matches(it) }
                 .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
                 .forEach { entity ->
-                    when {
-                        cityFamily.matches(entity) -> {
-                            val city = entity[CityComponent.mapper]
-                            if (city?.isCapital == true) drawCapitalCity(entity)
-                            else drawNormalCity(entity)
-                        }
-                        troopFamily.matches(entity) -> drawTroop(entity)
-                    }
+                    val city = entity[CityComponent.mapper]
+                    if (city?.isCapital == true) drawCapitalCity(entity)
+                    else drawNormalCity(entity)
                 }
+        }
+
+        // Pass 2b — unmoved troop highlights (above cities, below troops)
+        Gdx.gl.glEnable(GL20.GL_BLEND)
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+        shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
+            entities.forEach { entity ->
+                if (troopFamily.matches(entity)) drawUnmovedTroopHighlight(entity)
+            }
+        }
+        Gdx.gl.glDisable(GL20.GL_BLEND)
+
+        // Pass 2c — troop sprites (above highlights)
+        batch.projectionMatrix = camera.combined
+        batch.use {
+            entities
+                .filter { troopFamily.matches(it) }
+                .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
+                .forEach { entity -> drawTroop(entity) }
         }
     }
 
@@ -101,6 +117,31 @@ class View(
         val x = pos.x
         val y = pos.y
 
+        for (i in 0 until 6) {
+            val angle1 = (PI / 180) * (60 * i - 30)
+            val angle2 = (PI / 180) * (60 * (i + 1) - 30)
+            shapeRenderer.triangle(
+                x, y,
+                x + size * cos(angle1).toFloat(), y + size * sin(angle1).toFloat(),
+                x + size * cos(angle2).toFloat(), y + size * sin(angle2).toFloat()
+            )
+        }
+    }
+
+    private fun drawUnmovedTroopHighlight(entity: Entity) {
+        val troop = entity[TroopComponent.mapper] ?: return
+        if (!troop.isHighlighted) return
+
+        val pos = entity[PositionComponent.mapper] ?: return
+        val alpha = if (troop.isClicked)
+            0.55f + 0.25f * sin(stateTime * 4.0).toFloat()
+        else
+            0.6f
+        shapeRenderer.color = Color(1f, 0.85f, 0f, alpha)
+
+        val size = 18f
+        val x = pos.x
+        val y = pos.y
         for (i in 0 until 6) {
             val angle1 = (PI / 180) * (60 * i - 30)
             val angle2 = (PI / 180) * (60 * (i + 1) - 30)

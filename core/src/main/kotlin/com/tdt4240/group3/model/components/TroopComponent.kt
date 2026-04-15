@@ -10,6 +10,7 @@ class TroopComponent : Component, Pool.Poolable {
     var isMoved: Boolean = false
     var isClicked: Boolean = false
     var isColliding: Boolean = false
+    var isHighlighted: Boolean = false
 
 
     fun colliding(){
@@ -37,6 +38,7 @@ class TroopComponent : Component, Pool.Poolable {
         isMoved = false
         isClicked = false
         isColliding = false
+        isHighlighted = false
     }
 
 

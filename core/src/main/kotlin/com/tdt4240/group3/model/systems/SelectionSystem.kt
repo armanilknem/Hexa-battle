@@ -30,6 +30,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
         val clickedTile = findTileAt(worldX, worldY)
 
         if (selectedTroop != null && clickedTile != null && clickedTile[TileComponent.mapper]?.isHighlighted == true) {
+            selectedTroop?.get(TroopComponent.mapper)?.isClicked = false
             moveTroop(selectedTroop!!, clickedTile)
             clearHighlights()
             selectedTroop = null
@@ -40,13 +41,16 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
             clickedTroop != null -> {
                 val team = clickedTroop[TeamComponent.mapper]?.team ?: return
                 if (!turnSystem.isCurrentTeam(team)) return
+                selectedTroop?.get(TroopComponent.mapper)?.isClicked = false
                 if (clickedTroop[TroopComponent.mapper]?.isMoved == true) return
                 clearHighlights()
                 selectedTroop = clickedTroop
+                clickedTroop[TroopComponent.mapper]?.hasBeenClicked()
                 highlightReachableTiles(clickedTroop)
             }
 
             else -> {
+                selectedTroop?.get(TroopComponent.mapper)?.isClicked = false
                 clearHighlights()
                 selectedTroop = null
             }
@@ -76,6 +80,7 @@ class SelectionSystem(private val turnSystem: TurnSystem) : EntitySystem() {
 
         val troopComp = troop[TroopComponent.mapper]
         troopComp?.hasBeenMoved()
+        troopComp?.isClicked = false
         troopComp?.colliding()
 
         if (allTroopsMoved()) {
