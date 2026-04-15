@@ -9,6 +9,7 @@ import com.tdt4240.group3.model.systems.MovementSystem
 import com.tdt4240.group3.model.systems.SelectionSystem
 import com.tdt4240.group3.model.systems.TerritorySystem
 import com.tdt4240.group3.model.systems.TroopCreationSystem
+import com.tdt4240.group3.model.systems.TroopHighlightSystem
 import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.view.screens.PlayScreen
 
@@ -25,8 +26,9 @@ class PlayController(
         val collisionSystem = CollisionSystem()
         val troopCreationSystem = TroopCreationSystem(engine)
         val territorySystem = TerritorySystem()
+        val troopHighlightSystem = TroopHighlightSystem(turnSystem)
 
-        this.setUpSystems(turnSystem, selectionSystem, movementSystem, collisionSystem, troopCreationSystem, territorySystem)
+        this.setUpSystems(turnSystem, selectionSystem, movementSystem, collisionSystem, troopCreationSystem, territorySystem, troopHighlightSystem)
 
         val turnController = TurnController(turnSystem)
         val troopCreationController = TroopCreationController(troopCreationSystem)
@@ -41,13 +43,14 @@ class PlayController(
         return PlayScreen(game, engine, turnController, pauseController, selectionController)
     }
 
-    private fun setUpSystems(turnSystem: TurnSystem, selectionSystem: SelectionSystem, movementSystem: MovementSystem, collisionSystem: CollisionSystem, troopCreationSystem: TroopCreationSystem, territorySystem: TerritorySystem) {
+    private fun setUpSystems(turnSystem: TurnSystem, selectionSystem: SelectionSystem, movementSystem: MovementSystem, collisionSystem: CollisionSystem, troopCreationSystem: TroopCreationSystem, territorySystem: TerritorySystem, troopHighlightSystem: TroopHighlightSystem) {
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
         engine.addSystem(movementSystem)
         engine.addSystem(collisionSystem)
         engine.addSystem(troopCreationSystem)
         engine.addSystem(territorySystem)
+        engine.addSystem(troopHighlightSystem)
     }
 
     private fun setUpWorld() {

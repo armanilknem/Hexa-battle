@@ -18,6 +18,8 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent // add when ready
 import com.tdt4240.group3.model.components.marker.HighlightedComponent
+import com.tdt4240.group3.model.components.marker.SelectableComponent
+import com.tdt4240.group3.model.components.marker.SelectedComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely
@@ -139,7 +141,8 @@ class View(
         if (!troop.isHighlighted) return
 
         val pos = entity[PositionComponent.mapper] ?: return
-        val alpha = if (troop.isClicked)
+
+        val alpha = if (entity.getComponent(SelectedComponent::class.java) != null)
             0.55f + 0.25f * sin(stateTime * 4.0).toFloat()
         else
             0.6f
