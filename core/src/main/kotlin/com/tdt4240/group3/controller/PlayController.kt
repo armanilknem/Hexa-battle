@@ -56,12 +56,12 @@ class PlayController(
 
     private fun initializeCities() {
         factory.createCity(
-            name = "Manchester", isCapital = true, baseProduction = 20,
-            q = 3, r = 3, team = TeamComponent.TeamName.RED
+            name = "Oslo", isCapital = true, baseProduction = 20,
+            q = 1, r = 2, team = TeamComponent.TeamName.RED
         )
         factory.createCity(
-            name = "Bikini Buttom", isCapital = true, baseProduction = 20,
-            q = 8, r = 7, team = TeamComponent.TeamName.BLUE
+            name = "Bergen", isCapital = true, baseProduction = 20,
+            q = 10, r = 11, team = TeamComponent.TeamName.BLUE
         )
         factory.generateNormalCities(
             count = 20,
