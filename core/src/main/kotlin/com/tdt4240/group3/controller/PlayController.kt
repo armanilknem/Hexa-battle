@@ -60,6 +60,10 @@ class PlayController(
             name = "Bikini Buttom", isCapital = true, baseProduction = 20,
             q = 8, r = 7, team = TeamComponent.TeamName.BLUE
         )
+        factory.generateNormalCities(
+            count = 20,
+            capitalPositions = listOf(Pair(1, 2), Pair(10, 11))
+        )
     }
 
     private fun setUpInitialGameState() {
