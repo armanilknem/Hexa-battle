@@ -74,7 +74,20 @@ class View(
             }
         }
 
-        // Pass 1c — unmoved troop highlights (drawn before sprites so they appear under troops)
+        // Pass 2a — city sprites
+        batch.projectionMatrix = camera.combined
+        batch.use {
+            entities
+                .filter { cityFamily.matches(it) }
+                .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
+                .forEach { entity ->
+                    val city = entity[CityComponent.mapper]
+                    if (city?.isCapital == true) drawCapitalCity(entity)
+                    else drawNormalCity(entity)
+                }
+        }
+
+        // Pass 2b — unmoved troop highlights (above cities, below troops)
         Gdx.gl.glEnable(GL20.GL_BLEND)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
@@ -84,22 +97,13 @@ class View(
         }
         Gdx.gl.glDisable(GL20.GL_BLEND)
 
-        // Pass 2 — sprites
+        // Pass 2c — troop sprites (above highlights)
         batch.projectionMatrix = camera.combined
         batch.use {
             entities
-                .filter { cityFamily.matches(it) || troopFamily.matches(it) }
+                .filter { troopFamily.matches(it) }
                 .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
-                .forEach { entity ->
-                    when {
-                        cityFamily.matches(entity) -> {
-                            val city = entity[CityComponent.mapper]
-                            if (city?.isCapital == true) drawCapitalCity(entity)
-                            else drawNormalCity(entity)
-                        }
-                        troopFamily.matches(entity) -> drawTroop(entity)
-                    }
-                }
+                .forEach { entity -> drawTroop(entity) }
         }
     }
 
