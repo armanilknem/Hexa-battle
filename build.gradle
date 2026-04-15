@@ -9,7 +9,7 @@ buildscript {
   dependencies {
     classpath 'com.android.tools.build:gradle:9.0.0'
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-
+    classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlinVersion"
   }
 }
 
@@ -56,7 +56,6 @@ configure(subprojects - project(':android')) {
   }
   compileKotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
   compileTestKotlin.compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
-
 }
 
 subprojects {

@@ -8,6 +8,7 @@ import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.screens.LobbySelectScreen
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
@@ -29,7 +30,7 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
         val howToBtn    = VisTextButton("HOW TO PLAY")
         val optionsBtn  = VisTextButton("OPTIONS")
 
-        playBtn.onClick    { game.setScreen<LobbyScreen>() }
+        playBtn.onClick    { game.setScreen<LobbySelectScreen>() }
         howToBtn.onClick   { game.setScreen<HowToPlayScreen>() }
         optionsBtn.onClick { game.setScreen<OptionsScreen>() }
 

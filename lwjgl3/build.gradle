@@ -15,6 +15,7 @@ plugins {
 }
 apply plugin: 'io.github.fourlastor.construo'
 apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'org.jetbrains.kotlin.plugin.serialization'
 
 
 import io.github.fourlastor.construo.Target
@@ -36,6 +37,7 @@ dependencies {
   implementation "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
   implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
   implementation project(':core')
+  implementation "io.ktor:ktor-client-cio:$ktorVersion"
 
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-backend-lwjgl3:$graalHelperVersion"
