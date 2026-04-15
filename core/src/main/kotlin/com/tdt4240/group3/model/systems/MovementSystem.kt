@@ -7,6 +7,7 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.components.marker.MoveIntentComponent
 import com.tdt4240.group3.model.components.marker.SelectableComponent
+import com.tdt4240.group3.model.components.marker.TerritoryComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 
@@ -26,5 +27,8 @@ class MovementSystem : IteratingSystem(
 
         entity.remove(SelectableComponent::class.java)
         entity.remove(MoveIntentComponent::class.java)
+
+        val territoryMarker = engine.createComponent(TerritoryComponent::class.java)
+        entity.add(territoryMarker)
     }
 }

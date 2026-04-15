@@ -1,22 +1,34 @@
 package com.tdt4240.group3.model.systems
 
 import com.badlogic.ashley.core.Entity
-import com.badlogic.ashley.core.EntitySystem
+import com.badlogic.ashley.systems.IteratingSystem
 import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent
+import com.tdt4240.group3.model.components.marker.TerritoryComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 
-class TerritorySystem : EntitySystem() {
-
+class TerritorySystem : IteratingSystem(
+        allOf(PositionComponent::class,
+        TeamComponent::class,
+        TerritoryComponent::class
+    ).get()
+) {
     private val tileFamily = allOf(PositionComponent::class, TileComponent::class, TeamComponent::class).get()
 
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
 
     private val cityFamily = allOf(PositionComponent::class, CityComponent::class, TeamComponent::class).get()
+
+    override fun processEntity(entity: Entity, deltaTime: Float) {
+        val team = entity[TeamComponent.mapper] ?: return
+        this.claimTerritory(entity, team.team)
+
+        entity.remove(TerritoryComponent::class.java)
+    }
 
     fun claimTerritory(centerTile: Entity, team: TeamComponent.TeamName) {
         val centerPos = centerTile[PositionComponent.mapper] ?: return
@@ -26,7 +38,13 @@ class TerritorySystem : EntitySystem() {
     }
 
     private fun claimCenterTile(tile: Entity, q: Int, r: Int, team: TeamComponent.TeamName) {
-        tile[TeamComponent.mapper]?.team = team
+        val tileAtCenter = engine.entities.firstOrNull {
+            tileFamily.matches(it) &&
+                it[PositionComponent.mapper]?.q == q &&
+                it[PositionComponent.mapper]?.r == r
+        }
+
+        tileAtCenter?.get(TeamComponent.mapper)?.team = team
         findCityAt(q, r)?.get(TeamComponent.mapper)?.team = team
     }
 

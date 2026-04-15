@@ -61,7 +61,10 @@ class View(
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
             entities.forEach { entity ->
-                if (tileFamily.matches(entity)) drawTileHighlight(entity)
+                if (tileFamily.matches(entity)) {
+                    drawTileHighlight(entity)
+                    drawTerritory(entity)
+                }
             }
         }
         Gdx.gl.glDisable(GL20.GL_BLEND)
@@ -160,6 +163,7 @@ class View(
     private fun drawNormalCity(entity: Entity) {
         drawCity(entity, normalCityTexture, width = 68.5f, height = 72f, xOffset = 0f, yOffset = 1.5f)
     }
+
     private fun drawTroop(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
         val team = entity[TeamComponent.mapper] ?: return
@@ -177,6 +181,37 @@ class View(
             pos.x - 6f,
             pos.y + 20f
         )
+    }
+
+    private fun drawTerritory(entity: Entity) {
+        val team = entity[TeamComponent.mapper]?.team ?: return
+        if (team == TeamComponent.TeamName.NONE) return
+
+        val pos = entity[PositionComponent.mapper] ?: return
+        val x = pos.x.toFloat()
+        val y = pos.y.toFloat()
+        val size = 16f
+
+        shapeRenderer.color = when (team) {
+            TeamComponent.TeamName.RED -> Color(1f, 0f, 0f, 0.4f)  // 40% opacity red
+            TeamComponent.TeamName.BLUE -> Color(0f, 0f, 1f, 0.4f) // 40% opacity blue
+            else -> return
+        }
+
+        this.drawFullHexTile(x, y, size)
+    }
+
+    private fun drawFullHexTile(x: Float, y: Float, size: Float) {
+        for (i in 0 until 6) {
+            val angle1 = (PI / 180) * (60 * i - 30)
+            val angle2 = (PI / 180) * (60 * (i + 1) - 30)
+
+            shapeRenderer.triangle(
+                x, y, // Center point
+                x + size * cos(angle1).toFloat(), y + size * sin(angle1).toFloat(), // Vertex 1
+                x + size * cos(angle2).toFloat(), y + size * sin(angle2).toFloat()  // Vertex 2
+            )
+        }
     }
 
     private fun drawBackground() {

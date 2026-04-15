@@ -10,6 +10,7 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
 import com.tdt4240.group3.model.components.marker.SelectableComponent
+import com.tdt4240.group3.model.components.marker.TerritoryComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import ktx.ashley.allOf
 import ktx.ashley.get
@@ -61,7 +62,10 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
     fun createTroopsForTeam(team: TeamComponent.TeamName) {
         engine.getEntitiesFor(cityFamily)
             .filter { TeamComponent.mapper.get(it)?.team == team }
-            .forEach { createTroopFromCity(it) }
+            .forEach {
+                createTroopFromCity(it)
+                it.add(engine.createComponent(TerritoryComponent::class.java))
+            }
     }
 
     fun markSelectable(gs: GameStateComponent) {
