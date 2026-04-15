@@ -12,10 +12,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.utils.Disposable
 import com.tdt4240.group3.model.components.CityComponent
+import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
-import com.tdt4240.group3.model.components.TroopComponent
+import com.tdt4240.group3.model.components.TroopComponent // add when ready
+import com.tdt4240.group3.model.components.marker.HighlightedComponent
+import com.tdt4240.group3.model.components.marker.SelectableComponent
+import com.tdt4240.group3.model.components.marker.SelectedComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely
@@ -30,14 +34,18 @@ class View(
     private val camera: OrthographicCamera,
     private val font: BitmapFont
 ) : EntitySystem(), Disposable {
+    private var stateTime = 0f
     private val backgroundTexture = Texture(Gdx.files.internal("hexaBackground.png"))
 
     // Three distinct families — one per entity type
     private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
     private val cityFamily  = allOf(PositionComponent::class, CityComponent::class).get()
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class).get()
+    private val gameStateFamily = allOf(GameStateComponent::class).get()
 
-    private val cityTexture  = Texture(Gdx.files.internal("Manchester_City_FC_badge.svg.png"))
+    private val capitalCityTexture  = Texture(Gdx.files.internal("CapitalCity.png"))
+    private val normalCityTexture = Texture(Gdx.files.internal("NormalCity.png"))
+
     private val troopTexture = Texture(Gdx.files.internal("troop.png"))
 
     private val redTroopTexture = Texture(Gdx.files.internal("red_troop.png"))
@@ -45,6 +53,7 @@ class View(
     private val blueTroopTexture = Texture(Gdx.files.internal("blue_troop.png"))
 
     override fun update(deltaTime: Float) {
+        stateTime += deltaTime
         val entities = engine.entities
 
         batch.projectionMatrix = batch.projectionMatrix.idt() // identity projection
@@ -58,7 +67,10 @@ class View(
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
             entities.forEach { entity ->
-                if (tileFamily.matches(entity)) drawTileHighlight(entity)
+                if (tileFamily.matches(entity)) {
+                    drawTileHighlight(entity)
+                    drawTerritory(entity)
+                }
             }
         }
         Gdx.gl.glDisable(GL20.GL_BLEND)
@@ -70,24 +82,42 @@ class View(
             }
         }
 
-        // Pass 2 — sprites
+        // Pass 2a — city sprites
         batch.projectionMatrix = camera.combined
         batch.use {
             entities
-                .filter { cityFamily.matches(it) || troopFamily.matches(it) }
+                .filter { cityFamily.matches(it) }
                 .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
                 .forEach { entity ->
-                    when {
-                        cityFamily.matches(entity)  -> drawCity(entity)
-                        troopFamily.matches(entity) -> drawTroop(entity)
-                    }
+                    val city = entity[CityComponent.mapper]
+                    if (city?.isCapital == true) drawCapitalCity(entity)
+                    else drawNormalCity(entity)
                 }
+        }
+
+        // Pass 2b — unmoved troop highlights (above cities, below troops)
+        Gdx.gl.glEnable(GL20.GL_BLEND)
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+        shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
+            entities.forEach { entity ->
+                if (troopFamily.matches(entity)) drawUnmovedTroopHighlight(entity)
+            }
+        }
+        Gdx.gl.glDisable(GL20.GL_BLEND)
+
+        // Pass 2c — troop sprites (above highlights)
+        batch.projectionMatrix = camera.combined
+        batch.use {
+            entities
+                .filter { troopFamily.matches(it) }
+                .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
+                .forEach { entity -> drawTroop(entity) }
         }
     }
 
     private fun drawTileHighlight(entity: Entity) {
         val tile = entity[TileComponent.mapper] ?: return
-        if (!tile.isHighlighted) return
+        if (entity.getComponent(HighlightedComponent::class.java) == null) {return}
         val pos = entity[PositionComponent.mapper] ?: return
 
         shapeRenderer.color = Color(1f, 1f, 1f, 0.5f)
@@ -95,6 +125,32 @@ class View(
         val x = pos.x
         val y = pos.y
 
+        for (i in 0 until 6) {
+            val angle1 = (PI / 180) * (60 * i - 30)
+            val angle2 = (PI / 180) * (60 * (i + 1) - 30)
+            shapeRenderer.triangle(
+                x, y,
+                x + size * cos(angle1).toFloat(), y + size * sin(angle1).toFloat(),
+                x + size * cos(angle2).toFloat(), y + size * sin(angle2).toFloat()
+            )
+        }
+    }
+
+    private fun drawUnmovedTroopHighlight(entity: Entity) {
+        val troop = entity[TroopComponent.mapper] ?: return
+        if (!troop.isHighlighted) return
+
+        val pos = entity[PositionComponent.mapper] ?: return
+
+        val alpha = if (entity.getComponent(SelectedComponent::class.java) != null)
+            0.55f + 0.25f * sin(stateTime * 4.0).toFloat()
+        else
+            0.6f
+        shapeRenderer.color = Color(1f, 0.85f, 0f, alpha)
+
+        val size = 18f
+        val x = pos.x
+        val y = pos.y
         for (i in 0 until 6) {
             val angle1 = (PI / 180) * (60 * i - 30)
             val angle2 = (PI / 180) * (60 * (i + 1) - 30)
@@ -127,9 +183,31 @@ class View(
         }
     }
 
-    private fun drawCity(entity: Entity) {
+    private fun drawCity(
+        entity: Entity,
+        texture: Texture,
+        width: Float,
+        height: Float,
+        xOffset: Float,
+        yOffset: Float,
+        cityName: String? = null
+    ) {
         val pos = entity[PositionComponent.mapper] ?: return
-        batch.draw(cityTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
+        batch.draw(texture, pos.x - width / 2f + xOffset, pos.y - height / 2f + yOffset, width, height)
+        if (cityName != null) {
+            font.data.setScale(0.7f)
+            font.draw(batch, cityName, pos.x - width / 2f + 5f, pos.y - height / 2f + yOffset)
+            font.data.setScale(1f)
+        }
+    }
+
+    private fun drawCapitalCity(entity: Entity) {
+        val city = entity[CityComponent.mapper] ?: return
+        drawCity(entity, capitalCityTexture, width = 42f, height = 42f, xOffset = 1f, yOffset = 5.5f, cityName = city.name)
+    }
+
+    private fun drawNormalCity(entity: Entity) {
+        drawCity(entity, normalCityTexture, width = 68.5f, height = 72f, xOffset = 0f, yOffset = 1.5f)
     }
 
     private fun drawTroop(entity: Entity) {
@@ -151,14 +229,51 @@ class View(
         )
     }
 
+    private fun drawTerritory(entity: Entity) {
+        val team = entity[TeamComponent.mapper]?.team ?: return
+        if (team == TeamComponent.TeamName.NONE) return
+
+        val pos = entity[PositionComponent.mapper] ?: return
+        val x = pos.x.toFloat()
+        val y = pos.y.toFloat()
+        val size = 16f
+
+        val alpha = if (team == getCurrentTeam()) 0.6f else 0.3f
+
+        shapeRenderer.color = when (team) {
+            TeamComponent.TeamName.RED -> Color(1f, 0.2f, 0.2f, alpha)
+            TeamComponent.TeamName.BLUE -> Color(0.2f, 0.45f, 1f, alpha)
+            TeamComponent.TeamName.NONE -> return
+        }
+        this.drawFullHexTile(x, y, size)
+    }
+
+    private fun getCurrentTeam(): TeamComponent.TeamName {
+        val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull()
+        return gameState?.get(GameStateComponent.mapper)?.currentTeam
+            ?: TeamComponent.TeamName.NONE
+    }
+
+    private fun drawFullHexTile(x: Float, y: Float, size: Float) {
+        for (i in 0 until 6) {
+            val angle1 = (PI / 180) * (60 * i - 30)
+            val angle2 = (PI / 180) * (60 * (i + 1) - 30)
+
+            shapeRenderer.triangle(
+                x, y, // Center point
+                x + size * cos(angle1).toFloat(), y + size * sin(angle1).toFloat(), // Vertex 1
+                x + size * cos(angle2).toFloat(), y + size * sin(angle2).toFloat()  // Vertex 2
+            )
+        }
+    }
+
     private fun drawBackground() {
         batch.draw(backgroundTexture, -1f, -1f, 2f, 2f) // Using identity projection: drawing from (-1, -1) to (1, 1) fills the entire screen
     }
 
-
-
     override fun dispose() {
-        cityTexture.disposeSafely()
+        capitalCityTexture.disposeSafely()
+        normalCityTexture.disposeSafely()
         troopTexture.disposeSafely()
         backgroundTexture.disposeSafely()
         redTroopTexture.disposeSafely()

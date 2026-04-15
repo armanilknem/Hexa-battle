@@ -1,4 +1,4 @@
-package com.tdt4240.group3.screens
+package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -13,6 +13,7 @@ import com.tdt4240.group3.network.SupabaseClient
 import com.tdt4240.group3.network.model.Lobby
 import com.tdt4240.group3.network.model.LobbyStatus
 import com.tdt4240.group3.network.model.PresenceState
+import com.tdt4240.group3.screens.LobbySelectScreen
 import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresSingleDataFlow

@@ -7,38 +7,10 @@ import ktx.ashley.mapperFor
 
 class TroopComponent : Component, Pool.Poolable {
     var strength: Int = 0
-    var isMoved: Boolean = false
-    var isClicked: Boolean = false
-    var isColliding: Boolean = false
-
-
-    fun colliding(){
-        this.isColliding = true
-    }
-
-    fun hasBeenMoved(){
-        this.isMoved = true
-    }
-
-    fun hasBeenClicked(){
-        this.isClicked = true
-    }
-
-
+    var isHighlighted: Boolean = false
 
     override fun reset() {
-        strength = 0
-        isMoved = false
-        isClicked = false
-        isColliding = false
     }
-
-    fun resetForNewTurn(){
-        isMoved = false
-        isClicked = false
-        isColliding = false
-    }
-
 
     companion object {
         val mapper = mapperFor<TroopComponent>()

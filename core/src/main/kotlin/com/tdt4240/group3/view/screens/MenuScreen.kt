@@ -1,4 +1,4 @@
-package com.tdt4240.group3.screens
+package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -8,6 +8,7 @@ import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.screens.LobbySelectScreen
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
