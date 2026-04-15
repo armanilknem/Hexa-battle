@@ -1,9 +1,10 @@
-package com.tdt4240.group3.view.screens
+package com.tdt4240.group3.screens
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.InputMultiplexer
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.Vector3
@@ -15,18 +16,11 @@ import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PauseController
-import com.tdt4240.group3.controller.PlayController
 import com.tdt4240.group3.controller.SelectionController
 import com.tdt4240.group3.controller.TurnController
-import com.tdt4240.group3.model.components.TeamComponent
-import com.tdt4240.group3.model.entities.EntityFactory
-import com.tdt4240.group3.model.systems.CollisionSystem
-import com.tdt4240.group3.model.systems.MovementSystem
-import com.tdt4240.group3.model.systems.SelectionSystem
-import com.tdt4240.group3.model.systems.TroopCreationSystem
-import com.tdt4240.group3.model.systems.TurnSystem
+import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.GameStateComponent
-import com.tdt4240.group3.view.states.PauseState
+import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PlayerTurnState
 import ktx.actors.onClick
@@ -43,6 +37,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
 
     private lateinit var stage: Stage
     private lateinit var turnLabel: VisLabel
+    private lateinit var tooltipLabel: VisLabel
 
     init {
         setUpCamera()
@@ -109,13 +104,21 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     }
 
     private fun setUpInput() {
+        setupTooltip()
+
         val inputMultiplexer = InputMultiplexer()
         inputMultiplexer.addProcessor(stage)
         inputMultiplexer.addProcessor(object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                val worldCoords = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
+                val worldCoords =
+                    camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
                 selectionController.handleTouch(worldCoords.x, worldCoords.y)
                 return true
+            }
+
+            override fun mouseMoved(screenX: Int, screenY: Int): Boolean {
+                updateTooltip(screenX, screenY)
+                return false
             }
         })
         Gdx.input.inputProcessor = inputMultiplexer
@@ -125,6 +128,37 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
         val gs = gameState?.get(GameStateComponent.mapper)!!
         turnLabel.setText("Team: ${gs.currentTeam}   Turn: ${gs.turnCount}")
     }
+
+    private fun setupTooltip() {
+        tooltipLabel = VisLabel("").apply {
+            isVisible = false
+            setFontScale(1.2f)
+            color = Color.BLACK
+        }
+        stage.addActor(tooltipLabel)
+    }
+
+    private fun updateTooltip(screenX: Int, screenY: Int) {
+        val worldCoords = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
+        val tile = selectionController.findTileAt(worldCoords.x, worldCoords.y)
+        val pos = tile?.get(PositionComponent.mapper)
+        if (pos != null) {
+            val city = selectionController.findCityAt(worldCoords.x, worldCoords.y)
+            val cityName = city?.get(CityComponent.mapper)?.name
+            val text = if (cityName != null) "q: ${pos.q}, r: ${pos.r}\n$cityName"
+            else "q: ${pos.q}, r: ${pos.r}"
+            tooltipLabel.setText(text)
+            tooltipLabel.pack()
+            tooltipLabel.setPosition(
+                screenX.toFloat() + 12f,
+                stage.viewport.screenHeight - screenY.toFloat() + 12f
+            )
+            tooltipLabel.isVisible = true
+        } else {
+            tooltipLabel.isVisible = false
+        }
+    }
+
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)
     }
