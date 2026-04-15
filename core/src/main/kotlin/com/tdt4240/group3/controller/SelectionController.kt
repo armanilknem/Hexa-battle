@@ -8,4 +8,8 @@ class SelectionController(
     fun handleTouch(x: Float, y: Float) {
         selectionSystem.handleTouch(x, y)
     }
+
+    fun findTileAt(x: Float, y: Float) = selectionSystem.findTileAt(x, y)
+
+    fun findCityAt(x: Float, y: Float) = selectionSystem.findCityAt(x, y)
 }

@@ -1,4 +1,4 @@
-package com.tdt4240.group3.screens
+package com.tdt4240.group3.view.screens
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx

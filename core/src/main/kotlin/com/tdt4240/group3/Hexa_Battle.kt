@@ -12,7 +12,6 @@ import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
 import com.tdt4240.group3.view.screens.MenuScreen
-import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.view.screens.LobbyScreen
 import com.tdt4240.group3.view.screens.OptionsScreen
 import ktx.assets.disposeSafely

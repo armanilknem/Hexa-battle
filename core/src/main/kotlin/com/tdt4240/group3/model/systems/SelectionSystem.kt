@@ -8,6 +8,10 @@ import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.components.marker.HighlightedComponent
 import com.tdt4240.group3.model.components.marker.SelectedComponent
+import com.tdt4240.group3.model.components.marker.SelectableComponent
+import com.tdt4240.group3.model.components.CityComponent
+import com.tdt4240.group3.model.components.marker.MoveIntentComponent
+import com.tdt4240.group3.model.components.marker.CollidingComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 
@@ -111,7 +115,7 @@ class SelectionSystem() : EntitySystem() {
         }
     }
 
-    private fun findTileAt(worldX: Float, worldY: Float): Entity? {
+    fun findTileAt(worldX: Float, worldY: Float): Entity? {
         return engine.entities
             .filter { tileFamily.matches(it) }
             .minByOrNull { entity ->
