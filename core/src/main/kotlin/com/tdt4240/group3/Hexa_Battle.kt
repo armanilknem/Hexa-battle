@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.tdt4240.group3.controller.PlayController
 import com.tdt4240.group3.model.systems.PlayerSystem
 import com.tdt4240.group3.view.screens.HowToPlayScreen
 import com.tdt4240.group3.view.systems.View
@@ -43,7 +44,8 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         engine = Engine()
         engine.addSystem(PlayerSystem())
 
-        val playScreen = PlayScreen(this, engine)
+        val playController = PlayController(this, engine)
+        val playScreen = playController.createScreen()
         // Center camera on grid
         val cols = 12f
         val rows = 11f

@@ -15,6 +15,9 @@ import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PauseController
+import com.tdt4240.group3.controller.PlayController
+import com.tdt4240.group3.controller.SelectionController
+import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.CollisionSystem
@@ -23,6 +26,7 @@ import com.tdt4240.group3.model.systems.SelectionSystem
 import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.model.components.GameStateComponent
+import com.tdt4240.group3.view.states.PauseState
 import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PlayerTurnState
 import ktx.actors.onClick
@@ -31,85 +35,25 @@ import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.graphics.use
 
-class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : KtxScreen {
-
+class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, private val turnController: TurnController, private val pauseController: PauseController, private val selectionController: SelectionController) : KtxScreen {
     private var currentState: PlaySubState = PlayerTurnState()
     private var previousState: PlaySubState = PlayerTurnState()
+
     val camera = OrthographicCamera()
-
-    private val turnSystem      = TurnSystem()
-    private val movementSystem = MovementSystem()
-    private val troopCreationSystem = TroopCreationSystem(engine)
-    private val selectionSystem = SelectionSystem()
-    private val collisionSystem = CollisionSystem()
-
-
-    private val pauseController = PauseController(turnSystem, this)
 
     private lateinit var stage: Stage
     private lateinit var turnLabel: VisLabel
 
     init {
-        camera.setToOrtho(false, Hexa_Battle.WIDTH.toFloat(), Hexa_Battle.HEIGHT.toFloat())
-        camera.position.set(Hexa_Battle.WIDTH / 2f, Hexa_Battle.HEIGHT / 2f, 0f)
-        val factory = EntityFactory(engine)
-        factory.generateRectangularGrid(18, 15)
-        factory.createCity(
-            name = "Manchester", isCapital = true, baseProduction = 20,
-            q = 3, r = 3, team = TeamComponent.TeamName.RED
-        )
-        factory.createCity(
-            name = "Bikini Buttom", isCapital = true, baseProduction = 20,
-            q = 8, r = 7, team = TeamComponent.TeamName.BLUE
-        )
-        factory.createGameState()
-        engine.addSystem(turnSystem)
-        engine.addSystem(selectionSystem)
-        engine.addSystem(movementSystem)
-        engine.addSystem(collisionSystem)
-        engine.addSystem(troopCreationSystem)
-
-        troopCreationSystem.createTroopsForTeam(TeamComponent.TeamName.BLUE)
-
+        setUpCamera()
         currentState.enter(this)
     }
 
     override fun show() {
         if (!VisUI.isLoaded()) VisUI.load()
-
-        stage = Stage(ScreenViewport())
-
-        val root = Table().apply { setFillParent(true) }
-
-        val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
-        val gs = gameState?.get(GameStateComponent.mapper)!!
-
-        turnLabel  = VisLabel("Team: ${gs.currentTeam}   Turn: ${gs.turnCount}")  // now a field
-        turnLabel.setFontScale(2f)
-        val pauseBtn   = VisTextButton("PAUSE")
-        val endTurnBtn = VisTextButton("END TURN")
-
-        pauseBtn.onClick   { pauseController.togglePause(currentState) }
-        endTurnBtn.onClick { turnSystem.endTurn() }
-
-        root.top()
-        root.add(turnLabel).expandX().left().pad(8f)
-        root.add(pauseBtn).right().pad(8f)
-        root.add(endTurnBtn).right().pad(8f).row()
-
-
-        stage.addActor(root)
-
-        val inputMultiplexer = InputMultiplexer()
-        inputMultiplexer.addProcessor(stage)
-        inputMultiplexer.addProcessor(object : InputAdapter() {
-            override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                val worldCoords = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
-                selectionSystem.handleTouch(worldCoords.x, worldCoords.y)
-                return true
-            }
-        })
-        Gdx.input.inputProcessor = inputMultiplexer
+        setUpStage()
+        setUpUI()
+        setUpInput()
     }
 
     override fun render(delta: Float) {
@@ -127,13 +71,56 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
             currentState.render(this@PlayScreen)
         }
 
-        updateLabel()
+        updateTurnLabel()
 
         // Stage draws on top of the game world — must be outside batch.use
         stage.act(delta)
         stage.draw()
     }
-    fun updateLabel() {
+
+    private fun setUpCamera() {
+        camera.setToOrtho(false, Hexa_Battle.WIDTH.toFloat(), Hexa_Battle.HEIGHT.toFloat())
+        camera.position.set(Hexa_Battle.WIDTH / 2f, Hexa_Battle.HEIGHT / 2f, 0f)
+    }
+
+    private fun setUpStage() {
+        stage = Stage(ScreenViewport())
+    }
+
+    private fun setUpUI() {
+        val root = Table().apply { setFillParent(true) }
+        val gs = getGameState()
+
+        turnLabel  = VisLabel("Team: ${gs.currentTeam}   Turn: ${gs.turnCount}")  // now a field
+        turnLabel.setFontScale(2f)
+
+        val pauseBtn   = VisTextButton("PAUSE")
+        val endTurnBtn = VisTextButton("END TURN")
+
+        pauseBtn.onClick   { togglePause() }
+        endTurnBtn.onClick { turnController.endTurn() }
+
+        root.top()
+        root.add(turnLabel).expandX().left().pad(8f)
+        root.add(pauseBtn).right().pad(8f)
+        root.add(endTurnBtn).right().pad(8f).row()
+
+        stage.addActor(root)
+    }
+
+    private fun setUpInput() {
+        val inputMultiplexer = InputMultiplexer()
+        inputMultiplexer.addProcessor(stage)
+        inputMultiplexer.addProcessor(object : InputAdapter() {
+            override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                val worldCoords = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
+                selectionController.handleTouch(worldCoords.x, worldCoords.y)
+                return true
+            }
+        })
+        Gdx.input.inputProcessor = inputMultiplexer
+    }
+    private fun updateTurnLabel() {
         val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
         val gs = gameState?.get(GameStateComponent.mapper)!!
         turnLabel.setText("Team: ${gs.currentTeam}   Turn: ${gs.turnCount}")
@@ -147,6 +134,16 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine) : Kt
         previousState = currentState
         currentState = newState
         currentState.enter(this)
+    }
+
+    private fun getGameState(): GameStateComponent {
+        val gameStateEntity = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
+        return gameStateEntity?.get(GameStateComponent.mapper)
+            ?: error("GameStateComponent was not found")
+    }
+
+    private fun togglePause() {
+        changeState(pauseController.togglePause(currentState, previousState))
     }
 
     fun goToMenu() { game.setScreen<MenuScreen>() }
