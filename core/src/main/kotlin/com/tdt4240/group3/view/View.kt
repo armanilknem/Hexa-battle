@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.utils.Disposable
+import com.tdt4240.group3.model.components.CapitalComponent
 import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.PositionComponent
@@ -18,8 +19,9 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent // add when ready
 import com.tdt4240.group3.model.components.marker.HighlightedComponent
-import com.tdt4240.group3.model.components.marker.SelectableComponent
 import com.tdt4240.group3.model.components.marker.SelectedComponent
+import com.tdt4240.group3.view.theme.CityStyleRegistry
+import com.tdt4240.group3.view.theme.TeamStyleRegistry
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely
@@ -43,14 +45,7 @@ class View(
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class).get()
     private val gameStateFamily = allOf(GameStateComponent::class).get()
 
-    private val capitalCityTexture  = Texture(Gdx.files.internal("CapitalCity.png"))
-    private val normalCityTexture = Texture(Gdx.files.internal("NormalCity.png"))
-
-    private val troopTexture = Texture(Gdx.files.internal("troop.png"))
-
-    private val redTroopTexture = Texture(Gdx.files.internal("red_troop.png"))
-
-    private val blueTroopTexture = Texture(Gdx.files.internal("blue_troop.png"))
+    private val teamStyleRegistry = TeamStyleRegistry
 
     override fun update(deltaTime: Float) {
         stateTime += deltaTime
@@ -89,9 +84,9 @@ class View(
                 .filter { cityFamily.matches(it) }
                 .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
                 .forEach { entity ->
-                    val city = entity[CityComponent.mapper]
-                    if (city?.isCapital == true) drawCapitalCity(entity)
-                    else drawNormalCity(entity)
+                    if (entity.getComponent(CapitalComponent::class.java) != null) {
+                        drawCapitalCity(entity)
+                    } else drawNormalCity(entity)
                 }
         }
 
@@ -116,7 +111,6 @@ class View(
     }
 
     private fun drawTileHighlight(entity: Entity) {
-        val tile = entity[TileComponent.mapper] ?: return
         if (entity.getComponent(HighlightedComponent::class.java) == null) {return}
         val pos = entity[PositionComponent.mapper] ?: return
 
@@ -142,6 +136,7 @@ class View(
 
         val pos = entity[PositionComponent.mapper] ?: return
 
+        // Make the highlight pulsate when selected
         val alpha = if (entity.getComponent(SelectedComponent::class.java) != null)
             0.55f + 0.25f * sin(stateTime * 4.0).toFloat()
         else
@@ -164,8 +159,8 @@ class View(
 
     private fun drawTile(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
-        val x = pos.x.toFloat()
-        val y = pos.y.toFloat()
+        val x = pos.x
+        val y = pos.y
         val size = 16f
 
         shapeRenderer.color = Color.BLACK
@@ -185,15 +180,17 @@ class View(
 
     private fun drawCity(
         entity: Entity,
-        texture: Texture,
-        width: Float,
-        height: Float,
-        xOffset: Float,
-        yOffset: Float,
         cityName: String? = null
     ) {
         val pos = entity[PositionComponent.mapper] ?: return
-        batch.draw(texture, pos.x - width / 2f + xOffset, pos.y - height / 2f + yOffset, width, height)
+        val visuals = CityStyleRegistry.getFor(entity)
+
+        val width = visuals.width
+        val height = visuals.height
+        val xOffset = visuals.xOffset
+        val yOffset = visuals.yOffset
+
+        batch.draw(visuals.texture, pos.x - width / 2f + xOffset, pos.y - height / 2f + yOffset, width, height)
         if (cityName != null) {
             font.data.setScale(0.7f)
             font.draw(batch, cityName, pos.x - width / 2f + 5f, pos.y - height / 2f + yOffset)
@@ -203,22 +200,23 @@ class View(
 
     private fun drawCapitalCity(entity: Entity) {
         val city = entity[CityComponent.mapper] ?: return
-        drawCity(entity, capitalCityTexture, width = 42f, height = 42f, xOffset = 1f, yOffset = 5.5f, cityName = city.name)
+        drawCity(entity, cityName = city.name)
     }
 
     private fun drawNormalCity(entity: Entity) {
-        drawCity(entity, normalCityTexture, width = 68.5f, height = 72f, xOffset = 0f, yOffset = 1.5f)
+        drawCity(entity)
     }
 
     private fun drawTroop(entity: Entity) {
         val pos = entity[PositionComponent.mapper] ?: return
         val team = entity[TeamComponent.mapper] ?: return
         val troop = entity[TroopComponent.mapper] ?: return
+        val strength = troop.strength
 
-        if (team.team == TeamComponent.TeamName.RED) {
-            batch.draw(redTroopTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
-        } else if (team.team == TeamComponent.TeamName.BLUE) {
-            batch.draw(blueTroopTexture, pos.x - 8f, pos.y - 8f, 16f, 16f)
+        // get texture from teamsStyleRegistry based off name and strength
+        val texture = teamStyleRegistry.get(team.team, strength).troopTexture
+        if (texture != null) {
+            batch.draw(texture, pos.x - 8f, pos.y - 8f, 16f, 16f)
         }
 
         font.draw(
@@ -228,23 +226,22 @@ class View(
             pos.y + 20f
         )
     }
-
     private fun drawTerritory(entity: Entity) {
         val team = entity[TeamComponent.mapper]?.team ?: return
         if (team == TeamComponent.TeamName.NONE) return
 
         val pos = entity[PositionComponent.mapper] ?: return
-        val x = pos.x.toFloat()
-        val y = pos.y.toFloat()
+        val x = pos.x
+        val y = pos.y
         val size = 16f
 
+        // make territory semi-transparent for other teams
         val alpha = if (team == getCurrentTeam()) 0.6f else 0.3f
 
-        shapeRenderer.color = when (team) {
-            TeamComponent.TeamName.RED -> Color(1f, 0.2f, 0.2f, alpha)
-            TeamComponent.TeamName.BLUE -> Color(0.2f, 0.45f, 1f, alpha)
-            TeamComponent.TeamName.NONE -> return
-        }
+        // get team color from teamStyleRegistry
+        val color = teamStyleRegistry.get(team, 20).territoryColor.cpy()
+        shapeRenderer.color = color.apply { a = alpha }
+
         this.drawFullHexTile(x, y, size)
     }
 
@@ -272,11 +269,8 @@ class View(
     }
 
     override fun dispose() {
-        capitalCityTexture.disposeSafely()
-        normalCityTexture.disposeSafely()
-        troopTexture.disposeSafely()
         backgroundTexture.disposeSafely()
-        redTroopTexture.disposeSafely()
-        blueTroopTexture.disposeSafely()
+        teamStyleRegistry.dispose()
+        CityStyleRegistry.dispose()
     }
 }

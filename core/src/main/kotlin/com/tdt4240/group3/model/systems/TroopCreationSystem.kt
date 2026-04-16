@@ -14,8 +14,6 @@ import com.tdt4240.group3.model.components.marker.TerritoryComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import ktx.ashley.allOf
 import ktx.ashley.get
-import kotlin.compareTo
-import kotlin.text.get
 
 class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
     private val factory = EntityFactory(engine)

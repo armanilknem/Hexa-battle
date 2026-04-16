@@ -7,8 +7,7 @@ import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.badlogic.ashley.core.Entity
-import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.g2d.TextureRegion
+import com.tdt4240.group3.model.components.CapitalComponent
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.TileComponent
 import ktx.ashley.entity
@@ -34,7 +33,7 @@ class EntityFactory(private val engine: Engine) {
         }
     }
 
-    fun createTroop( team: TeamComponent.TeamName, strength: Int, q: Int, r: Int) = engine.entity {
+    fun createTroop(team: TeamComponent.TeamName, strength: Int, q: Int, r: Int) = engine.entity {
         with<TroopComponent> {
             this.strength = strength
         }
@@ -47,11 +46,10 @@ class EntityFactory(private val engine: Engine) {
             this.team = team
         }
     }
-    fun createCity(name: String, isCapital: Boolean, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
+    fun createCity(name: String, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
         with<CityComponent> {
             this.name = name
             this.baseProduction = baseProduction
-            this.isCapital = isCapital
         }
         with<PositionComponent> {
             this.q = q
@@ -62,7 +60,24 @@ class EntityFactory(private val engine: Engine) {
             this.team = team
         }
     }
-    fun createTroopFromCity(cityEntity: com.badlogic.ashley.core.Entity): com.badlogic.ashley.core.Entity {
+
+    fun createCapital(name: String, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
+        with<CityComponent> {
+            this.name = name
+            this.baseProduction = baseProduction
+        }
+        with<PositionComponent> {
+            this.q = q
+            this.r = r
+            this.zIndex = 1 // Middle layer
+        }
+        with<TeamComponent> {
+            this.team = team
+        }
+        with<CapitalComponent> {}
+    }
+
+    fun createTroopFromCity(cityEntity: Entity): Entity {
         val city = CityComponent.mapper.get(cityEntity)
         val position = PositionComponent.mapper.get(cityEntity)
         val team = TeamComponent.mapper.get(cityEntity)
@@ -114,7 +129,6 @@ class EntityFactory(private val engine: Engine) {
                 val name = cityNames.getOrElse(placedCities.size - 1) { "City ${placedCities.size}" }
                 createCity(
                     name = name,
-                    isCapital = false,
                     baseProduction = 10,
                     q = tile.first,
                     r = tile.second,

@@ -6,12 +6,10 @@ import ktx.ashley.mapperFor
 class CityComponent : Component, Pool.Poolable {
     var name: String = ""
     var baseProduction = 10
-    var isCapital: Boolean = false
 
     override fun reset() {
         name = ""
         baseProduction = 10
-        isCapital = false
     }
 
     companion object {
