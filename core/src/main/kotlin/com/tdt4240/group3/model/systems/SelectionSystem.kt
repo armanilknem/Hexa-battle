@@ -9,6 +9,8 @@ import ktx.ashley.*
 
 class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get()) {
 
+    private val gameStateFamily = allOf(GameStateComponent::class).get()
+
     override fun processEntity(entity: Entity, deltaTime: Float) {
         val input = entity[TouchInputComponent.mapper] ?: return
 
@@ -52,6 +54,11 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
             targetQ = tilePos.q
             targetR = tilePos.r
         })
+
+        // Decrement move counter in the GameState
+        engine.getEntitiesFor(gameStateFamily).firstOrNull()
+            ?.get(GameStateComponent.mapper)
+            ?.let { it.movesLeft-- }
 
         // Check for collision at target
         val targetOccupied = HexMapService.findTroopAt(engine, tilePos.x.toFloat(), tilePos.y.toFloat()) != null ||
