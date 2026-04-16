@@ -10,6 +10,7 @@ import com.tdt4240.group3.model.components.marker.HighlightedComponent
 import com.tdt4240.group3.model.components.marker.SelectedComponent
 import com.tdt4240.group3.model.components.marker.SelectableComponent
 import com.tdt4240.group3.model.components.CityComponent
+import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.marker.MoveIntentComponent
 import com.tdt4240.group3.model.components.marker.CollidingComponent
 import ktx.ashley.allOf
@@ -24,6 +25,7 @@ class SelectionSystem() : EntitySystem() {
     private val troopFamily =
         allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
 
+    private val gameStateFamily = allOf(GameStateComponent::class).get()
     fun handleTouch(worldX: Float, worldY: Float) {
         val clickedTroop = findTroopAt(worldX, worldY)
         val clickedTile = findTileAt(worldX, worldY)
@@ -57,6 +59,11 @@ class SelectionSystem() : EntitySystem() {
                 }
 
                 selectedTroop.remove(SelectableComponent::class.java)
+
+                // Decrement move counter
+                engine.getEntitiesFor(gameStateFamily).firstOrNull()
+                    ?.get(GameStateComponent.mapper)
+                    ?.let { it.movesLeft-- }
 
                 clearSelectedTroops()
                 clearHighlights()

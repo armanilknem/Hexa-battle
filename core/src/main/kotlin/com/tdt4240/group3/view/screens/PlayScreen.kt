@@ -87,7 +87,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
         val root = Table().apply { setFillParent(true) }
         val gs = getGameState()
 
-        turnLabel  = VisLabel("Team: ${gs.currentTeam}   Turn: ${gs.turnCount}")  // now a field
+        turnLabel  = VisLabel("Team: ${gs.currentTeam}   Turn: ${gs.turnCount} Moves Left: ${gs.movesLeft}")  // now a field
         turnLabel.setFontScale(2f)
 
         val pauseBtn   = VisTextButton("PAUSE")
@@ -127,7 +127,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     private fun updateTurnLabel() {
         val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
         val gs = gameState?.get(GameStateComponent.mapper)!!
-        turnLabel.setText("Team: ${gs.currentTeam}   Turn: ${gs.turnCount}")
+        turnLabel.setText("Team: ${gs.currentTeam}   Turn: ${gs.turnCount} Moves Left: ${gs.movesLeft}")
     }
 
     private fun setupTooltip() {
