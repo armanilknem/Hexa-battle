@@ -28,4 +28,8 @@ object MapData {
         "Stord", "Svelvik", "Svolvaer", "Toensberg", "Tromsoe", "Trondheim", "Tvedestrand",
         "Ulsteinvik", "Vadsoe", "Vardoe", "Farsund", "Maaloey", "Verdal", "Vestby", "Vinstra"
     )
+
+    val CAPITAL_NAMES = listOf(
+        "London", "Paris", "Berlin", "Rome", "Madrid", "Tokyo", "Washington", "Beijing", "Cairo", "Brasilia"
+    )
 }

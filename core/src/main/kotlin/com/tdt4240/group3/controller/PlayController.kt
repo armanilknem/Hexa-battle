@@ -1,7 +1,9 @@
 package com.tdt4240.group3.controller
 
 import com.badlogic.ashley.core.Engine
+import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.systems.CollisionSystem
@@ -12,6 +14,7 @@ import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TroopHighlightSystem
 import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.view.screens.PlayScreen
+import ktx.ashley.get
 
 class PlayController(
     private val game: Hexa_Battle,
@@ -35,10 +38,10 @@ class PlayController(
         val pauseController = PauseController()
         val selectionController = SelectionController(selectionSystem)
 
-        this.setUpInitialGameState()
+        val gameStateEntity = this.setUpInitialGameState()
         this.setUpWorld()
-        this.initializeCities()
-        this.initializeTroops(troopCreationController)
+        this.initializeCities(gameStateEntity)
+        this.initializeTroops(troopCreationController, gameStateEntity)
 
         return PlayScreen(game, engine, turnController, pauseController, selectionController)
     }
@@ -57,26 +60,23 @@ class PlayController(
         factory.generateRectangularGrid(18, 15)
     }
 
-    private fun initializeCities() {
-        factory.createCapital(
-            name = "Oslo", baseProduction = 20,
-            q = 1, r = 2, team = TeamComponent.TeamName.RED
-        )
-        factory.createCapital(
-            name = "Bergen", baseProduction = 20,
-            q = 10, r = 11, team = TeamComponent.TeamName.BLUE
-        )
+    private fun initializeCities(gameStateEntity: Entity) {
+        val gs = gameStateEntity[GameStateComponent.mapper] ?: return
+        factory.generateCapitals(gs.activeTeams)
         factory.generateNormalCities(
             count = 20,
             capitalPositions = listOf(Pair(1, 2), Pair(10, 11))
         )
     }
 
-    private fun setUpInitialGameState() {
-        factory.createGameState()
+    private fun setUpInitialGameState(): Entity {
+        return factory.createGameState(
+            listOf(TeamComponent.TeamName.RED, TeamComponent.TeamName.BLUE)
+        )
     }
 
-    private fun initializeTroops(troopCreationController: TroopCreationController) {
-        troopCreationController.createTroopsForTeam(TeamComponent.TeamName.BLUE)
+    private fun initializeTroops(troopCreationController: TroopCreationController, gameState: Entity) {
+        val gs = gameState[GameStateComponent.mapper] ?: return
+        troopCreationController.createTroopsForTeam(gs.currentTeam)
     }
 }

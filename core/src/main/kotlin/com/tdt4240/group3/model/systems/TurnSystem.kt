@@ -30,15 +30,14 @@ class TurnSystem : EntitySystem() {
         val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
         val gs = gameState[GameStateComponent.mapper] ?: return
 
-        gs.currentTeam = when (gs.currentTeam) {
-            TeamComponent.TeamName.BLUE -> TeamComponent.TeamName.RED
-            TeamComponent.TeamName.RED -> TeamComponent.TeamName.BLUE
-            else -> throw IllegalStateException("currentTeam should never be NONE")
-        }
+        if (gs.activeTeams.isEmpty()) return
 
-        if (gs.currentTeam == TeamComponent.TeamName.BLUE) {
+        gs.currentTeamIndex = (gs.currentTeamIndex + 1) % gs.activeTeams.size
+
+        if (gs.currentTeamIndex == 0) {
             gs.turnCount++
         }
+
         requestTroopSpawn(gameState)
     }
 

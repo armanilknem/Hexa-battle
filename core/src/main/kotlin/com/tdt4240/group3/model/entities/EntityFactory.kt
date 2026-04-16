@@ -98,8 +98,50 @@ class EntityFactory(private val engine: Engine) {
         }
     }
 
-    fun createGameState() = engine.entity {
-        with<GameStateComponent>()
+    fun createGameState(activeTeams: List<TeamComponent.TeamName>) = engine.entity {
+        with<GameStateComponent> {
+            initialize(activeTeams)
+        }
+    }
+
+    fun generateCapitals(teams: List<TeamComponent.TeamName>): List<Pair<Int, Int>> {
+        val cityNames = MapData.CAPITAL_NAMES.toMutableList()
+            .also { it.shuffle(Random(System.currentTimeMillis())) }
+
+        val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
+        val allTiles = engine.getEntitiesFor(tileFamily).map { entity ->
+            val pos = PositionComponent.mapper.get(entity)
+            Pair(pos.q, pos.r)
+        }
+
+        val candidateTiles = allTiles.filter { it !in MapData.WATER_TILES }.toMutableList()
+        val placedCapitals = mutableListOf<Pair<Int, Int>>()
+
+        teams.forEachIndexed { index, team ->
+            if (candidateTiles.isEmpty()) return@forEachIndexed
+
+            val bestTile = if (placedCapitals.isEmpty()) {
+                candidateTiles.random(Random(System.currentTimeMillis()))
+            } else {
+                candidateTiles.maxByOrNull { tile ->
+                    placedCapitals.minOf { placed ->
+                        hexDistance(tile.first, tile.second, placed.first, placed.second)
+                    }
+                }!!
+            }
+
+            placedCapitals.add(bestTile)
+            candidateTiles.remove(bestTile)
+
+            createCapital(
+                name = cityNames.getOrElse(index) { "Capital $index" },
+                baseProduction = 20,
+                q = bestTile.first,
+                r = bestTile.second,
+                team = team
+            )
+        }
+        return placedCapitals
     }
 
     fun generateNormalCities(count: Int, capitalPositions: List<Pair<Int, Int>>) {

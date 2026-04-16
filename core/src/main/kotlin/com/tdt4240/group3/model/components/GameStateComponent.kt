@@ -5,12 +5,22 @@ import com.badlogic.gdx.utils.Pool
 import ktx.ashley.mapperFor
 
 class GameStateComponent: Component, Pool.Poolable {
-    var currentTeam: TeamComponent.TeamName = TeamComponent.TeamName.BLUE
-
+    val activeTeams = mutableListOf<TeamComponent.TeamName>()
+    var currentTeamIndex: Int = 0
     var turnCount: Int = 1
+    val currentTeam: TeamComponent.TeamName
+        get() = activeTeams.getOrElse(currentTeamIndex) { TeamComponent.TeamName.NONE }
+
+    fun initialize(teams: List<TeamComponent.TeamName>) {
+        activeTeams.clear()
+        activeTeams.addAll(teams.filter { it != TeamComponent.TeamName.NONE })
+        currentTeamIndex = 0
+        turnCount = 1
+    }
 
     override fun reset() {
-        currentTeam = TeamComponent.TeamName.BLUE
+        activeTeams.clear()
+        currentTeamIndex = 0
         turnCount = 1
     }
 

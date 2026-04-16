@@ -10,6 +10,7 @@ class TeamComponent : Component, Pool.Poolable {
         BLUE,
         NONE
     }
+
     var team = TeamName.NONE
 
     override fun reset() {
