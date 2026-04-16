@@ -16,10 +16,8 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
         val clickedTile = HexMapService.findTileAt(engine, input.x, input.y)
         val selectedTroop = findSelectedTroop()
 
-        // --- Logic Logic Logic ---
         processSelectionLogic(clickedTroop, clickedTile, selectedTroop)
 
-        // IMPORTANT: Remove the input entity so we don't process the same click twice
         engine.removeEntity(entity)
     }
 
