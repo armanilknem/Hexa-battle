@@ -19,21 +19,21 @@ object TeamStyleRegistry : Disposable {
         if (isInitialized) return
 
         visuals = mapOf(
-            (TeamComponent.TeamName.RED to 20) to TeamVisuals(
+            (TeamComponent.TeamName.RED to 45) to TeamVisuals(
                 Color.RED,
                 Texture(Gdx.files.internal("red_troop.png"))
             ),
-            (TeamComponent.TeamName.RED to 40) to TeamVisuals(
+            (TeamComponent.TeamName.RED to 65) to TeamVisuals(
                 Color.RED,
-                Texture(Gdx.files.internal("red_troop.png"))
+                Texture(Gdx.files.internal("RedTank.png"))
             ),
-            (TeamComponent.TeamName.BLUE to 20) to TeamVisuals(
+            (TeamComponent.TeamName.BLUE to 45) to TeamVisuals(
                 Color.BLUE,
                 Texture(Gdx.files.internal("blue_troop.png"))
             ),
-            (TeamComponent.TeamName.BLUE to 40) to TeamVisuals(
+            (TeamComponent.TeamName.BLUE to 65) to TeamVisuals(
                 Color.BLUE,
-                Texture(Gdx.files.internal("blue_troop.png"))
+                Texture(Gdx.files.internal("BlueTank.png"))
             ),
         )
         isInitialized = true
@@ -41,7 +41,13 @@ object TeamStyleRegistry : Disposable {
 
     fun get(team: TeamComponent.TeamName, strength: Int): TeamVisuals {
         if (!isInitialized) init()
-        return visuals.getValue((team to strength))
+        var s = 45
+        if (strength < 45) {
+            s = 45
+        } else if (strength < 65) {
+            s = 65
+        }
+        return visuals.getValue((team to s))
     }
 
     override fun dispose() {
