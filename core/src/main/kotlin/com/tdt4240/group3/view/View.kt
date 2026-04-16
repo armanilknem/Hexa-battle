@@ -1,4 +1,4 @@
-package com.tdt4240.group3.view.systems
+package com.tdt4240.group3.view
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
@@ -20,8 +20,8 @@ import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent // add when ready
 import com.tdt4240.group3.model.components.marker.HighlightedComponent
 import com.tdt4240.group3.model.components.marker.SelectedComponent
-import com.tdt4240.group3.view.theme.CityStyleRegistry
-import com.tdt4240.group3.view.theme.TeamStyleRegistry
+import com.tdt4240.group3.view.styleRegistries.CityStyleRegistry
+import com.tdt4240.group3.view.styleRegistries.TeamStyleRegistry
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely

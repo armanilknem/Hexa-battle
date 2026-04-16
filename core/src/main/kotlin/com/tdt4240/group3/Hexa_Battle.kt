@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.tdt4240.group3.controller.PlayController
 import com.tdt4240.group3.model.systems.PlayerSystem
 import com.tdt4240.group3.view.screens.HowToPlayScreen
-import com.tdt4240.group3.view.systems.View
+import com.tdt4240.group3.view.View
 import com.tdt4240.group3.network.PlayerService
 import com.tdt4240.group3.screens.*
 import ktx.app.KtxGame

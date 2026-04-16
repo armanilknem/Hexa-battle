@@ -1,4 +1,4 @@
-package com.tdt4240.group3.view.theme
+package com.tdt4240.group3.view.styleRegistries
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color

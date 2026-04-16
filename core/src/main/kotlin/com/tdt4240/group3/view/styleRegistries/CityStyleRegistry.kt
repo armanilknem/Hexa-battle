@@ -1,4 +1,4 @@
-package com.tdt4240.group3.view.theme
+package com.tdt4240.group3.view.styleRegistries
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.Gdx
