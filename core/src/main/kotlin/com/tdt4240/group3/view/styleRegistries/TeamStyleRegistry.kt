@@ -34,7 +34,7 @@ object TeamStyleRegistry : Disposable {
             (TeamComponent.TeamName.BLUE to 65) to TeamVisuals(
                 Color.BLUE,
                 Texture(Gdx.files.internal("BlueTank.png"))
-            ),
+            )
         )
         isInitialized = true
     }

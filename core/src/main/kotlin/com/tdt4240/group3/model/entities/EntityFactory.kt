@@ -105,44 +105,81 @@ class EntityFactory(private val engine: Engine) {
     }
 
     fun generateCapitals(teams: List<TeamComponent.TeamName>): List<Pair<Int, Int>> {
-        val cityNames = MapData.CAPITAL_NAMES.toMutableList()
+        val capitalNames = MapData.CAPITAL_NAMES.toMutableList()
             .also { it.shuffle(Random(System.currentTimeMillis())) }
 
         val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
-        val allTiles = engine.getEntitiesFor(tileFamily).map { entity ->
-            val pos = PositionComponent.mapper.get(entity)
-            Pair(pos.q, pos.r)
-        }
 
-        val candidateTiles = allTiles.filter { it !in MapData.WATER_TILES }.toMutableList()
-        val placedCapitals = mutableListOf<Pair<Int, Int>>()
+        data class TilePos(val q: Int, val r: Int, val x: Float, val y: Float)
 
-        teams.forEachIndexed { index, team ->
-            if (candidateTiles.isEmpty()) return@forEachIndexed
-
-            val bestTile = if (placedCapitals.isEmpty()) {
-                candidateTiles.random(Random(System.currentTimeMillis()))
-            } else {
-                candidateTiles.maxByOrNull { tile ->
-                    placedCapitals.minOf { placed ->
-                        hexDistance(tile.first, tile.second, placed.first, placed.second)
-                    }
-                }!!
+        val validTiles = engine.getEntitiesFor(tileFamily)
+            .mapNotNull { entity ->
+                val pos = PositionComponent.mapper.get(entity) ?: return@mapNotNull null
+                val coords = pos.q to pos.r
+                if (coords in MapData.WATER_TILES) return@mapNotNull null
+                TilePos(pos.q, pos.r, pos.x, pos.y)
             }
 
-            placedCapitals.add(bestTile)
-            candidateTiles.remove(bestTile)
+        if (validTiles.isEmpty()) return emptyList()
+
+        val minX = validTiles.minOf { it.x }
+        val maxX = validTiles.maxOf { it.x }
+        val minY = validTiles.minOf { it.y }
+        val maxY = validTiles.maxOf { it.y }
+
+        val centerX = (minX + maxX) / 2f
+        val padX = (maxX - minX) * 0.12f
+        val padY = (maxY - minY) * 0.12f
+
+        val anchors = listOf(
+            (minX + padX) to (minY + padY), // top-left-ish
+            centerX to (minY + padY),       // top
+            (maxX - padX) to (minY + padY), // top-right-ish
+            (maxX - padX) to (maxY - padY), // bottom-right-ish
+            centerX to (maxY - padY),       // bottom
+            (minX + padX) to (maxY - padY)  // bottom-left-ish
+        )
+
+        val anchorIndices = when (teams.size) {
+            1 -> listOf(0)
+            2 -> listOf(0, 3)
+            3 -> listOf(0, 2, 4)
+            4 -> listOf(0, 1, 3, 5)
+            5 -> listOf(0, 1, 2, 3, 5)
+            else -> listOf(0, 1, 2, 3, 4, 5)
+        }
+
+        val used = mutableSetOf<Pair<Int, Int>>()
+        val placedCapitals = mutableListOf<Pair<Int, Int>>()
+
+        teams.take(anchorIndices.size).forEachIndexed { index, team ->
+            val (ax, ay) = anchors[anchorIndices[index]]
+
+            val bestTile = validTiles
+                .filter { (it.q to it.r) !in used }
+                .minByOrNull { tile ->
+                    val dx = tile.x - ax
+                    val dy = tile.y - ay
+                    dx * dx + dy * dy
+                } ?: return@forEachIndexed
+
+            val coords = bestTile.q to bestTile.r
+            used.add(coords)
+            placedCapitals.add(coords)
 
             createCapital(
-                name = cityNames.getOrElse(index) { "Capital $index" },
+                name = capitalNames.getOrElse(index) { "Capital ${index + 1}" },
                 baseProduction = 20,
-                q = bestTile.first,
-                r = bestTile.second,
+                q = bestTile.q,
+                r = bestTile.r,
                 team = team
             )
         }
+
         return placedCapitals
     }
+
+
 
     fun generateNormalCities(count: Int, capitalPositions: List<Pair<Int, Int>>) {
         val cityNames = MapData.CITY_NAMES.toMutableList()

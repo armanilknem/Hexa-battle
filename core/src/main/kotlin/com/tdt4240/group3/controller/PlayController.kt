@@ -62,10 +62,11 @@ class PlayController(
 
     private fun initializeCities(gameStateEntity: Entity) {
         val gs = gameStateEntity[GameStateComponent.mapper] ?: return
-        factory.generateCapitals(gs.activeTeams)
+        val capitalPositions = factory.generateCapitals(gs.activeTeams)
+
         factory.generateNormalCities(
             count = 20,
-            capitalPositions = listOf(Pair(1, 2), Pair(10, 11))
+            capitalPositions = capitalPositions
         )
     }
 
