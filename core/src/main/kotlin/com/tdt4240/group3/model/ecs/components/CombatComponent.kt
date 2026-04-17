@@ -1,0 +1,18 @@
+package com.tdt4240.group3.model.ecs.components
+
+import com.badlogic.ashley.core.Component
+import com.badlogic.gdx.utils.Pool
+
+class CombatComponent : Component, Pool.Poolable {
+    var maxStackSize: Int = 99
+    var attackMultiplier: Float = 1f
+    var defenseMultiplier: Float = 1f
+    var canMergeFriendly: Boolean = true
+
+    override fun reset() {
+        maxStackSize = 99
+        attackMultiplier = 1f
+        defenseMultiplier = 1f
+        canMergeFriendly = true
+    }
+}

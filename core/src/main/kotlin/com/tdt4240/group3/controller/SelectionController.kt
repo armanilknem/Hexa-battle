@@ -1,6 +1,6 @@
 package com.tdt4240.group3.controller
 
-import com.tdt4240.group3.model.systems.SelectionSystem
+import com.tdt4240.group3.model.ecs.systems.SelectionSystem
 
 class SelectionController(
     private val selectionSystem: SelectionSystem,

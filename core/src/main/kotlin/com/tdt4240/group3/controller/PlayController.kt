@@ -2,16 +2,10 @@ package com.tdt4240.group3.controller
 
 import com.badlogic.ashley.core.Engine
 import com.tdt4240.group3.Hexa_Battle
-import com.tdt4240.group3.model.components.TeamComponent
-import com.tdt4240.group3.model.entities.EntityFactory
-import com.tdt4240.group3.model.systems.CollisionSystem
-import com.tdt4240.group3.model.systems.MovementSystem
-import com.tdt4240.group3.model.systems.SelectionSystem
-import com.tdt4240.group3.model.systems.TerritorySystem
-import com.tdt4240.group3.model.systems.TroopCreationSystem
-import com.tdt4240.group3.model.systems.TroopHighlightSystem
-import com.tdt4240.group3.model.systems.TurnSystem
+import com.tdt4240.group3.model.ecs.entities.EntityFactory
+import com.tdt4240.group3.model.ecs.systems.*
 import com.tdt4240.group3.view.screens.PlayScreen
+import com.tdt4240.group3.model.ecs.components.TeamComponent
 
 class PlayController(
     private val game: Hexa_Battle,
