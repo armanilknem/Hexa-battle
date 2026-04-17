@@ -1,7 +1,7 @@
 package com.tdt4240.group3.controller
 
 import com.badlogic.ashley.core.Engine
-import com.tdt4240.group3.model.HexMapService
+import com.tdt4240.group3.model.service.HexMapService
 import com.tdt4240.group3.model.ecs.components.TouchInputComponent
 import ktx.ashley.entity
 import ktx.ashley.with

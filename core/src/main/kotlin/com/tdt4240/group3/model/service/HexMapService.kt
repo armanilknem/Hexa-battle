@@ -1,9 +1,13 @@
-package com.tdt4240.group3.model
+package com.tdt4240.group3.model.service
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
-import com.tdt4240.group3.model.ecs.components.*
-import ktx.ashley.*
+import com.tdt4240.group3.model.ecs.components.CityComponent
+import com.tdt4240.group3.model.ecs.components.PositionComponent
+import com.tdt4240.group3.model.ecs.components.TileComponent
+import com.tdt4240.group3.model.ecs.components.TroopComponent
+import ktx.ashley.allOf
+import ktx.ashley.get
 
 object HexMapService {
     private val tileFamily = allOf(PositionComponent::class, TileComponent::class).get()
@@ -31,7 +35,7 @@ object HexMapService {
     }
 
     private fun distSq(entity: Entity, x: Float, y: Float): Float {
-        val pos = entity[PositionComponent.mapper] ?: return Float.MAX_VALUE
+        val pos = entity[PositionComponent.Companion.mapper] ?: return Float.MAX_VALUE
         val dx = pos.x - x
         val dy = pos.y - y
         return dx * dx + dy * dy

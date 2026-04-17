@@ -2,7 +2,7 @@ package com.tdt4240.group3.model.ecs.systems
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.systems.IteratingSystem
-import com.tdt4240.group3.model.HexMapService
+import com.tdt4240.group3.model.service.HexMapService
 import com.tdt4240.group3.model.ecs.components.TouchInputComponent
 import com.tdt4240.group3.model.ecs.components.*
 import com.tdt4240.group3.model.ecs.components.marker.*
