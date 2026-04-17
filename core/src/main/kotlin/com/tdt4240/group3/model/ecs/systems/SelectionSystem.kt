@@ -1,13 +1,15 @@
 package com.tdt4240.group3.model.ecs.systems
 
 import com.badlogic.ashley.core.Entity
-import com.badlogic.ashley.core.EntitySystem
+import com.badlogic.ashley.systems.IteratingSystem
+import com.tdt4240.group3.model.HexMapService
+import com.tdt4240.group3.model.ecs.components.TouchInputComponent
 import com.tdt4240.group3.model.ecs.components.*
 import com.tdt4240.group3.model.ecs.components.marker.*
 import ktx.ashley.allOf
 import ktx.ashley.get
-
-class SelectionSystem() : EntitySystem() {
+import ktx.ashley.has
+import ktx.ashley.remove
 
 class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get()) {
 
@@ -50,7 +52,6 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
 
     private fun handleMoveIntent(troop: Entity, tile: Entity) {
         val tilePos = tile[PositionComponent.mapper] ?: return
-        val troopData = troop[TroopComponent.mapper] ?: return
         val currentPos = troop[PositionComponent.mapper] ?: return
 
         // Reselect troop to cancel move
@@ -61,7 +62,9 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
         }
 
         // Find if there is a troop at the destination
-        val targetTroopEntity = engine.getEntitiesFor(allOf(TroopComponent::class, PositionComponent::class).get())
+        val targetTroopEntity = engine.getEntitiesFor(
+            allOf(TroopComponent::class, PositionComponent::class, CombatComponent::class).get()
+        )
             .find {
                 val p = it[PositionComponent.mapper]
                 p?.q == tilePos.q && p?.r == tilePos.r
@@ -70,12 +73,17 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
         // Check for overflow before moving
         if (targetTroopEntity != null) {
             val targetTroopData = targetTroopEntity[TroopComponent.mapper]!!
+            val targetCombat = targetTroopEntity[CombatComponent.mapper] ?: return
+            val movingCombat = troop[CombatComponent.mapper] ?: return
             val targetTeam = targetTroopEntity[TeamComponent.mapper]?.team
             val movingTeam = troop[TeamComponent.mapper]?.team
 
-            // If it's a friendly merge and the target is already at 99
-            if (targetTeam == movingTeam && targetTroopData.strength >= 99) {
-                println("Move rejected: Target tile already full")
+            // Cancel the move if a friendly merge is not allowed or the target stack is already full.
+            if (targetTeam == movingTeam &&
+                (!movingCombat.canMergeFriendly ||
+                    !targetCombat.canMergeFriendly ||
+                    targetTroopData.strength >= targetCombat.maxStackSize)
+            ) {
                 clearSelectedTroops()
                 clearHighlights()
                 return // Move is not counted
@@ -103,21 +111,22 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
         clearHighlights()
     }
 
-    // Helper methods (highlightReachableTiles, etc) stay here but use
-    // engine.getEntitiesFor(family) instead of engine.entities.filter
     private fun highlightReachableTiles(troop: Entity) {
         val troopPos = troop[PositionComponent.mapper] ?: return
+        val movement = troop[MovementComponent.mapper] ?: return
         val tiles = engine.getEntitiesFor(allOf(PositionComponent::class, TileComponent::class).get())
 
         tiles.forEach { tile ->
             val hex = tile[PositionComponent.mapper]!!
-            if (hexDistance(troopPos.q, troopPos.r, hex.q, hex.r) <= 2) {
+            if (hexDistance(troopPos.q, troopPos.r, hex.q, hex.r) <= movement.moveRange) {
                 tile.add(engine.createComponent(HighlightedComponent::class.java))
             }
         }
     }
 
-    private fun findSelectedTroop() = engine.getEntitiesFor(allOf(SelectedComponent::class, TroopComponent::class).get()).firstOrNull()
+    private fun findSelectedTroop() = engine.getEntitiesFor(
+        allOf(SelectedComponent::class, TroopComponent::class, MovementComponent::class, CombatComponent::class).get()
+    ).firstOrNull()
 
     private fun clearSelectedTroops() {
         engine.getEntitiesFor(allOf(SelectedComponent::class).get()).forEach { it.remove<SelectedComponent>() }

@@ -6,6 +6,7 @@ import com.tdt4240.group3.model.ecs.entities.EntityFactory
 import com.tdt4240.group3.model.ecs.systems.*
 import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.model.ecs.components.TeamComponent
+import com.tdt4240.group3.model.systems.WinSystem
 
 class PlayController(
     private val game: Hexa_Battle,
