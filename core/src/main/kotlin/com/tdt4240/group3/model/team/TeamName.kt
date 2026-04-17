@@ -4,5 +4,6 @@ enum class TeamName {
     RED,
     BLUE,
     GREEN,
+    PURPLE,
     NONE
 }

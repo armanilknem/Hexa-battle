@@ -26,6 +26,16 @@ object TeamCatalog {
                 UnitTier.TIER_3 to "troopSprites/blue_plane.png"
             )
         ),
+        "purple" to TeamDefinition(
+            teamName = TeamName.PURPLE,
+            displayName = "Purple",
+            territoryColorHex = "#800080",
+            troopTextures = mapOf(
+                UnitTier.TIER_1 to "troopSprites/purple_soldier.png",
+                UnitTier.TIER_2 to "troopSprites/purple_tank.png",
+                UnitTier.TIER_3 to "troopSprites/purple_plane.png"
+            )
+        ),
         "green" to TeamDefinition(
             teamName = TeamName.GREEN,
             displayName = "Green",

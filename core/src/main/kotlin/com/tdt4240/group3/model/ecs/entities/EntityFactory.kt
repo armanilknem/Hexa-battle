@@ -158,19 +158,19 @@ class EntityFactory(private val engine: Engine) {
         val padY = (maxY - minY) * 0.12f
 
         val anchors = listOf(
-            (minX + padX) to (minY + padY), // top-left-ish
-            centerX to (minY + padY),       // top
-            (maxX - padX) to (minY + padY), // top-right-ish
-            (maxX - padX) to (maxY - padY), // bottom-right-ish
-            centerX to (maxY - padY),       // bottom
-            (minX + padX) to (maxY - padY)  // bottom-left-ish
+            (minX + padX) to (minY + padY), // bottom-left-ish
+            centerX to (minY + padY),       // bottom
+            (maxX - padX) to (minY + padY), // bottom-right-ish
+            (maxX - padX) to (maxY - padY), // top-right-ish
+            centerX to (maxY - padY),       // top
+            (minX + padX) to (maxY - padY)  // top-left-ish
         )
 
         val anchorIndices = when (teams.size) {
             1 -> listOf(0)
             2 -> listOf(0, 3)
             3 -> listOf(0, 2, 4)
-            4 -> listOf(0, 1, 3, 5)
+            4 -> listOf(0, 2, 3, 5)
             5 -> listOf(0, 1, 2, 3, 5)
             else -> listOf(0, 1, 2, 3, 4, 5)
         }

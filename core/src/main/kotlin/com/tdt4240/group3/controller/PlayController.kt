@@ -69,7 +69,7 @@ class PlayController(
     }
 
     private fun setUpInitialGameState(): Entity {
-        return factory.createGameState(listOf(TeamName.RED, TeamName.BLUE, TeamName.GREEN))
+        return factory.createGameState(listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN))
     }
 
     private fun initializeTroops(troopCreationController: TroopCreationController, gameState: Entity) {
