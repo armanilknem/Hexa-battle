@@ -14,7 +14,7 @@ import com.tdt4240.group3.model.ecs.components.TeamComponent
 import com.tdt4240.group3.model.ecs.components.TileComponent
 import com.tdt4240.group3.model.ecs.components.TroopComponent
 import com.tdt4240.group3.model.ecs.components.UnitComponent
-import com.tdt4240.group3.model.map.MapData
+import com.tdt4240.group3.model.MapData
 import com.tdt4240.group3.model.unit.UnitCatalog
 import ktx.ashley.entity
 import ktx.ashley.with

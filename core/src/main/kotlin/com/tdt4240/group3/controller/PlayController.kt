@@ -7,7 +7,6 @@ import com.tdt4240.group3.model.ecs.components.GameStateComponent
 import com.tdt4240.group3.model.ecs.entities.EntityFactory
 import com.tdt4240.group3.model.ecs.systems.*
 import com.tdt4240.group3.model.team.TeamName
-import com.tdt4240.group3.model.systems.WinSystem
 import com.tdt4240.group3.view.screens.PlayScreen
 import ktx.ashley.get
 

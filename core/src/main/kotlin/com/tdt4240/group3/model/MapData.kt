@@ -1,4 +1,4 @@
-package com.tdt4240.group3.model.map
+package com.tdt4240.group3.model
 
 object MapData {
 
