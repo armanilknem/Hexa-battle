@@ -18,10 +18,7 @@ import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PauseController
 import com.tdt4240.group3.controller.SelectionController
 import com.tdt4240.group3.controller.TurnController
-import com.tdt4240.group3.model.components.TeamComponent
-import com.tdt4240.group3.model.components.CityComponent
-import com.tdt4240.group3.model.components.GameStateComponent
-import com.tdt4240.group3.model.components.PositionComponent
+import com.tdt4240.group3.model.ecs.components.*
 import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PlayerTurnState
 import ktx.actors.onClick
