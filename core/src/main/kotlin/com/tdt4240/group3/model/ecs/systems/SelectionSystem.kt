@@ -54,43 +54,6 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
 
     private fun handleMoveIntent(troop: Entity, tile: Entity) {
         val tilePos = tile[PositionComponent.mapper] ?: return
-        val currentPos = troop[PositionComponent.mapper] ?: return
-
-        // Reselect troop to cancel move
-        if (currentPos.q == tilePos.q && currentPos.r == tilePos.r) {
-            clearSelectedTroops()
-            clearHighlights()
-            return // Move is not counted
-        }
-
-        // Find if there is a troop at the destination
-        val targetTroopEntity = engine.getEntitiesFor(
-            allOf(TroopComponent::class, PositionComponent::class, CombatComponent::class).get()
-        )
-            .find {
-                val p = it[PositionComponent.mapper]
-                p?.q == tilePos.q && p?.r == tilePos.r
-            }
-
-        // Check for overflow before moving
-        if (targetTroopEntity != null) {
-            val targetTroopData = targetTroopEntity[TroopComponent.mapper]!!
-            val targetCombat = targetTroopEntity[CombatComponent.mapper] ?: return
-            val movingCombat = troop[CombatComponent.mapper] ?: return
-            val targetTeam = targetTroopEntity[TeamComponent.mapper]?.team
-            val movingTeam = troop[TeamComponent.mapper]?.team
-
-            // Cancel the move if a friendly merge is not allowed or the target stack is already full.
-            if (targetTeam == movingTeam &&
-                (!movingCombat.canMergeFriendly ||
-                    !targetCombat.canMergeFriendly ||
-                    targetTroopData.strength >= targetCombat.maxStackSize)
-            ) {
-                clearSelectedTroops()
-                clearHighlights()
-                return // Move is not counted
-            }
-        }
 
         // Add Move Intent
         troop.add(engine.createComponent(MoveIntentComponent::class.java).apply {
@@ -113,20 +76,6 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
 
         troop.remove<SelectableComponent>()
         clearSelectedTroops()
-        clearHighlights()
-    }
-
-    private fun highlightReachableTiles(troop: Entity) {
-        val troopPos = troop[PositionComponent.mapper] ?: return
-        val movement = troop[MovementComponent.mapper] ?: return
-        val tiles = engine.getEntitiesFor(allOf(PositionComponent::class, TileComponent::class).get())
-
-        tiles.forEach { tile ->
-            val hex = tile[PositionComponent.mapper]!!
-            if (hexDistance(troopPos.q, troopPos.r, hex.q, hex.r) <= movement.moveRange) {
-                tile.add(engine.createComponent(HighlightedComponent::class.java))
-            }
-        }
     }
 
     private fun findSelectedTroop() = engine.getEntitiesFor(

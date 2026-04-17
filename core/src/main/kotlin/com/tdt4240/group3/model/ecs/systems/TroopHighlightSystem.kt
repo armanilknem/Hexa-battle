@@ -12,7 +12,12 @@ class TroopHighlightSystem(private val turnSystem: TurnSystem) : EntitySystem() 
 
     private val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
     private val tileFamily = allOf(PositionComponent::class, TileComponent::class).get()
-    private val selectedTroopFamily = allOf(SelectedComponent::class, TroopComponent::class, PositionComponent::class).get()
+    private val selectedTroopFamily = allOf(
+        SelectedComponent::class,
+        TroopComponent::class,
+        PositionComponent::class,
+        MovementComponent::class
+    ).get()
 
     override fun update(deltaTime: Float) {
         updateUnmovedTroopHighlights()
@@ -41,9 +46,10 @@ class TroopHighlightSystem(private val turnSystem: TurnSystem) : EntitySystem() 
 
         if (selectedTroop != null) {
             val troopPos = selectedTroop[PositionComponent.mapper]!!
+            val movement = selectedTroop[MovementComponent.mapper] ?: return
             tiles.forEach { tile ->
                 val tilePos = tile[PositionComponent.mapper]!!
-                if (hexDistance(troopPos.q, troopPos.r, tilePos.q, tilePos.r) <= 2) {
+                if (hexDistance(troopPos.q, troopPos.r, tilePos.q, tilePos.r) <= movement.moveRange) {
                     if (!tile.has(HighlightedComponent.mapper)) {
                         tile.add(engine.createComponent(HighlightedComponent::class.java))
                     }

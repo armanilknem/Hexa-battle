@@ -13,7 +13,12 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
     private val factory = EntityFactory(engine)
     private val cityFamily = allOf(CityComponent::class, PositionComponent::class, TeamComponent::class).get()
     private val gameStateFamily = allOf(GameStateComponent::class, NeedsTroopSpawnComponent::class).get()
-    private val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
+    private val troopFamily = allOf(
+        TroopComponent::class,
+        CombatComponent::class,
+        PositionComponent::class,
+        TeamComponent::class
+    ).get()
 
 
     override fun update(deltaTime: Float) {
@@ -35,14 +40,15 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
         }
         if (existingTroop != null) {
             val troopComp = existingTroop[TroopComponent.mapper]!!
+            val combatComp = existingTroop[CombatComponent.mapper] ?: return
             val troopTeam = existingTroop[TeamComponent.mapper]?.team ?: return
             if (troopTeam == cityTeam) {
                 val total = troopComp.strength + cityComp.baseProduction
-                if (total <= 99) {
+                if (total <= combatComp.maxStackSize) {
                     troopComp.strength = total
                 }
                 else {
-                    troopComp.strength = 99
+                    troopComp.strength = combatComp.maxStackSize
                 }
             }
         } else {
