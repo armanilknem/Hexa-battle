@@ -25,18 +25,23 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
 
     private fun processSelectionLogic(clickedTroop: Entity?, clickedTile: Entity?, selectedTroop: Entity?) {
         when {
-            // Case 1: Move Troop
+            // Case 1: Deselect already selected troop (must be before move, since troop's own tile is highlighted)
+            clickedTroop != null && clickedTroop == selectedTroop -> {
+                clearSelectedTroops()
+            }
+
+            // Case 2: Move Troop
             clickedTile != null && clickedTile.has(HighlightedComponent.mapper) && selectedTroop != null -> {
                 handleMoveIntent(selectedTroop, clickedTile)
             }
 
-            // Case 2: Select Troop
+            // Case 3: Select Troop
             clickedTroop != null && clickedTroop.has(SelectableComponent.mapper) -> {
                 clearSelectedTroops()
                 clickedTroop.add(engine.createComponent(SelectedComponent::class.java))
             }
 
-            // Case 3: Deselect
+            // Case 4: Deselect (clicked empty area)
             else -> {
                 clearSelectedTroops()
             }

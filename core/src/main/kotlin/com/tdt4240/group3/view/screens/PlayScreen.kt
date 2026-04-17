@@ -18,6 +18,7 @@ import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PauseController
 import com.tdt4240.group3.controller.SelectionController
 import com.tdt4240.group3.controller.TurnController
+import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.PositionComponent
@@ -182,6 +183,10 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     }
 
     fun goToMenu() { game.setScreen<MenuScreen>() }
+    fun goToWin(winner: TeamComponent.TeamName) {
+        game.getScreen<WinScreen>().winner = winner
+        game.setScreen<WinScreen>()
+    }
     fun getBatch() = game.batch
     fun getFont()  = game.font
 
