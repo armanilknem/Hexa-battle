@@ -7,7 +7,6 @@ import ktx.ashley.mapperFor
 
 class TroopComponent : Component, Pool.Poolable {
     var strength: Int = 0
-    var isHighlighted: Boolean = false
 
     override fun reset() {
     }

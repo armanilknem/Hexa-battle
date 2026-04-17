@@ -29,23 +29,25 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
 
     private fun processSelectionLogic(clickedTroop: Entity?, clickedTile: Entity?, selectedTroop: Entity?) {
         when {
-            // Case 1: Move Troop
+            // Case 1: Deselect already selected troop (must be before move, since troop's own tile is highlighted)
+            clickedTroop != null && clickedTroop == selectedTroop -> {
+                clearSelectedTroops()
+            }
+
+            // Case 2: Move Troop
             clickedTile != null && clickedTile.has(HighlightedComponent.mapper) && selectedTroop != null -> {
                 handleMoveIntent(selectedTroop, clickedTile)
             }
 
-            // Case 2: Select Troop
+            // Case 3: Select Troop
             clickedTroop != null && clickedTroop.has(SelectableComponent.mapper) -> {
                 clearSelectedTroops()
-                clearHighlights()
                 clickedTroop.add(engine.createComponent(SelectedComponent::class.java))
-                highlightReachableTiles(clickedTroop)
             }
 
-            // Case 3: Deselect
+            // Case 4: Deselect (clicked empty area)
             else -> {
                 clearSelectedTroops()
-                clearHighlights()
             }
         }
     }
@@ -101,8 +103,11 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
             ?.get(GameStateComponent.mapper)
             ?.let { it.movesLeft-- }
 
-        // Add CollidingComponent if there is a target troop
-        if (targetTroopEntity != null) {
+        // Check for collision at target
+        val targetOccupied = HexMapService.findTroopAt(engine, tilePos.x.toFloat(), tilePos.y.toFloat()) != null ||
+            HexMapService.findCityAt(engine, tilePos.x.toFloat(), tilePos.y.toFloat()) != null
+
+        if (targetOccupied) {
             troop.add(engine.createComponent(CollidingComponent::class.java))
         }
 
@@ -130,13 +135,5 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
 
     private fun clearSelectedTroops() {
         engine.getEntitiesFor(allOf(SelectedComponent::class).get()).forEach { it.remove<SelectedComponent>() }
-    }
-
-    private fun clearHighlights() {
-        engine.getEntitiesFor(allOf(HighlightedComponent::class).get()).forEach { it.remove<HighlightedComponent>() }
-    }
-
-    private fun hexDistance(q1: Int, r1: Int, q2: Int, r2: Int): Int {
-        return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2
     }
 }
