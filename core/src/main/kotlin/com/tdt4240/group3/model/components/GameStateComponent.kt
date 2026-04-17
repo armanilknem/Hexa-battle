@@ -8,8 +8,8 @@ class GameStateComponent: Component, Pool.Poolable {
     var currentTeam: TeamComponent.TeamName = TeamComponent.TeamName.BLUE
 
     var turnCount: Int = 1
-
     var movesLeft: Int = 5
+
 
     override fun reset() {
         currentTeam = TeamComponent.TeamName.BLUE

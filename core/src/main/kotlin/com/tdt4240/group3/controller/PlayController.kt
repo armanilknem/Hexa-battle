@@ -35,7 +35,7 @@ class PlayController(
         val turnController = TurnController(turnSystem)
         val troopCreationController = TroopCreationController(troopCreationSystem)
         val pauseController = PauseController()
-        val selectionController = SelectionController(selectionSystem)
+        val selectionController = SelectionController(engine)
 
         this.setUpInitialGameState()
         this.setUpWorld()

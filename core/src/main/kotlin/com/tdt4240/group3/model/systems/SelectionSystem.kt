@@ -1,83 +1,44 @@
 package com.tdt4240.group3.model.systems
 
 import com.badlogic.ashley.core.Entity
-import com.badlogic.ashley.core.EntitySystem
-import com.tdt4240.group3.model.components.PositionComponent
-import com.tdt4240.group3.model.components.TeamComponent
-import com.tdt4240.group3.model.components.TileComponent
-import com.tdt4240.group3.model.components.TroopComponent
-import com.tdt4240.group3.model.components.marker.HighlightedComponent
-import com.tdt4240.group3.model.components.marker.SelectedComponent
-import com.tdt4240.group3.model.components.marker.SelectableComponent
-import com.tdt4240.group3.model.components.CityComponent
-import com.tdt4240.group3.model.components.GameStateComponent
-import com.tdt4240.group3.model.components.marker.MoveIntentComponent
-import com.tdt4240.group3.model.components.marker.CollidingComponent
-import ktx.ashley.allOf
-import ktx.ashley.get
+import com.badlogic.ashley.systems.IteratingSystem
+import com.tdt4240.group3.model.HexMapService
+import com.tdt4240.group3.model.components.*
+import com.tdt4240.group3.model.components.marker.*
+import ktx.ashley.*
 
-class SelectionSystem() : EntitySystem() {
-
-    private val tileFamily = allOf(PositionComponent::class, TileComponent::class).get()
-
-    private val cityFamily  = allOf(PositionComponent::class, CityComponent::class).get()
-
-    private val troopFamily =
-        allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
+class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get()) {
 
     private val gameStateFamily = allOf(GameStateComponent::class).get()
-    fun handleTouch(worldX: Float, worldY: Float) {
-        val clickedTroop = findTroopAt(worldX, worldY)
-        val clickedTile = findTileAt(worldX, worldY)
+
+    override fun processEntity(entity: Entity, deltaTime: Float) {
+        val input = entity[TouchInputComponent.mapper] ?: return
+
+        val clickedTroop = HexMapService.findTroopAt(engine, input.x, input.y)
+        val clickedTile = HexMapService.findTileAt(engine, input.x, input.y)
         val selectedTroop = findSelectedTroop()
 
+        processSelectionLogic(clickedTroop, clickedTile, selectedTroop)
+
+        engine.removeEntity(entity)
+    }
+
+    private fun processSelectionLogic(clickedTroop: Entity?, clickedTile: Entity?, selectedTroop: Entity?) {
         when {
-            // moving a troop to a tile
-            clickedTile != null && clickedTile.getComponent(HighlightedComponent::class.java)
-                != null && selectedTroop != null -> {
-                val intent = engine.createComponent(MoveIntentComponent::class.java)
-                val tilePos = clickedTile.getComponent(PositionComponent::class.java) ?: return
-
-                intent.targetQ = tilePos.q
-                intent.targetR = tilePos.r
-                selectedTroop.add(intent)
-
-                val targetTroop = engine.getEntitiesFor(troopFamily).firstOrNull { troop ->
-                    if (troop == selectedTroop) return@firstOrNull false
-                    val pos = troop[PositionComponent.mapper] ?: return@firstOrNull false
-                    pos.q == tilePos.q && pos.r == tilePos.r
-                }
-
-                val targetCity = engine.entities.firstOrNull { entity ->
-                    entity.getComponent(CityComponent::class.java) != null &&
-                        entity[PositionComponent.mapper]?.q == tilePos.q &&
-                        entity[PositionComponent.mapper]?.r == tilePos.r
-                }
-
-                if (targetTroop != null || targetCity != null) {
-                    selectedTroop.add(engine.createComponent(CollidingComponent::class.java))
-                }
-
-                selectedTroop.remove(SelectableComponent::class.java)
-
-                // Decrement move counter
-                engine.getEntitiesFor(gameStateFamily).firstOrNull()
-                    ?.get(GameStateComponent.mapper)
-                    ?.let { it.movesLeft-- }
-
-                clearSelectedTroops()
-                clearHighlights()
+            // Case 1: Move Troop
+            clickedTile != null && clickedTile.has(HighlightedComponent.mapper) && selectedTroop != null -> {
+                handleMoveIntent(selectedTroop, clickedTile)
             }
 
-            // show highlighted area when selecting troop
-            clickedTroop != null && clickedTroop.getComponent(SelectableComponent::class.java) != null -> {
+            // Case 2: Select Troop
+            clickedTroop != null && clickedTroop.has(SelectableComponent.mapper) -> {
                 clearSelectedTroops()
                 clearHighlights()
                 clickedTroop.add(engine.createComponent(SelectedComponent::class.java))
                 highlightReachableTiles(clickedTroop)
             }
 
-            // unselect when clicking outside or on same troop twice //FIX:
+            // Case 3: Deselect
             else -> {
                 clearSelectedTroops()
                 clearHighlights()
@@ -85,65 +46,86 @@ class SelectionSystem() : EntitySystem() {
         }
     }
 
-    private fun findSelectedTroop(): Entity? {
-        return engine.getEntitiesFor(allOf(SelectedComponent::class, TroopComponent::class).get()).firstOrNull()
-    }
+    private fun handleMoveIntent(troop: Entity, tile: Entity) {
+        val tilePos = tile[PositionComponent.mapper] ?: return
+        val troopData = troop[TroopComponent.mapper] ?: return
+        val currentPos = troop[PositionComponent.mapper] ?: return
 
-    private fun clearSelectedTroops() {
-        val selected = engine.getEntitiesFor(allOf(SelectedComponent::class).get())
-        selected.toList().forEach { it.remove(SelectedComponent::class.java) }
-    }
+        // Reselect troop to cancel move
+        if (currentPos.q == tilePos.q && currentPos.r == tilePos.r) {
+            clearSelectedTroops()
+            clearHighlights()
+            return // Move is not counted
+        }
 
-    private fun highlightReachableTiles(troop: Entity) {
-        val troopPos = troop[PositionComponent.mapper] ?: return
-        engine.entities.forEach { entity ->
-            if (!tileFamily.matches(entity)) return@forEach
-            val hex = entity[PositionComponent.mapper] ?: return@forEach
-            if (hexDistance(troopPos.q, troopPos.r, hex.q, hex.r) <= 2) {
-                entity.add(engine.createComponent(HighlightedComponent::class.java))
+        // Find if there is a troop at the destination
+        val targetTroopEntity = engine.getEntitiesFor(allOf(TroopComponent::class, PositionComponent::class).get())
+            .find {
+                val p = it[PositionComponent.mapper]
+                p?.q == tilePos.q && p?.r == tilePos.r
+            }
+
+        // Check for overflow before moving
+        if (targetTroopEntity != null) {
+            val targetTroopData = targetTroopEntity[TroopComponent.mapper]!!
+            val targetTeam = targetTroopEntity[TeamComponent.mapper]?.team
+            val movingTeam = troop[TeamComponent.mapper]?.team
+
+            // If it's a friendly merge and the target is already at 99
+            if (targetTeam == movingTeam && targetTroopData.strength >= 99) {
+                println("Move rejected: Target tile already full")
+                clearSelectedTroops()
+                clearHighlights()
+                return // Move is not counted
             }
         }
+
+        // Add Move Intent
+        troop.add(engine.createComponent(MoveIntentComponent::class.java).apply {
+            targetQ = tilePos.q
+            targetR = tilePos.r
+        })
+
+        // Decrement move counter in the GameState
+        engine.getEntitiesFor(gameStateFamily).firstOrNull()
+            ?.get(GameStateComponent.mapper)
+            ?.let { it.movesLeft-- }
+
+        // Add CollidingComponent if there is a target troop
+        if (targetTroopEntity != null) {
+            troop.add(engine.createComponent(CollidingComponent::class.java))
+        }
+
+        troop.remove<SelectableComponent>()
+        clearSelectedTroops()
+        clearHighlights()
+    }
+
+    // Helper methods (highlightReachableTiles, etc) stay here but use
+    // engine.getEntitiesFor(family) instead of engine.entities.filter
+    private fun highlightReachableTiles(troop: Entity) {
+        val troopPos = troop[PositionComponent.mapper] ?: return
+        val tiles = engine.getEntitiesFor(allOf(PositionComponent::class, TileComponent::class).get())
+
+        tiles.forEach { tile ->
+            val hex = tile[PositionComponent.mapper]!!
+            if (hexDistance(troopPos.q, troopPos.r, hex.q, hex.r) <= 2) {
+                tile.add(engine.createComponent(HighlightedComponent::class.java))
+            }
+        }
+    }
+
+    private fun findSelectedTroop() = engine.getEntitiesFor(allOf(SelectedComponent::class, TroopComponent::class).get()).firstOrNull()
+
+    private fun clearSelectedTroops() {
+        engine.getEntitiesFor(allOf(SelectedComponent::class).get()).forEach { it.remove<SelectedComponent>() }
     }
 
     private fun clearHighlights() {
-        val highlighted = engine.getEntitiesFor(allOf(HighlightedComponent::class).get())
-        highlighted.toList().forEach { it.remove(HighlightedComponent::class.java) }
-    }
-
-    private fun findTroopAt(worldX: Float, worldY: Float): Entity? {
-        return engine.entities.firstOrNull { entity ->
-            if (!troopFamily.matches(entity)) return@firstOrNull false
-            val pos = entity[PositionComponent.mapper] ?: return@firstOrNull false
-            Math.abs(pos.x.toFloat() - worldX) < 16f && Math.abs(pos.y.toFloat() - worldY) < 16f
-        }
-    }
-
-    fun findTileAt(worldX: Float, worldY: Float): Entity? {
-        return engine.entities
-            .filter { tileFamily.matches(it) }
-            .minByOrNull { entity ->
-                val pos = entity[PositionComponent.mapper] ?: return@minByOrNull Float.MAX_VALUE
-                val dx = pos.x.toFloat() - worldX
-                val dy = pos.y.toFloat() - worldY
-                dx * dx + dy * dy
-            }
-            ?.takeIf { entity ->
-                val pos = entity[PositionComponent.mapper] ?: return@takeIf false
-                Math.abs(pos.x.toFloat() - worldX) < 16f && Math.abs(pos.y.toFloat() - worldY) < 16f
-            }
-    }
-
-    fun findCityAt(worldX: Float, worldY: Float): Entity? {
-        return engine.entities.firstOrNull { entity ->
-            if (!cityFamily.matches(entity)) return@firstOrNull false
-            val pos = entity[PositionComponent.mapper] ?: return@firstOrNull false
-            Math.abs(pos.x - worldX) < 16f && Math.abs(pos.y - worldY) < 16f
-        }
+        engine.getEntitiesFor(allOf(HighlightedComponent::class).get()).forEach { it.remove<HighlightedComponent>() }
     }
 
     private fun hexDistance(q1: Int, r1: Int, q2: Int, r2: Int): Int {
-        return (Math.abs(q1 - q2) +
-            Math.abs(q1 + r1 - q2 - r2) +
-            Math.abs(r1 - r2)) / 2
+        return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2
     }
 }
