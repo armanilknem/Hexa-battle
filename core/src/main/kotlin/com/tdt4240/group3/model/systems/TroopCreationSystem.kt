@@ -54,7 +54,8 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
                 }
             }
         } else {
-            val newTroop = factory.createTroopFromCity(cityEntity)
+            // generate baseTroops from cities
+            val newTroop = factory.createTroopFromCity(cityEntity, "baseTroop")
             newTroop.add(engine.createComponent(SelectableComponent::class.java))
         }
     }

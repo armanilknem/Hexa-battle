@@ -1,5 +1,9 @@
 package com.tdt4240.group3.config.unit
 
+/**
+ * Registry for static unit definitions.
+ * Used in entityFactory to create troops.
+ */
 object UnitCatalog {
     val units = mapOf(
         "baseTroop" to UnitDefinition(

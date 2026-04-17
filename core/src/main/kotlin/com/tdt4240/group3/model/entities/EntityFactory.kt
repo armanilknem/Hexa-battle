@@ -7,8 +7,6 @@ import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.badlogic.ashley.core.Entity
-import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.tdt4240.group3.config.unit.UnitCatalog
 import com.tdt4240.group3.model.components.CombatComponent
 import com.tdt4240.group3.model.components.GameStateComponent
@@ -37,6 +35,9 @@ class EntityFactory(private val engine: Engine) {
         }
     }
 
+    /**
+     * Creates a troop entity based on a definition from the UnitCatalog.
+     */
     fun createTroop(team: TeamComponent.TeamName, unitKey: String, strength: Int, q: Int, r: Int) = engine.entity {
         val unitDef = UnitCatalog.units.getValue(unitKey)
         with<UnitComponent> {
@@ -80,9 +81,10 @@ class EntityFactory(private val engine: Engine) {
         }
     }
 
-    // create baseTroop
-    fun createTroopFromCity(cityEntity: Entity): Entity {
-        val troopType = "baseTroop"
+    /**
+     * Creates a troop entity from a city entity based on definition from the UnitCatalog.
+     */
+    fun createTroopFromCity(cityEntity: Entity, troopType: String): Entity {
         val city = CityComponent.mapper.get(cityEntity)
         val position = PositionComponent.mapper.get(cityEntity)
         val team = TeamComponent.mapper.get(cityEntity)
