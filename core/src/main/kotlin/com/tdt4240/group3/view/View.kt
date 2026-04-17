@@ -21,7 +21,8 @@ import com.tdt4240.group3.model.components.TroopComponent // add when ready
 import com.tdt4240.group3.model.components.marker.HighlightedComponent
 import com.tdt4240.group3.model.components.marker.SelectedComponent
 import com.tdt4240.group3.view.styleRegistries.CityStyleRegistry
-import com.tdt4240.group3.view.styleRegistries.TeamStyleRegistry
+import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
+import com.tdt4240.group3.view.styleRegistries.TroopVisualRegistry
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely
@@ -45,7 +46,6 @@ class View(
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class).get()
     private val gameStateFamily = allOf(GameStateComponent::class).get()
 
-    private val teamStyleRegistry = TeamStyleRegistry
 
     override fun update(deltaTime: Float) {
         stateTime += deltaTime
@@ -214,10 +214,8 @@ class View(
         val strength = troop.strength
 
         // get texture from teamsStyleRegistry based off name and strength
-        val texture = teamStyleRegistry.get(team.team, strength).troopTexture
-        if (texture != null) {
-            batch.draw(texture, pos.x - 8f, pos.y - 8f, 16f, 16f)
-        }
+        val texture = TroopVisualRegistry.getTexture(team.team, strength)
+        batch.draw(texture, pos.x - 8f, pos.y - 8f, 16f, 16f)
 
         font.draw(
             batch,
@@ -239,7 +237,7 @@ class View(
         val alpha = if (team == getCurrentTeam()) 0.6f else 0.3f
 
         // get team color from teamStyleRegistry
-        val color = teamStyleRegistry.get(team, 20).territoryColor.cpy()
+        val color = TeamVisualRegistry.getTerritoryColor(team)
         shapeRenderer.color = color.apply { a = alpha }
 
         this.drawFullHexTile(x, y, size)
@@ -270,7 +268,7 @@ class View(
 
     override fun dispose() {
         backgroundTexture.disposeSafely()
-        teamStyleRegistry.dispose()
+        TroopVisualRegistry.dispose()
         CityStyleRegistry.dispose()
     }
 }

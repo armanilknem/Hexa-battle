@@ -8,6 +8,7 @@ class TeamComponent : Component, Pool.Poolable {
     enum class TeamName {
         RED,
         BLUE,
+        GREEN,
         NONE
     }
 

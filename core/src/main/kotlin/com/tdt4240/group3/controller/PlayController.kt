@@ -3,6 +3,7 @@ package com.tdt4240.group3.controller
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.config.match.MatchConfig
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.entities.EntityFactory
@@ -19,6 +20,7 @@ import ktx.ashley.get
 class PlayController(
     private val game: Hexa_Battle,
     private val engine: Engine,
+    private val matchConfig: MatchConfig
 ) {
     private val factory: EntityFactory = EntityFactory(engine)
 
@@ -71,9 +73,7 @@ class PlayController(
     }
 
     private fun setUpInitialGameState(): Entity {
-        return factory.createGameState(
-            listOf(TeamComponent.TeamName.RED, TeamComponent.TeamName.BLUE)
-        )
+        return factory.createGameState(matchConfig.activeTeams)
     }
 
     private fun initializeTroops(troopCreationController: TroopCreationController, gameState: Entity) {
