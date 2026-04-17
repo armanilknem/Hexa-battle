@@ -18,7 +18,6 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent // add when ready
 import com.tdt4240.group3.model.components.marker.HighlightedComponent
-import com.tdt4240.group3.model.components.marker.SelectableComponent
 import com.tdt4240.group3.model.components.marker.SelectedComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
@@ -67,10 +66,7 @@ class View(
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
             entities.forEach { entity ->
-                if (tileFamily.matches(entity)) {
-                    drawTileHighlight(entity)
-                    drawTerritory(entity)
-                }
+                if (tileFamily.matches(entity)) drawTerritory(entity)
             }
         }
         Gdx.gl.glDisable(GL20.GL_BLEND)
@@ -95,7 +91,17 @@ class View(
                 }
         }
 
-        // Pass 2b — unmoved troop highlights (above cities, below troops)
+        // Pass 2b — tile highlights for possible moves (above cities)
+        Gdx.gl.glEnable(GL20.GL_BLEND)
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+        shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
+            entities.forEach { entity ->
+                if (tileFamily.matches(entity)) drawTileHighlight(entity)
+            }
+        }
+        Gdx.gl.glDisable(GL20.GL_BLEND)
+
+        // Pass 2c — unmoved troop highlights (above cities, below troops)
         Gdx.gl.glEnable(GL20.GL_BLEND)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
@@ -137,8 +143,7 @@ class View(
     }
 
     private fun drawUnmovedTroopHighlight(entity: Entity) {
-        val troop = entity[TroopComponent.mapper] ?: return
-        if (!troop.isHighlighted) return
+        if (entity.getComponent(HighlightedComponent::class.java) == null) return
 
         val pos = entity[PositionComponent.mapper] ?: return
 
