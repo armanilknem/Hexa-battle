@@ -28,7 +28,7 @@ class View(
     private val font: BitmapFont
 ) : EntitySystem(), Disposable {
     private var stateTime = 0f
-    private val backgroundTexture = Texture(Gdx.files.internal("hexaBackground.png"))
+    private val backgroundTexture = Texture(Gdx.files.internal("backgrounds/GameBackground.png"))
 
     // Three distinct families — one per entity type
     private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
