@@ -16,6 +16,7 @@ import ktx.app.KtxScreen
 import ktx.async.KtxAsync
 import com.tdt4240.group3.view.screens.MenuScreen
 import com.tdt4240.group3.view.screens.OptionsScreen
+import com.tdt4240.group3.view.screens.WinScreen
 import ktx.assets.disposeSafely
 import kotlin.math.sqrt
 import java.util.UUID
@@ -71,6 +72,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         addScreen(LobbySelectScreen(this))
         addScreen(HowToPlayScreen(this))
         addScreen(OptionsScreen(this))
+        addScreen(WinScreen(this))
 
         setScreen<MenuScreen>()
     }

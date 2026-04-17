@@ -180,6 +180,10 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     }
 
     fun goToMenu() { game.setScreen<MenuScreen>() }
+    fun goToWin(winner: TeamComponent.TeamName) {
+        game.getScreen<WinScreen>().winner = winner
+        game.setScreen<WinScreen>()
+    }
     fun getBatch() = game.batch
     fun getFont()  = game.font
 

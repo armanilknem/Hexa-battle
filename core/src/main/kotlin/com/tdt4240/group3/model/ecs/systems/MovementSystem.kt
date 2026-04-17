@@ -21,6 +21,9 @@ class MovementSystem : IteratingSystem(
         val pos = entity[PositionComponent.mapper] ?: return
         val intent = entity[MoveIntentComponent.mapper] ?: return
 
+        pos.prevQ = pos.q
+        pos.prevR = pos.r
+
         pos.q = intent.targetQ
         pos.r = intent.targetR
 

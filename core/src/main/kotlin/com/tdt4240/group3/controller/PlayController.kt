@@ -21,23 +21,26 @@ class PlayController(
         val troopCreationSystem = TroopCreationSystem(engine)
         val territorySystem = TerritorySystem()
         val troopHighlightSystem = TroopHighlightSystem(turnSystem)
+        val winSystem = WinSystem()
 
-        this.setUpSystems(turnSystem, selectionSystem, movementSystem, collisionSystem, troopCreationSystem, territorySystem, troopHighlightSystem)
+        this.setUpSystems(turnSystem, selectionSystem, movementSystem, collisionSystem, troopCreationSystem, territorySystem, troopHighlightSystem, winSystem)
 
         val turnController = TurnController(turnSystem)
         val troopCreationController = TroopCreationController(troopCreationSystem)
         val pauseController = PauseController()
-        val selectionController = SelectionController(selectionSystem)
+        val selectionController = SelectionController(engine)
 
         this.setUpInitialGameState()
         this.setUpWorld()
         this.initializeCities()
         this.initializeTroops(troopCreationController)
 
-        return PlayScreen(game, engine, turnController, pauseController, selectionController)
+        val playScreen = PlayScreen(game, engine, turnController, pauseController, selectionController)
+        winSystem.onWin = { winner -> playScreen.goToWin(winner) }
+        return playScreen
     }
 
-    private fun setUpSystems(turnSystem: TurnSystem, selectionSystem: SelectionSystem, movementSystem: MovementSystem, collisionSystem: CollisionSystem, troopCreationSystem: TroopCreationSystem, territorySystem: TerritorySystem, troopHighlightSystem: TroopHighlightSystem) {
+    private fun setUpSystems(turnSystem: TurnSystem, selectionSystem: SelectionSystem, movementSystem: MovementSystem, collisionSystem: CollisionSystem, troopCreationSystem: TroopCreationSystem, territorySystem: TerritorySystem, troopHighlightSystem: TroopHighlightSystem, winSystem: WinSystem) {
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
         engine.addSystem(movementSystem)
@@ -45,6 +48,7 @@ class PlayController(
         engine.addSystem(troopCreationSystem)
         engine.addSystem(territorySystem)
         engine.addSystem(troopHighlightSystem)
+        engine.addSystem(winSystem)
     }
 
     private fun setUpWorld() {
