@@ -54,6 +54,34 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
 
     private fun handleMoveIntent(troop: Entity, tile: Entity) {
         val tilePos = tile[PositionComponent.mapper] ?: return
+        val currentPos = troop[PositionComponent.mapper] ?: return
+
+        // Reselect troop to cancel move
+        if (currentPos.q == tilePos.q && currentPos.r == tilePos.r) {
+            clearSelectedTroops()
+            return // Move is not counted
+        }
+
+        // Find if there is a troop at the destination
+        val targetTroopEntity = engine.getEntitiesFor(allOf(TroopComponent::class, PositionComponent::class).get())
+            .find {
+                val p = it[PositionComponent.mapper]
+                p?.q == tilePos.q && p?.r == tilePos.r
+            }
+
+        // Check for overflow before moving
+        if (targetTroopEntity != null) {
+            val targetTroopData = targetTroopEntity[TroopComponent.mapper]!!
+            val targetTeam = targetTroopEntity[TeamComponent.mapper]?.team
+            val movingTeam = troop[TeamComponent.mapper]?.team
+
+            // If it's a friendly merge and the target is already at 99
+            if (targetTeam == movingTeam && targetTroopData.strength >= 99) {
+                println("Move rejected: Target tile already full")
+                clearSelectedTroops()
+                return // Move is not counted
+            }
+        }
 
         // Add Move Intent
         troop.add(engine.createComponent(MoveIntentComponent::class.java).apply {
@@ -66,11 +94,8 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
             ?.get(GameStateComponent.mapper)
             ?.let { it.movesLeft-- }
 
-        // Check for collision at target
-        val targetOccupied = HexMapService.findTroopAt(engine, tilePos.x.toFloat(), tilePos.y.toFloat()) != null ||
-            HexMapService.findCityAt(engine, tilePos.x.toFloat(), tilePos.y.toFloat()) != null
-
-        if (targetOccupied) {
+        // Add CollidingComponent if there is a target troop
+        if (targetTroopEntity != null) {
             troop.add(engine.createComponent(CollidingComponent::class.java))
         }
 
