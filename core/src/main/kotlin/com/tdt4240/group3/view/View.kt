@@ -18,7 +18,6 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent // add when ready
 import com.tdt4240.group3.model.components.marker.HighlightedComponent
-import com.tdt4240.group3.model.components.marker.SelectableComponent
 import com.tdt4240.group3.model.components.marker.SelectedComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
@@ -137,8 +136,7 @@ class View(
     }
 
     private fun drawUnmovedTroopHighlight(entity: Entity) {
-        val troop = entity[TroopComponent.mapper] ?: return
-        if (!troop.isHighlighted) return
+        if (entity.getComponent(HighlightedComponent::class.java) == null) return
 
         val pos = entity[PositionComponent.mapper] ?: return
 

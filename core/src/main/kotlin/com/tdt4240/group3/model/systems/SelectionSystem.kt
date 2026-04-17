@@ -33,15 +33,12 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
             // Case 2: Select Troop
             clickedTroop != null && clickedTroop.has(SelectableComponent.mapper) -> {
                 clearSelectedTroops()
-                clearHighlights()
                 clickedTroop.add(engine.createComponent(SelectedComponent::class.java))
-                highlightReachableTiles(clickedTroop)
             }
 
             // Case 3: Deselect
             else -> {
                 clearSelectedTroops()
-                clearHighlights()
             }
         }
     }
@@ -70,34 +67,11 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
 
         troop.remove<SelectableComponent>()
         clearSelectedTroops()
-        clearHighlights()
-    }
-
-    // Helper methods (highlightReachableTiles, etc) stay here but use
-    // engine.getEntitiesFor(family) instead of engine.entities.filter
-    private fun highlightReachableTiles(troop: Entity) {
-        val troopPos = troop[PositionComponent.mapper] ?: return
-        val tiles = engine.getEntitiesFor(allOf(PositionComponent::class, TileComponent::class).get())
-
-        tiles.forEach { tile ->
-            val hex = tile[PositionComponent.mapper]!!
-            if (hexDistance(troopPos.q, troopPos.r, hex.q, hex.r) <= 2) {
-                tile.add(engine.createComponent(HighlightedComponent::class.java))
-            }
-        }
     }
 
     private fun findSelectedTroop() = engine.getEntitiesFor(allOf(SelectedComponent::class, TroopComponent::class).get()).firstOrNull()
 
     private fun clearSelectedTroops() {
         engine.getEntitiesFor(allOf(SelectedComponent::class).get()).forEach { it.remove<SelectedComponent>() }
-    }
-
-    private fun clearHighlights() {
-        engine.getEntitiesFor(allOf(HighlightedComponent::class).get()).forEach { it.remove<HighlightedComponent>() }
-    }
-
-    private fun hexDistance(q1: Int, r1: Int, q2: Int, r2: Int): Int {
-        return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2
     }
 }
