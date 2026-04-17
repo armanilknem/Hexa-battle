@@ -3,13 +3,17 @@ package com.tdt4240.group3.view.styleRegistries
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.utils.Disposable
-import com.tdt4240.group3.config.team.TeamCatalog
-import com.tdt4240.group3.config.team.UnitTier
-import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.model.team.TeamCatalog
+import com.tdt4240.group3.model.team.UnitTier
+import com.tdt4240.group3.model.team.TeamName
 
+/**
+ * Registry for troop-related textures.
+ * Manages loading and providing access to unit textures based on team and strength tier.
+ */
 object TroopVisualRegistry : Disposable {
     private val catalog = TeamCatalog.teams
-    private val textures = mutableMapOf<Pair<String, UnitTier>, Texture>()
+    private val textures = mutableMapOf<Pair<TeamName, UnitTier>, Texture>()
 
     private var initialized = false
     fun init() {
@@ -17,18 +21,17 @@ object TroopVisualRegistry : Disposable {
 
         catalog.values.forEach { teamDef ->
             teamDef.troopTextures.forEach { (tier, path) ->
-                textures[teamDef.key to tier] = Texture(Gdx.files.internal(path))
+                textures[teamDef.teamName to tier] = Texture(Gdx.files.internal(path))
             }
         }
         initialized = true
     }
 
-    fun getTexture(team: TeamComponent.TeamName, strength: Int): Texture {
+    fun getTexture(teamName: TeamName, strength: Int): Texture {
         if (!initialized) init()
         val tier = tierFor(strength)
-        val key = team.toConfigKey()
-        return textures[key to tier]
-            ?: throw IllegalArgumentException("No texture found for team $team and tier $tier")
+        return textures[teamName to tier]
+            ?: throw IllegalArgumentException("No texture found for team $teamName and tier $tier")
     }
 
     private fun tierFor(strength: Int): UnitTier {
@@ -40,10 +43,5 @@ object TroopVisualRegistry : Disposable {
         textures.values.forEach { it.dispose() }
         textures.clear()
         initialized = false
-    }
-
-    private fun TeamComponent.TeamName.toConfigKey(): String {
-        require(this != TeamComponent.TeamName.NONE) { "Neutral team has no troop textures." }
-        return name.lowercase()
     }
 }

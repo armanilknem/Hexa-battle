@@ -1,9 +1,13 @@
-package com.tdt4240.group3.config.team
+package com.tdt4240.group3.model.team
 
+/**
+ * Registry for static team definitions.
+ * Centralizes configuration for team-specific visuals and display names.
+ */
 object TeamCatalog {
     val teams = mapOf(
         "red" to TeamDefinition(
-            key = "red",
+            teamName = TeamName.RED,
             displayName = "Red",
             territoryColorHex = "#FF0000",
             troopTextures = mapOf(
@@ -12,7 +16,7 @@ object TeamCatalog {
             )
         ),
         "blue" to TeamDefinition(
-            key = "blue",
+            teamName = TeamName.BLUE,
             displayName = "Blue",
             territoryColorHex = "#0000FF",
             troopTextures = mapOf(
@@ -21,7 +25,7 @@ object TeamCatalog {
             )
         ),
         "green" to TeamDefinition(
-            key = "green",
+            teamName = TeamName.GREEN,
             displayName = "Green",
             territoryColorHex = "#00FF00",
             troopTextures = mapOf(

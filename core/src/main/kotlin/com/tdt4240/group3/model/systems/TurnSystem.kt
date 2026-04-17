@@ -6,6 +6,7 @@ import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
 import com.tdt4240.group3.model.components.marker.SelectableComponent
+import com.tdt4240.group3.model.team.TeamName
 import ktx.ashley.allOf
 import ktx.ashley.get
 
@@ -41,7 +42,7 @@ class TurnSystem : EntitySystem() {
         requestTroopSpawn(gameState)
     }
 
-    fun isCurrentTeam(team: TeamComponent.TeamName): Boolean {
+    fun isCurrentTeam(team: TeamName): Boolean {
         val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return false
         val gs = gameState[GameStateComponent.mapper] ?: return false
         return gs.currentTeam == team

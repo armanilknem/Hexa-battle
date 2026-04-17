@@ -5,9 +5,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.tdt4240.group3.config.match.MatchConfig
 import com.tdt4240.group3.controller.PlayController
-import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.systems.PlayerSystem
 import com.tdt4240.group3.view.screens.HowToPlayScreen
 import com.tdt4240.group3.view.View
@@ -55,16 +53,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         engine = Engine()
         engine.addSystem(PlayerSystem())
 
-        // active teams!
-        val matchConfig = MatchConfig(
-            activeTeams = listOf(
-                TeamComponent.TeamName.RED,
-                TeamComponent.TeamName.BLUE,
-                TeamComponent.TeamName.GREEN
-            )
-        )
-
-        val playController = PlayController(this, engine, matchConfig)
+        val playController = PlayController(this, engine)
         val playScreen = playController.createScreen()
         val cols = 12f
         val rows = 11f

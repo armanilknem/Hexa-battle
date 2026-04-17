@@ -30,6 +30,7 @@ import ktx.graphics.use
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import com.tdt4240.group3.model.team.TeamName
 
 class View(
     private val batch: SpriteBatch,
@@ -226,7 +227,7 @@ class View(
     }
     private fun drawTerritory(entity: Entity) {
         val team = entity[TeamComponent.mapper]?.team ?: return
-        if (team == TeamComponent.TeamName.NONE) return
+        if (team == TeamName.NONE) return
 
         val pos = entity[PositionComponent.mapper] ?: return
         val x = pos.x
@@ -243,10 +244,10 @@ class View(
         this.drawFullHexTile(x, y, size)
     }
 
-    private fun getCurrentTeam(): TeamComponent.TeamName {
+    private fun getCurrentTeam(): TeamName {
         val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull()
         return gameState?.get(GameStateComponent.mapper)?.currentTeam
-            ?: TeamComponent.TeamName.NONE
+            ?: TeamName.NONE
     }
 
     private fun drawFullHexTile(x: Float, y: Float, size: Float) {

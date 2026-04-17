@@ -7,6 +7,7 @@ import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.components.marker.CollidingComponent
+import com.tdt4240.group3.model.team.TeamName
 import ktx.ashley.allOf
 import ktx.ashley.get
 
@@ -31,7 +32,7 @@ class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionCom
 
         if (targetTroopEntity != null) {
             val otherTroop = targetTroopEntity[TroopComponent.mapper]!!
-            val otherTeam = targetTroopEntity[TeamComponent.mapper]?.team ?: TeamComponent.TeamName.NONE
+            val otherTeam = targetTroopEntity[TeamComponent.mapper]?.team ?: TeamName.NONE
 
             if (otherTeam == team.team) {
                 // Friendly: Merge. returns true if fully merged (moving entity deleted)

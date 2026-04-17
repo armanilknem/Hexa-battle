@@ -1,4 +1,4 @@
-package com.tdt4240.group3.config.team
+package com.tdt4240.group3.model.team
 
 enum class UnitTier {
     TIER_1,

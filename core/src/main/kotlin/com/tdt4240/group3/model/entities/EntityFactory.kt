@@ -10,6 +10,7 @@ import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.model.components.CapitalComponent
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.TileComponent
+import com.tdt4240.group3.model.team.TeamName
 import ktx.ashley.entity
 import ktx.ashley.with
 import kotlin.math.abs
@@ -33,7 +34,7 @@ class EntityFactory(private val engine: Engine) {
         }
     }
 
-    fun createTroop(team: TeamComponent.TeamName, strength: Int, q: Int, r: Int) = engine.entity {
+    fun createTroop(team: TeamName, strength: Int, q: Int, r: Int) = engine.entity {
         with<TroopComponent> {
             this.strength = strength
         }
@@ -46,7 +47,7 @@ class EntityFactory(private val engine: Engine) {
             this.team = team
         }
     }
-    fun createCity(name: String, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
+    fun createCity(name: String, baseProduction: Int, q: Int, r: Int, team: TeamName) = engine.entity {
         with<CityComponent> {
             this.name = name
             this.baseProduction = baseProduction
@@ -61,7 +62,7 @@ class EntityFactory(private val engine: Engine) {
         }
     }
 
-    fun createCapital(name: String, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
+    fun createCapital(name: String, baseProduction: Int, q: Int, r: Int, team: TeamName) = engine.entity {
         with<CityComponent> {
             this.name = name
             this.baseProduction = baseProduction
@@ -94,17 +95,17 @@ class EntityFactory(private val engine: Engine) {
             this.zIndex = 0 // Bottom layer
         }
         with<TeamComponent> {
-            this.team = TeamComponent.TeamName.NONE
+            this.team = TeamName.NONE
         }
     }
 
-    fun createGameState(activeTeams: List<TeamComponent.TeamName>) = engine.entity {
+    fun createGameState(activeTeams: List<TeamName>) = engine.entity {
         with<GameStateComponent> {
             initialize(activeTeams)
         }
     }
 
-    fun generateCapitals(teams: List<TeamComponent.TeamName>): List<Pair<Int, Int>> {
+    fun generateCapitals(teams: List<TeamName>): List<Pair<Int, Int>> {
         val capitalNames = MapData.CAPITAL_NAMES.toMutableList()
             .also { it.shuffle(Random(System.currentTimeMillis())) }
 
@@ -211,7 +212,7 @@ class EntityFactory(private val engine: Engine) {
                     baseProduction = 10,
                     q = tile.first,
                     r = tile.second,
-                    team = TeamComponent.TeamName.NONE
+                    team = TeamName.NONE
                 )
             }
         }

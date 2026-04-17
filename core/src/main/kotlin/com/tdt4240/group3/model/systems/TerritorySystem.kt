@@ -8,6 +8,7 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.components.marker.TerritoryComponent
+import com.tdt4240.group3.model.team.TeamName
 import ktx.ashley.allOf
 import ktx.ashley.get
 
@@ -30,14 +31,14 @@ class TerritorySystem : IteratingSystem(
         entity.remove(TerritoryComponent::class.java)
     }
 
-    fun claimTerritory(centerTile: Entity, team: TeamComponent.TeamName) {
+    fun claimTerritory(centerTile: Entity, team: TeamName) {
         val centerPos = centerTile[PositionComponent.mapper] ?: return
 
         claimCenterTile(centerTile, centerPos.q, centerPos.r, team)
         claimNearbyTiles(centerPos.q, centerPos.r, team)
     }
 
-    private fun claimCenterTile(tile: Entity, q: Int, r: Int, team: TeamComponent.TeamName) {
+    private fun claimCenterTile(tile: Entity, q: Int, r: Int, team: TeamName) {
         val tileAtCenter = engine.entities.firstOrNull {
             tileFamily.matches(it) &&
                 it[PositionComponent.mapper]?.q == q &&
@@ -48,7 +49,7 @@ class TerritorySystem : IteratingSystem(
         findCityAt(q, r)?.get(TeamComponent.mapper)?.team = team
     }
 
-    private fun claimNearbyTiles(centerQ: Int, centerR: Int, team: TeamComponent.TeamName) {
+    private fun claimNearbyTiles(centerQ: Int, centerR: Int, team: TeamName) {
         val tiles = engine.entities.filter { tileFamily.matches(it) }
 
         tiles.forEach { tile ->
