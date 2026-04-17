@@ -12,17 +12,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.utils.Disposable
 import com.tdt4240.group3.model.components.CapitalComponent
-import com.tdt4240.group3.model.components.CityComponent
-import com.tdt4240.group3.model.components.GameStateComponent
-import com.tdt4240.group3.model.components.PositionComponent
-import com.tdt4240.group3.model.components.TeamComponent
-import com.tdt4240.group3.model.components.TileComponent
-import com.tdt4240.group3.model.components.TroopComponent // add when ready
-import com.tdt4240.group3.model.components.marker.HighlightedComponent
-import com.tdt4240.group3.model.components.marker.SelectedComponent
-import com.tdt4240.group3.view.styleRegistries.CityStyleRegistry
-import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
-import com.tdt4240.group3.view.styleRegistries.TroopVisualRegistry
+import com.tdt4240.group3.model.ecs.components.*
+import com.tdt4240.group3.model.ecs.components.marker.*
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely
@@ -31,6 +22,9 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.view.styleRegistries.CityStyleRegistry
+import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
+import com.tdt4240.group3.view.styleRegistries.TroopVisualRegistry
 
 class View(
     private val batch: SpriteBatch,
@@ -46,7 +40,6 @@ class View(
     private val cityFamily  = allOf(PositionComponent::class, CityComponent::class).get()
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class).get()
     private val gameStateFamily = allOf(GameStateComponent::class).get()
-
 
     override fun update(deltaTime: Float) {
         stateTime += deltaTime
@@ -231,6 +224,7 @@ class View(
             pos.y + 20f
         )
     }
+
     private fun drawTerritory(entity: Entity) {
         val team = entity[TeamComponent.mapper]?.team ?: return
         if (team == TeamName.NONE) return
