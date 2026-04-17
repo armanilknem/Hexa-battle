@@ -1,4 +1,4 @@
-package com.tdt4240.group3.config.unit
+package com.tdt4240.group3.model.entities.unit
 
 /**
  * Registry for static unit definitions.
@@ -9,13 +9,8 @@ object UnitCatalog {
         "baseTroop" to UnitDefinition(
             key = "baseTroop",
             displayName = "Base Troop",
-            movement = MovementRules(
-                moveRange = 2
-            ),
-            combat = CombatRules(
-                maxStackSize = 99,
-                canMergeFriendly = true
-            )
+            movement = MovementRules(),
+            combat = CombatRules()
         ),
         "tank" to UnitDefinition(
             key = "tank",

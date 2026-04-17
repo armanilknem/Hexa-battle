@@ -7,7 +7,7 @@ import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.badlogic.ashley.core.Entity
-import com.tdt4240.group3.config.unit.UnitCatalog
+import com.tdt4240.group3.model.entities.unit.UnitCatalog
 import com.tdt4240.group3.model.components.CombatComponent
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.MovementComponent

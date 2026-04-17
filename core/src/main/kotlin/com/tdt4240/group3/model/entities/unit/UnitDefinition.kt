@@ -1,4 +1,4 @@
-package com.tdt4240.group3.config.unit
+package com.tdt4240.group3.model.entities.unit
 
 data class UnitDefinition(
     val key: String,
