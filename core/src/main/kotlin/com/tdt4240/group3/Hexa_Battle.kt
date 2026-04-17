@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.tdt4240.group3.controller.PlayController
-import com.tdt4240.group3.model.ecs.systems.PlayerSystem
+import com.tdt4240.group3.model.systems.PlayerSystem
 import com.tdt4240.group3.view.screens.HowToPlayScreen
 import com.tdt4240.group3.view.View
 import com.tdt4240.group3.network.PlayerService

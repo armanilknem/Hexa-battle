@@ -3,10 +3,10 @@ package com.tdt4240.group3.controller
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.Hexa_Battle
-import com.tdt4240.group3.model.ecs.components.GameStateComponent
-import com.tdt4240.group3.model.ecs.entities.EntityFactory
-import com.tdt4240.group3.model.ecs.systems.*
-import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.model.components.GameStateComponent
+import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.model.systems.*
+import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.view.screens.PlayScreen
 import ktx.ashley.get
 
@@ -69,7 +69,9 @@ class PlayController(
     }
 
     private fun setUpInitialGameState(): Entity {
-        return factory.createGameState(listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN))
+        val teams = Team.entries.filter { it.isPlayer }
+
+        return factory.createGameState(teams)
     }
 
     private fun initializeTroops(troopCreationController: TroopCreationController, gameState: Entity) {

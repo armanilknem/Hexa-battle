@@ -18,8 +18,8 @@ import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PauseController
 import com.tdt4240.group3.controller.SelectionController
 import com.tdt4240.group3.controller.TurnController
-import com.tdt4240.group3.model.team.TeamName
-import com.tdt4240.group3.model.ecs.components.*
+import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PlayerTurnState
 import ktx.actors.onClick
@@ -181,7 +181,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     }
 
     fun goToMenu() { game.setScreen<MenuScreen>() }
-    fun goToWin(winner: TeamName) {
+    fun goToWin(winner: Team) {
         game.getScreen<WinScreen>().winner = winner
         game.setScreen<WinScreen>()
     }
