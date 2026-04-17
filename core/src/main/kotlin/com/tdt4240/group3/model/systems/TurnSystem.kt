@@ -15,6 +15,7 @@ class TurnSystem : EntitySystem() {
 
     override fun update(deltaTime: Float) {
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
+        val gs = gameStateEntity[GameStateComponent.mapper] ?: return
 
         if (gameStateEntity.getComponent(NeedsTroopSpawnComponent::class.java) != null) {
             return
@@ -22,7 +23,7 @@ class TurnSystem : EntitySystem() {
 
         val selectableTroops = engine.getEntitiesFor(allOf(SelectableComponent::class).get()).toList()
 
-        if (selectableTroops.isEmpty()) {
+        if (selectableTroops.isEmpty() || gs.movesLeft < 1) {
             endTurn()
         }
     }
@@ -39,6 +40,7 @@ class TurnSystem : EntitySystem() {
             gs.turnCount++
         }
 
+        gs.movesLeft = 5
         requestTroopSpawn(gameState)
     }
 

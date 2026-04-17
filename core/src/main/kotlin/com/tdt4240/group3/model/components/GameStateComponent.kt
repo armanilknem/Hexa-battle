@@ -9,6 +9,8 @@ class GameStateComponent: Component, Pool.Poolable {
     val activeTeams = mutableListOf<TeamName>()
     var currentTeamIndex: Int = 0
     var turnCount: Int = 1
+    var movesLeft: Int = 5
+
     val currentTeam: TeamName
         get() = activeTeams.getOrElse(currentTeamIndex) { TeamName.NONE }
 
@@ -23,6 +25,7 @@ class GameStateComponent: Component, Pool.Poolable {
         activeTeams.clear()
         currentTeamIndex = 0
         turnCount = 1
+        movesLeft = 5
     }
 
     companion object {
