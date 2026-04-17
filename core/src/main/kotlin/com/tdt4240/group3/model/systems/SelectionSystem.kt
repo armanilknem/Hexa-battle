@@ -51,6 +51,13 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
         val troopData = troop[TroopComponent.mapper] ?: return
         val currentPos = troop[PositionComponent.mapper] ?: return
 
+        // Reselect troop to cancel move
+        if (currentPos.q == tilePos.q && currentPos.r == tilePos.r) {
+            clearSelectedTroops()
+            clearHighlights()
+            return // Move is not counted
+        }
+
         // Find if there is a troop at the destination
         val targetTroopEntity = engine.getEntitiesFor(allOf(TroopComponent::class, PositionComponent::class).get())
             .find {
