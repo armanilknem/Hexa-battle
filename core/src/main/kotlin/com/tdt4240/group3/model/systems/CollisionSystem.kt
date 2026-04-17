@@ -2,6 +2,7 @@ package com.tdt4240.group3.model.systems
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.systems.IteratingSystem
+import com.tdt4240.group3.model.components.CombatComponent
 import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
@@ -9,11 +10,19 @@ import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.components.marker.CollidingComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
+import kotlin.math.ceil
+import kotlin.math.max
 
-class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionComponent::class, TeamComponent::class, CollidingComponent::class).get()){
+class CollisionSystem : IteratingSystem(allOf(
+    TroopComponent::class,
+    CombatComponent::class,
+    PositionComponent::class,
+    TeamComponent::class,
+    CollidingComponent::class).get()){
 
     override fun processEntity(movingEntity: Entity, deltaTime: Float) {
         val troop = movingEntity[TroopComponent.mapper]!!
+        val combat = movingEntity.getComponent(CombatComponent::class.java) ?: return
         val pos = movingEntity[PositionComponent.mapper]!!
         val team = movingEntity[TeamComponent.mapper]!!
 
@@ -26,20 +35,23 @@ class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionCom
             }
 
         // --- STEP 1: RESOLVE TROOP COLLISIONS FIRST ---
-        val targetTroopEntity = otherEntities.find { it[TroopComponent.mapper] != null }
+        val targetTroopEntity = otherEntities.find {
+            it[TroopComponent.mapper] != null && it.getComponent(CombatComponent::class.java) != null
+        }
         var movingTroopSurvived = true
 
         if (targetTroopEntity != null) {
             val otherTroop = targetTroopEntity[TroopComponent.mapper]!!
+            val otherCombat = targetTroopEntity.getComponent(CombatComponent::class.java) ?: return
             val otherTeam = targetTroopEntity[TeamComponent.mapper]?.team ?: TeamComponent.TeamName.NONE
 
             if (otherTeam == team.team) {
                 // Friendly: Merge. returns true if fully merged (moving entity deleted)
-                val fullyMerged = handleMerge(movingEntity, troop, targetTroopEntity, otherTroop)
+                val fullyMerged = handleMerge(movingEntity, troop, combat, targetTroopEntity, otherTroop, otherCombat)
                 if (fullyMerged) movingTroopSurvived = false
             } else {
                 // Enemy: Combat. returns true if moving troop won and stayed on tile
-                movingTroopSurvived = handleCombat(movingEntity, troop, targetTroopEntity, otherTroop)
+                movingTroopSurvived = handleCombat(movingEntity, troop, combat, targetTroopEntity, otherTroop, otherCombat)
             }
         }
 
@@ -60,37 +72,56 @@ class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionCom
         movingEntity.remove(CollidingComponent::class.java)
     }
 
-    private fun handleMerge(movingEntity: Entity, movingTroop: TroopComponent, stationaryEntity: Entity, stationaryTroop: TroopComponent): Boolean {
-        val total = movingTroop.strength + stationaryTroop.strength
+    private fun handleMerge(
+        movingEntity: Entity,
+        movingTroop: TroopComponent,
+        movingCombat: CombatComponent,
+        stationaryEntity: Entity,
+        stationaryTroop: TroopComponent,
+        stationaryCombat: CombatComponent
+    ): Boolean {
+        if (!movingCombat.canMergeFriendly || !stationaryCombat.canMergeFriendly) {
+            bounceBack(movingEntity)
+            return false
+        }
 
-        return if (total <= 99) {
+        val total = movingTroop.strength + stationaryTroop.strength
+        val maxStack = stationaryCombat.maxStackSize
+
+        return if (total <= maxStack) {
             // Success: Combine all into the target tile
             stationaryTroop.strength = total
             engine.removeEntity(movingEntity)
             true
         } else {
             // Overflow: Target tile hits 99, moving troop bounces back with remainder
-            stationaryTroop.strength = 99
-            movingTroop.strength = total - 99
-
-            val pos = movingEntity[PositionComponent.mapper]!!
-            pos.q = pos.prevQ
-            pos.r = pos.prevR
+            stationaryTroop.strength = maxStack
+            movingTroop.strength = total - maxStack
+            bounceBack(movingEntity)
             false
         }
     }
 
-    private fun handleCombat(movingEntity: Entity, movingTroop: TroopComponent, enemyEntity: Entity, enemyTroop: TroopComponent): Boolean {
-        val diff = movingTroop.strength - enemyTroop.strength
+    private fun handleCombat(
+        movingEntity: Entity,
+        movingTroop: TroopComponent,
+        movingCombat: CombatComponent,
+        enemyEntity: Entity,
+        enemyTroop: TroopComponent,
+        enemyCombat: CombatComponent
+    ): Boolean {
+        val attackerPower = movingTroop.strength * movingCombat.attackMultiplier
+        val defenderPower = enemyTroop.strength * enemyCombat.defenseMultiplier
+        val diff = attackerPower - defenderPower
 
         return when {
             diff > 0 -> { // Moving troop wins
-                movingTroop.strength = diff
+                movingTroop.strength = max(1, ceil(diff / movingCombat.attackMultiplier).toInt())
                 engine.removeEntity(enemyEntity)
                 true
             }
             diff < 0 -> { // Enemy troop wins (stationary wins)
-                enemyTroop.strength = -diff
+                enemyTroop.strength = max(1, ceil((-diff) / enemyCombat.defenseMultiplier).toInt())
                 engine.removeEntity(movingEntity)
                 false
             }
@@ -100,5 +131,11 @@ class CollisionSystem : IteratingSystem(allOf(TroopComponent::class, PositionCom
                 false
             }
         }
+    }
+
+    private fun bounceBack(entity: Entity) {
+        val pos = entity[PositionComponent.mapper] ?: return
+        pos.q = pos.prevQ
+        pos.r = pos.prevR
     }
 }

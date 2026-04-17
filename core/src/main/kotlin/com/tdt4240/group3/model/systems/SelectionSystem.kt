@@ -3,6 +3,7 @@ package com.tdt4240.group3.model.systems
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
 import com.tdt4240.group3.model.components.PositionComponent
+import com.tdt4240.group3.model.components.MovementComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent
@@ -23,7 +24,7 @@ class SelectionSystem() : EntitySystem() {
     private val cityFamily  = allOf(PositionComponent::class, CityComponent::class).get()
 
     private val troopFamily =
-        allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class).get()
+        allOf(PositionComponent::class, TroopComponent::class, TeamComponent::class, MovementComponent::class).get()
 
     private val gameStateFamily = allOf(GameStateComponent::class).get()
     fun handleTouch(worldX: Float, worldY: Float) {
@@ -86,7 +87,7 @@ class SelectionSystem() : EntitySystem() {
     }
 
     private fun findSelectedTroop(): Entity? {
-        return engine.getEntitiesFor(allOf(SelectedComponent::class, TroopComponent::class).get()).firstOrNull()
+        return engine.getEntitiesFor(allOf(SelectedComponent::class, TroopComponent::class, MovementComponent::class).get()).firstOrNull()
     }
 
     private fun clearSelectedTroops() {
@@ -96,10 +97,12 @@ class SelectionSystem() : EntitySystem() {
 
     private fun highlightReachableTiles(troop: Entity) {
         val troopPos = troop[PositionComponent.mapper] ?: return
+        val movement = troop.getComponent(MovementComponent::class.java) ?: return
+        val moveRange = movement.moveRange
         engine.entities.forEach { entity ->
             if (!tileFamily.matches(entity)) return@forEach
             val hex = entity[PositionComponent.mapper] ?: return@forEach
-            if (hexDistance(troopPos.q, troopPos.r, hex.q, hex.r) <= 2) {
+            if (hexDistance(troopPos.q, troopPos.r, hex.q, hex.r) <= moveRange) {
                 entity.add(engine.createComponent(HighlightedComponent::class.java))
             }
         }

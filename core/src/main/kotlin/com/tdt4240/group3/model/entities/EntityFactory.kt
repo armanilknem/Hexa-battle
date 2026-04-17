@@ -9,8 +9,12 @@ import com.tdt4240.group3.model.components.TroopComponent
 import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
+import com.tdt4240.group3.config.unit.UnitCatalog
+import com.tdt4240.group3.model.components.CombatComponent
 import com.tdt4240.group3.model.components.GameStateComponent
+import com.tdt4240.group3.model.components.MovementComponent
 import com.tdt4240.group3.model.components.TileComponent
+import com.tdt4240.group3.model.components.UnitComponent
 import ktx.ashley.entity
 import ktx.ashley.with
 import kotlin.math.abs
@@ -18,7 +22,6 @@ import kotlin.math.floor
 import kotlin.random.Random
 
 class EntityFactory(private val engine: Engine) {
-
     fun createPlayer(name: String) = engine.entity {
         with<PlayerComponent > {
             this.name = name
@@ -34,7 +37,21 @@ class EntityFactory(private val engine: Engine) {
         }
     }
 
-    fun createTroop( team: TeamComponent.TeamName, strength: Int, q: Int, r: Int) = engine.entity {
+    fun createTroop(team: TeamComponent.TeamName, unitKey: String, strength: Int, q: Int, r: Int) = engine.entity {
+        val unitDef = UnitCatalog.units.getValue(unitKey)
+        with<UnitComponent> {
+            this.unitKey = unitDef.key
+        }
+        with<MovementComponent> {
+            this.moveRange = unitDef.movement.moveRange
+            this.canCrossWater = unitDef.movement.canCrossWater
+        }
+        with<CombatComponent> {
+            this.maxStackSize = unitDef.combat.maxStackSize
+            this.attackMultiplier = unitDef.combat.attackMultiplier
+            this.defenseMultiplier = unitDef.combat.defenseMultiplier
+            this.canMergeFriendly = unitDef.combat.canMergeFriendly
+        }
         with<TroopComponent> {
             this.strength = strength
         }
@@ -62,11 +79,14 @@ class EntityFactory(private val engine: Engine) {
             this.team = team
         }
     }
-    fun createTroopFromCity(cityEntity: com.badlogic.ashley.core.Entity): com.badlogic.ashley.core.Entity {
+
+    // create baseTroop
+    fun createTroopFromCity(cityEntity: Entity): Entity {
+        val troopType = "baseTroop"
         val city = CityComponent.mapper.get(cityEntity)
         val position = PositionComponent.mapper.get(cityEntity)
         val team = TeamComponent.mapper.get(cityEntity)
-        return createTroop(team.team, city.baseProduction, position.q, position.r)
+        return createTroop(team.team, troopType, city.baseProduction, position.q, position.r)
     }
 
     fun createTile(q: Int, r: Int, type: TileComponent.TileType): Entity = engine.entity {
