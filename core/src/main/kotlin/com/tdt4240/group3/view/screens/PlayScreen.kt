@@ -22,6 +22,7 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.PositionComponent
+import com.tdt4240.group3.model.team.TeamName
 import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PlayerTurnState
 import ktx.actors.onClick
@@ -183,7 +184,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     }
 
     fun goToMenu() { game.setScreen<MenuScreen>() }
-    fun goToWin(winner: TeamComponent.TeamName) {
+    fun goToWin(winner: TeamName) {
         game.getScreen<WinScreen>().winner = winner
         game.setScreen<WinScreen>()
     }
