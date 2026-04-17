@@ -1,8 +1,11 @@
 package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
@@ -39,6 +42,7 @@ class LobbyScreen(
 
     private val stage = Stage(ScreenViewport())
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private val backgroundTexture = Texture(Gdx.files.internal("backgrounds/MenuBackground.png"))
 
     private var lobby = initialLobby
     private var channel: RealtimeChannel? = null
@@ -71,6 +75,7 @@ class LobbyScreen(
         val root = Table().apply {
             setFillParent(true)
             center()
+            background = TextureRegionDrawable(TextureRegion(backgroundTexture))
         }
 
         root.add(backBtn).left().pad(10f).row()
@@ -168,6 +173,7 @@ class LobbyScreen(
 
     override fun dispose() {
         stage.dispose()
+        backgroundTexture.dispose()
         if (VisUI.isLoaded()) VisUI.dispose()
         scope.cancel()
     }
