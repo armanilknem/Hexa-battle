@@ -11,8 +11,9 @@ object TeamCatalog {
             displayName = "Red",
             territoryColorHex = "#FF0000",
             troopTextures = mapOf(
-                UnitTier.TIER_1 to "red_troop.png",
-                UnitTier.TIER_2 to "RedTank.png"
+                UnitTier.TIER_1 to "troopSprites/red_soldier.png",
+                UnitTier.TIER_2 to "troopSprites/red_tank.png",
+                UnitTier.TIER_3 to "troopSprites/red_plane.png"
             )
         ),
         "blue" to TeamDefinition(
@@ -20,8 +21,9 @@ object TeamCatalog {
             displayName = "Blue",
             territoryColorHex = "#0000FF",
             troopTextures = mapOf(
-                UnitTier.TIER_1 to "blue_troop.png",
-                UnitTier.TIER_2 to "BlueTank.png"
+                UnitTier.TIER_1 to "troopSprites/blue_soldier.png",
+                UnitTier.TIER_2 to "troopSprites/blue_tank.png",
+                UnitTier.TIER_3 to "troopSprites/blue_plane.png"
             )
         ),
         "green" to TeamDefinition(
@@ -29,8 +31,9 @@ object TeamCatalog {
             displayName = "Green",
             territoryColorHex = "#00FF00",
             troopTextures = mapOf(
-                UnitTier.TIER_1 to "troop.png",
-                UnitTier.TIER_2 to "troop.png",
+                UnitTier.TIER_1 to "troopSprites/green_soldier.png",
+                UnitTier.TIER_2 to "troopSprites/green_tank.png",
+                UnitTier.TIER_3 to "troopSprites/green_plane.png"
             )
         )
     )

@@ -35,7 +35,11 @@ object TroopVisualRegistry : Disposable {
     }
 
     private fun tierFor(strength: Int): UnitTier {
-        return if (strength < 65) UnitTier.TIER_1 else UnitTier.TIER_2
+        return when {
+            strength < 40 -> UnitTier.TIER_1
+            strength < 80 -> UnitTier.TIER_2
+            else -> UnitTier.TIER_3
+        }
     }
 
     override fun dispose() {
