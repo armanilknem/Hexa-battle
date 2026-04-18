@@ -2,6 +2,8 @@ package com.tdt4240.group3.model.ecs.entities
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
+import com.tdt4240.group3.model.components.CapitalComponent
+import com.tdt4240.group3.model.team.TeamName
 import com.tdt4240.group3.model.ecs.components.CityComponent
 import com.tdt4240.group3.model.ecs.components.CombatComponent
 import com.tdt4240.group3.model.ecs.components.GameStateComponent
@@ -12,7 +14,7 @@ import com.tdt4240.group3.model.ecs.components.TeamComponent
 import com.tdt4240.group3.model.ecs.components.TileComponent
 import com.tdt4240.group3.model.ecs.components.TroopComponent
 import com.tdt4240.group3.model.ecs.components.UnitComponent
-import com.tdt4240.group3.model.map.MapData
+import com.tdt4240.group3.model.MapData
 import com.tdt4240.group3.model.unit.UnitCatalog
 import ktx.ashley.entity
 import ktx.ashley.with
@@ -39,7 +41,7 @@ class EntityFactory(private val engine: Engine) {
     /**
      * Creates a troop entity based on a definition from the UnitCatalog.
      */
-    fun createTroop(team: TeamComponent.TeamName, unitKey: String, strength: Int, q: Int, r: Int) = engine.entity {
+    fun createTroop(team: TeamName, unitKey: String, strength: Int, q: Int, r: Int) = engine.entity {
         val unitDef = UnitCatalog.units.getValue(unitKey)
         with<UnitComponent> {
             this.unitKey = unitDef.key
@@ -66,11 +68,10 @@ class EntityFactory(private val engine: Engine) {
             this.team = team
         }
     }
-    fun createCity(name: String, isCapital: Boolean, baseProduction: Int, q: Int, r: Int, team: TeamComponent.TeamName) = engine.entity {
+    fun createCity(name: String, baseProduction: Int, q: Int, r: Int, team: TeamName) = engine.entity {
         with<CityComponent> {
             this.name = name
             this.baseProduction = baseProduction
-            this.isCapital = isCapital
         }
         with<PositionComponent> {
             this.q = q
@@ -81,6 +82,23 @@ class EntityFactory(private val engine: Engine) {
             this.team = team
         }
     }
+
+    fun createCapital(name: String, baseProduction: Int, q: Int, r: Int, team: TeamName) = engine.entity {
+        with<CityComponent> {
+            this.name = name
+            this.baseProduction = baseProduction
+        }
+        with<PositionComponent> {
+            this.q = q
+            this.r = r
+            this.zIndex = 1 // Middle layer
+        }
+        with<TeamComponent> {
+            this.team = team
+        }
+        with<CapitalComponent> {}
+    }
+
 
     /**
      * Creates a troop entity from a city entity based on definition from the UnitCatalog.
@@ -102,12 +120,89 @@ class EntityFactory(private val engine: Engine) {
             this.zIndex = 0 // Bottom layer
         }
         with<TeamComponent> {
-            this.team = TeamComponent.TeamName.NONE
+            this.team = TeamName.NONE
         }
     }
 
-    fun createGameState() = engine.entity {
-        with<GameStateComponent>()
+    fun createGameState(activeTeams: List<TeamName>) = engine.entity {
+        with<GameStateComponent> {
+            initialize(activeTeams)
+        }
+    }
+
+    fun generateCapitals(teams: List<TeamName>): List<Pair<Int, Int>> {
+        val capitalNames = MapData.CAPITAL_NAMES.toMutableList()
+            .also { it.shuffle(Random(System.currentTimeMillis())) }
+
+        val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
+
+        data class TilePos(val q: Int, val r: Int, val x: Float, val y: Float)
+
+        val validTiles = engine.getEntitiesFor(tileFamily)
+            .mapNotNull { entity ->
+                val pos = PositionComponent.mapper.get(entity) ?: return@mapNotNull null
+                val coords = pos.q to pos.r
+                if (coords in MapData.WATER_TILES) return@mapNotNull null
+                TilePos(pos.q, pos.r, pos.x, pos.y)
+            }
+
+        if (validTiles.isEmpty()) return emptyList()
+
+        val minX = validTiles.minOf { it.x }
+        val maxX = validTiles.maxOf { it.x }
+        val minY = validTiles.minOf { it.y }
+        val maxY = validTiles.maxOf { it.y }
+
+        val centerX = (minX + maxX) / 2f
+        val padX = (maxX - minX) * 0.12f
+        val padY = (maxY - minY) * 0.12f
+
+        val anchors = listOf(
+            (minX + padX) to (minY + padY), // bottom-left-ish
+            centerX to (minY + padY),       // bottom
+            (maxX - padX) to (minY + padY), // bottom-right-ish
+            (maxX - padX) to (maxY - padY), // top-right-ish
+            centerX to (maxY - padY),       // top
+            (minX + padX) to (maxY - padY)  // top-left-ish
+        )
+
+        val anchorIndices = when (teams.size) {
+            1 -> listOf(0)
+            2 -> listOf(0, 3)
+            3 -> listOf(0, 2, 4)
+            4 -> listOf(0, 2, 3, 5)
+            5 -> listOf(0, 1, 2, 3, 5)
+            else -> listOf(0, 1, 2, 3, 4, 5)
+        }
+
+        val used = mutableSetOf<Pair<Int, Int>>()
+        val placedCapitals = mutableListOf<Pair<Int, Int>>()
+
+        teams.take(anchorIndices.size).forEachIndexed { index, team ->
+            val (ax, ay) = anchors[anchorIndices[index]]
+
+            val bestTile = validTiles
+                .filter { (it.q to it.r) !in used }
+                .minByOrNull { tile ->
+                    val dx = tile.x - ax
+                    val dy = tile.y - ay
+                    dx * dx + dy * dy
+                } ?: return@forEachIndexed
+
+            val coords = bestTile.q to bestTile.r
+            used.add(coords)
+            placedCapitals.add(coords)
+
+            createCapital(
+                name = capitalNames.getOrElse(index) { "Capital ${index + 1}" },
+                baseProduction = 20,
+                q = bestTile.q,
+                r = bestTile.r,
+                team = team
+            )
+        }
+
+        return placedCapitals
     }
 
     fun generateNormalCities(count: Int, capitalPositions: List<Pair<Int, Int>>) {
@@ -137,15 +232,16 @@ class EntityFactory(private val engine: Engine) {
                 val name = cityNames.getOrElse(placedCities.size - 1) { "City ${placedCities.size}" }
                 createCity(
                     name = name,
-                    isCapital = false,
                     baseProduction = 10,
                     q = tile.first,
                     r = tile.second,
-                    team = TeamComponent.TeamName.NONE
+                    team = TeamName.NONE
                 )
             }
         }
     }
+
+
 
     private fun hexDistance(q1: Int, r1: Int, q2: Int, r2: Int): Int {
         return (abs(q1 - q2) + abs(q1 + r1 - q2 - r2) + abs(r1 - r2)) / 2

@@ -9,12 +9,13 @@ import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.model.ecs.components.TeamComponent
+import com.tdt4240.group3.model.team.TeamName
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
 
 class WinScreen(private val game: Hexa_Battle) : KtxScreen {
-    var winner: TeamComponent.TeamName = TeamComponent.TeamName.NONE
+    var winner: TeamName = TeamName.NONE
     private lateinit var stage: Stage
 
     override fun show() {
@@ -37,7 +38,7 @@ class WinScreen(private val game: Hexa_Battle) : KtxScreen {
     }
 
     override fun render(delta: Float) {
-        val (r, g, b) = if (winner == TeamComponent.TeamName.RED) Triple(0.4f, 0.1f, 0.1f)
+        val (r, g, b) = if (winner == TeamName.RED) Triple(0.4f, 0.1f, 0.1f)
                         else Triple(0.1f, 0.2f, 0.4f)
         clearScreen(r, g, b, 1f)
         stage.act(delta)

@@ -1,25 +1,34 @@
-package com.tdt4240.group3.model.systems
+package com.tdt4240.group3.model.ecs.systems
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.systems.IteratingSystem
+import com.tdt4240.group3.model.components.CapitalComponent
 import com.tdt4240.group3.model.ecs.components.CityComponent
 import com.tdt4240.group3.model.ecs.components.TeamComponent
+import com.tdt4240.group3.model.team.TeamName
 import ktx.ashley.allOf
 import ktx.ashley.get
 
 class WinSystem : IteratingSystem(allOf(TeamComponent::class, CityComponent::class).get()) {
-    var onWin: ((TeamComponent.TeamName) -> Unit)? = null
+    var onWin: ((TeamName) -> Unit)? = null
     private var winTriggered = false
 
     override fun update(deltaTime: Float) {
         if (winTriggered) return
-        val capitals = entities.filter { it[CityComponent.mapper]?.isCapital == true }
+
+        // Find all capital entities
+        val capitals = engine.getEntitiesFor(allOf(CapitalComponent::class).get()).toList()
         if (capitals.isEmpty()) return
-        val owner = capitals.first()[TeamComponent.mapper]?.team ?: return
-        if (owner == TeamComponent.TeamName.NONE) return
-        if (capitals.all { it[TeamComponent.mapper]?.team == owner }) {
+
+        // Check if all capitals are owned by the same (non-NONE) team
+        val firstOwner = capitals.first()[TeamComponent.mapper]?.team ?: return
+        if (firstOwner == TeamName.NONE) return
+
+        val allOwnedBySameTeam = capitals.all { it[TeamComponent.mapper]?.team == firstOwner }
+
+        if (allOwnedBySameTeam) {
             winTriggered = true
-            onWin?.invoke(owner)
+            onWin?.invoke(firstOwner)
         }
     }
 

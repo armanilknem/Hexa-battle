@@ -1,4 +1,4 @@
-package com.tdt4240.group3.model.map
+package com.tdt4240.group3.model
 
 object MapData {
 
@@ -27,5 +27,9 @@ object MapData {
         "Sortland", "Stavanger", "Stavern", "Steinkjer", "Stjoerdal", "Stokmarknes",
         "Stord", "Svelvik", "Svolvaer", "Toensberg", "Tromsoe", "Trondheim", "Tvedestrand",
         "Ulsteinvik", "Vadsoe", "Vardoe", "Farsund", "Maaloey", "Verdal", "Vestby", "Vinstra"
+    )
+
+    val CAPITAL_NAMES = listOf(
+        "London", "Paris", "Berlin", "Rome", "Madrid", "Tokyo", "Washington", "Beijing", "Cairo", "Brasilia"
     )
 }
