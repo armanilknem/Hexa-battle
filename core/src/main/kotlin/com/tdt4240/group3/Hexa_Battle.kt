@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.tdt4240.group3.controller.PlayController
 import com.tdt4240.group3.model.ecs.systems.PlayerSystem
 import com.tdt4240.group3.view.screens.HowToPlayScreen
 import com.tdt4240.group3.view.View
@@ -23,9 +22,12 @@ import java.util.UUID
 import kotlinx.coroutines.launch
 
 class Hexa_Battle : KtxGame<KtxScreen>() {
-    private lateinit var engine: Engine
-    private lateinit var view: View
-    private lateinit var shapeRenderer: ShapeRenderer
+
+    lateinit var engine: Engine
+    lateinit var view: View
+    lateinit var batch: SpriteBatch
+    lateinit var font: BitmapFont
+    lateinit var shapeRenderer: ShapeRenderer
 
     var myPlayerId: String = ""
         private set
@@ -38,11 +40,6 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         const val TITLE = "Hexa Battle"
     }
 
-    lateinit var batch: SpriteBatch private set
-    lateinit var font: BitmapFont private set
-
-
-
     override fun create() {
         KtxAsync.initiate()
         setupPlayerIdentity()
@@ -54,21 +51,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         engine = Engine()
         engine.addSystem(PlayerSystem())
 
-        val playController = PlayController(this, engine)
-        val playScreen = playController.createScreen()
-        val cols = 12f
-        val rows = 11f
-        val centerX = 16f * (sqrt(3.0).toFloat() * (cols / 2f) + sqrt(3.0).toFloat() / 2f * (rows / 2f))
-        val centerY = 16f * (3f / 2f * (rows / 2f)) + 36f
-
-        playScreen.camera.position.set(centerX, centerY, 0f)
-        playScreen.camera.update()
-        // Single unified render system — no TileRenderSystem, no CityRenderSystem
-        view = View(batch, shapeRenderer, playScreen.camera, font)
-        engine.addSystem(view)
-
         addScreen(MenuScreen(this))
-        addScreen(playScreen)
         addScreen(LobbySelectScreen(this))
         addScreen(HowToPlayScreen(this))
         addScreen(OptionsScreen(this))
@@ -83,7 +66,6 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
 
         KtxAsync.launch {
             if (savedId.isEmpty()) {
-                // First time — generate ID and create player in DB
                 val newId = UUID.randomUUID().toString()
                 val defaultName = "Guest${(1000..9999).random()}"
                 val player = PlayerService.getOrCreatePlayer(newId, defaultName)
@@ -92,7 +74,6 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
                 myPlayerId = newId
                 myPlayerName = player?.displayName ?: defaultName
             } else {
-                // Returning player — fetch name from DB
                 val player = PlayerService.getOrCreatePlayer(savedId)
                 myPlayerId = savedId
                 myPlayerName = player?.displayName ?: "Guest"

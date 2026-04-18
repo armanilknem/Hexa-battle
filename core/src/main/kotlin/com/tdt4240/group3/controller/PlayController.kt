@@ -8,6 +8,9 @@ import com.tdt4240.group3.model.ecs.entities.EntityFactory
 import com.tdt4240.group3.model.ecs.systems.*
 import com.tdt4240.group3.model.team.TeamName
 import com.tdt4240.group3.view.screens.PlayScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import ktx.ashley.get
 
 class PlayController(
@@ -15,9 +18,10 @@ class PlayController(
     private val engine: Engine,
 ) {
     private val factory: EntityFactory = EntityFactory(engine)
+    private val scope = CoroutineScope(Dispatchers.Default)
 
-    fun createScreen(): PlayScreen {
-        val turnSystem = TurnSystem()
+    fun createScreen(lobbyId: Int, myPlayerId: String, playerOrder: List<String>): PlayScreen {
+        val turnSystem = TurnSystem(lobbyId)
         val selectionSystem = SelectionSystem()
         val movementSystem = MovementSystem()
         val collisionSystem = CollisionSystem()
@@ -28,17 +32,32 @@ class PlayController(
 
         this.setUpSystems(turnSystem, selectionSystem, movementSystem, collisionSystem, troopCreationSystem, territorySystem, troopHighlightSystem, winSystem)
 
-        val turnController = TurnController(turnSystem)
+        val turnController = TurnController(turnSystem = turnSystem)
+
         val troopCreationController = TroopCreationController(troopCreationSystem)
         val pauseController = PauseController()
         val selectionController = SelectionController(engine)
 
-        val gameStateEntity = this.setUpInitialGameState()
-        this.setUpWorld()
-        this.initializeCities(gameStateEntity)
-        this.initializeTroops(troopCreationController, gameStateEntity)
+        val gameStateEntity = setUpInitialGameState(playerOrder.size)
+        val gs = gameStateEntity[GameStateComponent.mapper]!!
 
-        val playScreen = PlayScreen(game, engine, turnController, pauseController, selectionController)
+        gs.playerOrder = playerOrder
+        gs.currentPlayerIndex = playerOrder.indexOf(myPlayerId)
+
+        setUpWorld()
+        initializeCities(gameStateEntity, lobbyId)
+        initializeTroops(troopCreationController, gameStateEntity)
+
+        val playScreen = PlayScreen(
+            game,
+            engine,
+            turnController,
+            pauseController,
+            selectionController,
+            lobbyId,
+            myPlayerId
+        )
+
         winSystem.onWin = { winner -> playScreen.goToWin(winner) }
         return playScreen
     }
@@ -58,7 +77,7 @@ class PlayController(
         factory.generateRectangularGrid(18, 15)
     }
 
-    private fun initializeCities(gameStateEntity: Entity) {
+    private fun initializeCities(gameStateEntity: Entity, lobbyId: Int) {
         val gs = gameStateEntity[GameStateComponent.mapper] ?: return
         val capitalPositions = factory.generateCapitals(gs.activeTeams)
 
@@ -68,8 +87,16 @@ class PlayController(
         )
     }
 
-    private fun setUpInitialGameState(): Entity {
-        return factory.createGameState(listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN))
+    private fun setUpInitialGameState(playerCount: Int): Entity {
+        val teamNames = when (playerCount) {
+            1 -> listOf(TeamName.RED)
+            2 -> listOf(TeamName.RED, TeamName.BLUE)
+            3 -> listOf(TeamName.RED, TeamName.BLUE, TeamName.GREEN)
+            4 -> listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN)
+            else -> listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN)
+        }
+
+        return factory.createGameState(teamNames)
     }
 
     private fun initializeTroops(troopCreationController: TroopCreationController, gameState: Entity) {
