@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
 import com.tdt4240.group3.model.ecs.components.*
 import com.tdt4240.group3.model.ecs.components.marker.*
+import com.tdt4240.group3.model.team.TeamName
 import ktx.ashley.allOf
 import ktx.ashley.get
 
@@ -29,20 +30,19 @@ class TurnSystem : EntitySystem() {
         val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
         val gs = gameState[GameStateComponent.mapper] ?: return
 
-        gs.currentTeam = when (gs.currentTeam) {
-            TeamComponent.TeamName.BLUE -> TeamComponent.TeamName.RED
-            TeamComponent.TeamName.RED -> TeamComponent.TeamName.BLUE
-            else -> throw IllegalStateException("currentTeam should never be NONE")
-        }
+        if (gs.activeTeams.isEmpty()) return
 
-        if (gs.currentTeam == TeamComponent.TeamName.BLUE) {
+        gs.currentTeamIndex = (gs.currentTeamIndex + 1) % gs.activeTeams.size
+
+        if (gs.currentTeamIndex == 0) {
             gs.turnCount++
         }
+
         gs.movesLeft = 5
         requestTroopSpawn(gameState)
     }
 
-    fun isCurrentTeam(team: TeamComponent.TeamName): Boolean {
+    fun isCurrentTeam(team: TeamName): Boolean {
         val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return false
         val gs = gameState[GameStateComponent.mapper] ?: return false
         return gs.currentTeam == team

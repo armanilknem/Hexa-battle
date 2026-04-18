@@ -8,6 +8,7 @@ import com.tdt4240.group3.model.ecs.components.TeamComponent
 import com.tdt4240.group3.model.ecs.components.TroopComponent
 import com.tdt4240.group3.model.ecs.components.marker.CollidingComponent
 import com.tdt4240.group3.model.ecs.components.CityComponent
+import com.tdt4240.group3.model.team.TeamName
 import ktx.ashley.allOf
 import ktx.ashley.get
 import kotlin.math.ceil
@@ -43,7 +44,7 @@ class CollisionSystem : IteratingSystem(allOf(
         if (targetTroopEntity != null) {
             val otherTroop = targetTroopEntity[TroopComponent.mapper]!!
             val otherCombat = targetTroopEntity.getComponent(CombatComponent::class.java) ?: return
-            val otherTeam = targetTroopEntity[TeamComponent.mapper]?.team ?: TeamComponent.TeamName.NONE
+            val otherTeam = targetTroopEntity[TeamComponent.mapper]?.team ?: TeamName.NONE
 
             if (otherTeam == team.team) {
                 // Friendly: Merge. returns true if fully merged (moving entity deleted)
