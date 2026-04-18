@@ -182,7 +182,9 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
 
     fun goToMenu() { game.setScreen<MenuScreen>() }
     fun goToWin(winner: TeamName) {
-        game.getScreen<WinScreen>().winner = winner
+        val winScreen = game.getScreen<WinScreen>()
+        winScreen.winner = winner
+        winScreen.viewerTeam = game.myTeam
         game.setScreen<WinScreen>()
     }
     fun getBatch() = game.batch

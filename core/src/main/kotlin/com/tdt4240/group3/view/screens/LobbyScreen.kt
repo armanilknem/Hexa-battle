@@ -16,6 +16,7 @@ import com.tdt4240.group3.network.SupabaseClient
 import com.tdt4240.group3.network.model.Lobby
 import com.tdt4240.group3.network.model.LobbyStatus
 import com.tdt4240.group3.network.model.PresenceState
+import com.tdt4240.group3.model.team.TeamName
 import com.tdt4240.group3.screens.LobbySelectScreen
 import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.channel
@@ -123,6 +124,7 @@ class LobbyScreen(
             lobbyFlow.onEach {
                 if (it.status === LobbyStatus.PLAYING) {
                     Gdx.app.postRunnable {
+                        game.myTeam = assignTeamForPlayer(game.myPlayerId, connectedPlayers.keys)
                         game.setScreen<PlayScreen>()
                     }
                 }
@@ -176,5 +178,17 @@ class LobbyScreen(
         backgroundTexture.dispose()
         if (VisUI.isLoaded()) VisUI.dispose()
         scope.cancel()
+    }
+
+    private fun assignTeamForPlayer(playerId: String, playerIds: Collection<String>): TeamName {
+        val orderedTeams = listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN)
+        val orderedPlayerIds = playerIds.sorted()
+        val playerIndex = orderedPlayerIds.indexOf(playerId)
+
+        return if (playerIndex in orderedTeams.indices) {
+            orderedTeams[playerIndex]
+        } else {
+            TeamName.RED
+        }
     }
 }

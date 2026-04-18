@@ -17,6 +17,7 @@ import ktx.async.KtxAsync
 import com.tdt4240.group3.view.screens.MenuScreen
 import com.tdt4240.group3.view.screens.OptionsScreen
 import com.tdt4240.group3.view.screens.WinScreen
+import com.tdt4240.group3.model.team.TeamName
 import ktx.assets.disposeSafely
 import kotlin.math.sqrt
 import java.util.UUID
@@ -31,6 +32,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         private set
     var myPlayerName: String = ""
         private set
+    var myTeam: TeamName = TeamName.NONE
 
     companion object {
         const val WIDTH = 640
