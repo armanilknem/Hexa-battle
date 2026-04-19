@@ -41,7 +41,7 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
 
         playBtn.onClick    {
             game.myTeam = Team.RED
-            game.setScreen<PlayScreen>()
+            // game.setScreen<PlayScreen>()
             game.setScreen<LobbySelectScreen>()
         }
         howToBtn.onClick   { game.setScreen<HowToPlayScreen>() }
