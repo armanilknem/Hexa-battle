@@ -30,6 +30,20 @@ object LobbyService {
         }
     }
 
+    suspend fun getLobbyPlayers(lobbyId: Int): List<LobbyPlayer> {
+        return try {
+            val lobbyPlayers = client.from("lobby_players").select() {
+                filter {
+                    eq("lobby_id", lobbyId)
+                }
+            }.decodeList<LobbyPlayer>()
+            lobbyPlayers
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
     suspend fun joinLobbyByCode(code: String, playerId: String): LobbyResult {
         return try {
             PlayerService.getOrCreatePlayer(playerId)

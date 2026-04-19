@@ -11,22 +11,21 @@ import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.controller.PlayController
+import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.network.LobbyGameStateService
 import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.SupabaseClient
 import com.tdt4240.group3.network.model.Lobby
 import com.tdt4240.group3.network.model.LobbyStatus
 import com.tdt4240.group3.network.model.PresenceState
-import com.tdt4240.group3.model.team.TeamName
 import com.tdt4240.group3.screens.LobbySelectScreen
+import com.tdt4240.group3.view.View
 import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresSingleDataFlow
 import io.github.jan.supabase.realtime.presenceDataFlow
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.Json
@@ -35,6 +34,7 @@ import kotlinx.serialization.json.jsonObject
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
+import kotlin.math.sqrt
 
 class LobbyScreen(
     private val game: Hexa_Battle,
@@ -48,14 +48,15 @@ class LobbyScreen(
     private var lobby = initialLobby
     private var channel: RealtimeChannel? = null
 
-    // playerId -> displayName
     private val connectedPlayers = mutableMapOf<String, String>()
-    private lateinit var backBtn: VisTextButton
 
     private lateinit var codeLabel: VisLabel
     private lateinit var countLabel: VisLabel
     private lateinit var playerTable: Table
     private lateinit var startBtn: VisTextButton
+    private lateinit var backBtn: VisTextButton
+
+    private var transitioningToPlay = false
 
     override fun show() {
         if (!VisUI.isLoaded()) VisUI.load()
@@ -80,9 +81,7 @@ class LobbyScreen(
         }
 
         root.add(backBtn).left().pad(10f).row()
-        backBtn.onClick {
-            game.setScreen<LobbySelectScreen>()
-        }
+        backBtn.onClick { game.setScreen<LobbySelectScreen>() }
 
         root.add(codeLabel).padBottom(10f).row()
         root.add(countLabel).padBottom(20f).row()
@@ -92,8 +91,16 @@ class LobbyScreen(
         if (lobby.hostId == game.myPlayerId) {
             root.add(startBtn).width(280f).height(60f).row()
             startBtn.onClick {
+                startBtn.isDisabled = true
                 scope.launch {
-                    LobbyService.startGame(lobby.id!!, connectedPlayers.keys.toList())
+                    val sortedOrder = connectedPlayers.keys.sorted()
+
+                    LobbyGameStateService.createInitialGameState(
+                        lobbyId = lobby.id!!,
+                        currentPlayerId = sortedOrder.first()
+                    )
+
+                    LobbyService.startGame(lobby.id!!, sortedOrder)
                 }
             }
         } else {
@@ -102,7 +109,6 @@ class LobbyScreen(
 
         stage.addActor(root)
     }
-
 
     private fun connectToChannel() {
         val channel = SupabaseClient.client.channel("lobby_${lobby.id}")
@@ -118,20 +124,57 @@ class LobbyScreen(
         }.launchIn(scope)
 
         scope.launch {
-            val lobbyFlow = channel.postgresSingleDataFlow(schema="public", table="lobbies", primaryKey=Lobby::id) {
+            val lobbyFlow = channel.postgresSingleDataFlow(
+                schema = "public",
+                table = "lobbies",
+                primaryKey = Lobby::id
+            ) {
                 eq("id", lobby.id!!)
             }
-            lobbyFlow.onEach {
-                if (it.status === LobbyStatus.PLAYING) {
+
+            lobbyFlow.onEach { updatedLobby ->
+                lobby = updatedLobby
+
+                if (lobby.status == LobbyStatus.PLAYING && !transitioningToPlay) {
+                    transitioningToPlay = true
+
+                    val players = LobbyService.getLobbyPlayers(lobby.id!!)
+                    val sortedOrder = players.sortedBy { it.playerId }.map { it.playerId }
+
                     Gdx.app.postRunnable {
-                        game.myTeam = assignTeamForPlayer(game.myPlayerId, connectedPlayers.keys)
+                        game.resetForNewMatch()
+
+                        //game.myTeam = assignTeamForPlayer(game.myPlayerId, connectedPlayers.keys)
+                        val playController = PlayController(game, game.engine)
+                        val playScreen = playController.createScreen(
+                            lobbyId = lobby.id!!,
+                            myPlayerId = game.myPlayerId,
+                            playerOrder = sortedOrder
+                        )
+
+                        val cols = 12f
+                        val rows = 11f
+                        val centerX = 16f * (sqrt(3.0).toFloat() * (cols / 2f) + sqrt(3.0).toFloat() / 2f * (rows / 2f))
+                        val centerY = 16f * (3f / 2f * (rows / 2f)) + 36f
+
+                        playScreen.camera.position.set(centerX, centerY, 0f)
+                        playScreen.camera.update()
+
+                        game.view = View(game.batch, game.shapeRenderer, playScreen.camera, game.font)
+                        game.engine.addSystem(game.view)
+
+                        game.addScreen(playScreen)
                         game.setScreen<PlayScreen>()
                     }
                 }
             }.launchIn(scope)
 
             channel.subscribe(blockUntilSubscribed = true)
-            channel.track(Json.encodeToJsonElement(PresenceState(game.myPlayerId, game.myPlayerName)).jsonObject)
+            channel.track(
+                Json.encodeToJsonElement(
+                    PresenceState(game.myPlayerId, game.myPlayerName)
+                ).jsonObject
+            )
         }
     }
 
@@ -142,9 +185,7 @@ class LobbyScreen(
 
             connectedPlayers.forEach { (playerId, displayName) ->
                 val isHost = playerId == lobby.hostId
-                val label = VisLabel(
-                    if (isHost) "$displayName (HOST)" else displayName
-                )
+                val label = VisLabel(if (isHost) "$displayName (HOST)" else displayName)
                 playerTable.add(label).padBottom(5f).row()
             }
         }
@@ -156,20 +197,13 @@ class LobbyScreen(
         stage.draw()
     }
 
-    override fun resize(width: Int, height: Int) {
-        stage.viewport.update(width, height, true)
-    }
-
     override fun hide() {
         Gdx.input.inputProcessor = null
-
         scope.launch {
             try {
                 channel?.untrack()
                 channel?.unsubscribe()
-            } catch (_: Exception) {
-                // ignore
-            }
+            } catch (_: Exception) {}
         }
     }
 
@@ -180,15 +214,15 @@ class LobbyScreen(
         scope.cancel()
     }
 
-    private fun assignTeamForPlayer(playerId: String, playerIds: Collection<String>): TeamName {
-        val orderedTeams = listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN)
+    private fun assignTeamForPlayer(playerId: String, playerIds: Collection<String>): Team {
+        val orderedTeams = listOf(Team.RED, Team.BLUE, Team.PURPLE, Team.GREEN)
         val orderedPlayerIds = playerIds.sorted()
         val playerIndex = orderedPlayerIds.indexOf(playerId)
 
         return if (playerIndex in orderedTeams.indices) {
             orderedTeams[playerIndex]
         } else {
-            TeamName.RED
+            Team.RED
         }
     }
 }

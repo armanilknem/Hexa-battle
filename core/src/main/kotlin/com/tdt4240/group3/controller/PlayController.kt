@@ -3,11 +3,18 @@ package com.tdt4240.group3.controller
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.Hexa_Battle
-import com.tdt4240.group3.model.ecs.components.GameStateComponent
-import com.tdt4240.group3.model.ecs.entities.EntityFactory
-import com.tdt4240.group3.model.ecs.systems.*
-import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.components.GameStateComponent
+import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
+import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.model.systems.*
+import com.tdt4240.group3.network.LobbyGameStateService
+import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
+import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import ktx.ashley.get
 
 class PlayController(
@@ -15,35 +22,81 @@ class PlayController(
     private val engine: Engine,
 ) {
     private val factory: EntityFactory = EntityFactory(engine)
+    private val scope = CoroutineScope(Dispatchers.Default)
 
-    fun createScreen(): PlayScreen {
-        val turnSystem = TurnSystem()
+    fun createScreen(lobbyId: Int, myPlayerId: String, playerOrder: List<String>): PlayScreen {
+        val turnSystem = TurnSystem(lobbyId)
         val selectionSystem = SelectionSystem()
         val movementSystem = MovementSystem()
         val collisionSystem = CollisionSystem()
         val troopCreationSystem = TroopCreationSystem(engine)
-        val territorySystem = TerritorySystem()
+        val territorySystem = TerritorySystem(lobbyId)
         val troopHighlightSystem = TroopHighlightSystem(turnSystem)
         val winSystem = WinSystem()
 
-        this.setUpSystems(turnSystem, selectionSystem, movementSystem, collisionSystem, troopCreationSystem, territorySystem, troopHighlightSystem, winSystem)
+        setUpSystems(
+            turnSystem, selectionSystem, movementSystem, collisionSystem,
+            troopCreationSystem, territorySystem, troopHighlightSystem, winSystem
+        )
 
-        val turnController = TurnController(turnSystem)
-        val troopCreationController = TroopCreationController(troopCreationSystem)
+        val turnController = TurnController(turnSystem = turnSystem)
         val pauseController = PauseController()
         val selectionController = SelectionController(engine)
 
-        val gameStateEntity = this.setUpInitialGameState()
-        this.setUpWorld()
-        this.initializeCities(gameStateEntity)
-        this.initializeTroops(troopCreationController, gameStateEntity)
+        val gameStateEntity = setUpInitialGameState(playerOrder.size)
+        val gs = gameStateEntity[GameStateComponent.mapper]!!
 
-        val playScreen = PlayScreen(game, engine, turnController, pauseController, selectionController)
+        gs.playerOrder = playerOrder
+        gs.currentPlayerIndex = 0
+
+        setUpWorld()
+
+        val isHost = myPlayerId == playerOrder.first()
+        val capitalPositions = factory.generateCapitals(gs.activeTeams)
+        factory.generateNormalCities(count = 20, capitalPositions = capitalPositions)
+
+        if (isHost) {
+            val lobbyMapStates = capitalPositions.mapIndexed { index, capitalPosition ->
+                LobbyMapState(
+                    lobbyId = lobbyId,
+                    q = capitalPosition.first,
+                    r = capitalPosition.second,
+                    ownerId = gs.playerOrder[index],
+                    strength = 0
+                )
+            }
+            scope.launch {
+                LobbyGameStateService.setLobbyMapStates(lobbyMapStates)
+            }
+        }
+
+        gameStateEntity.add(engine.createComponent(NeedsTroopSpawnComponent::class.java))
+
+        val playScreen = PlayScreen(
+            game,
+            engine,
+            turnController,
+            pauseController,
+            selectionController,
+            lobbyId,
+            myPlayerId,
+            factory
+        )
+
         winSystem.onWin = { winner -> playScreen.goToWin(winner) }
         return playScreen
     }
 
-    private fun setUpSystems(turnSystem: TurnSystem, selectionSystem: SelectionSystem, movementSystem: MovementSystem, collisionSystem: CollisionSystem, troopCreationSystem: TroopCreationSystem, territorySystem: TerritorySystem, troopHighlightSystem: TroopHighlightSystem, winSystem: WinSystem) {
+    private fun setUpSystems(
+        turnSystem: TurnSystem,
+        selectionSystem: SelectionSystem,
+        movementSystem: MovementSystem,
+        collisionSystem: CollisionSystem,
+        troopCreationSystem: TroopCreationSystem,
+        territorySystem: TerritorySystem,
+        troopHighlightSystem: TroopHighlightSystem,
+        winSystem: WinSystem
+    ) {
         engine.addSystem(turnSystem)
         engine.addSystem(selectionSystem)
         engine.addSystem(movementSystem)
@@ -58,22 +111,8 @@ class PlayController(
         factory.generateRectangularGrid(18, 15)
     }
 
-    private fun initializeCities(gameStateEntity: Entity) {
-        val gs = gameStateEntity[GameStateComponent.mapper] ?: return
-        val capitalPositions = factory.generateCapitals(gs.activeTeams)
-
-        factory.generateNormalCities(
-            count = 20,
-            capitalPositions = capitalPositions
-        )
-    }
-
-    private fun setUpInitialGameState(): Entity {
-        return factory.createGameState(listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN))
-    }
-
-    private fun initializeTroops(troopCreationController: TroopCreationController, gameState: Entity) {
-        val gs = gameState[GameStateComponent.mapper] ?: return
-        troopCreationController.createTroopsForTeam(gs.currentTeam)
+    private fun setUpInitialGameState(playerCount: Int): Entity {
+        val teamNames = TeamVisualRegistry.visuals.keys.take(playerCount)
+        return factory.createGameState(teamNames)
     }
 }

@@ -21,18 +21,31 @@ import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PauseController
 import com.tdt4240.group3.controller.SelectionController
 import com.tdt4240.group3.controller.TurnController
-import com.tdt4240.group3.model.team.TeamName
-import com.tdt4240.group3.model.ecs.components.*
+import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PauseState
 import com.tdt4240.group3.view.states.PlayerTurnState
+import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.network.MultiplayerManager
+import com.tdt4240.group3.view.states.*
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.graphics.use
 
-class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, private val turnController: TurnController, private val pauseController: PauseController, private val selectionController: SelectionController) : KtxScreen {
+class PlayScreen(
+    private val game: Hexa_Battle,
+    private val engine: Engine,
+    private val turnController: TurnController,
+    private val pauseController: PauseController,
+    private val selectionController: SelectionController,
+    private val lobbyId: Int,
+    private val myPlayerId: String,
+    private val entityFactory: EntityFactory
+) : KtxScreen {
+
     private var currentState: PlaySubState = PlayerTurnState()
     private var previousState: PlaySubState = PlayerTurnState()
 
@@ -45,6 +58,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     private lateinit var endTurnBtn: VisTextButton
     private lateinit var pauseOverlay: Table
 
+    private var multiplayerManager: MultiplayerManager? = null
 
     init {
         setUpCamera()
@@ -56,6 +70,14 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
         setUpStage()
         setUpUI()
         setUpInput()
+
+        multiplayerManager = MultiplayerManager(
+            lobbyId = lobbyId,
+            myPlayerId = myPlayerId,
+            engine = engine,
+            screen = this,
+            entityFactory = entityFactory
+        ).also { it.start() }
     }
 
     override fun render(delta: Float) {
@@ -250,7 +272,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     }
 
     fun goToMenu() { game.setScreen<MenuScreen>() }
-    fun goToWin(winner: TeamName) {
+    fun goToWin(winner: Team) {
         val winScreen = game.getScreen<WinScreen>()
         winScreen.winner = winner
         winScreen.viewerTeam = game.myTeam
@@ -259,5 +281,8 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     fun getBatch() = game.batch
     fun getFont()  = game.font
 
-    override fun dispose() { super.dispose() }
+    override fun dispose() {
+        multiplayerManager?.dispose()
+        super.dispose()
+    }
 }
