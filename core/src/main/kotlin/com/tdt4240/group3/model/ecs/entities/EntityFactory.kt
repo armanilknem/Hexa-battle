@@ -132,7 +132,7 @@ class EntityFactory(private val engine: Engine) {
 
     fun generateCapitals(teams: List<TeamName>): List<Pair<Int, Int>> {
         val capitalNames = MapData.CAPITAL_NAMES.toMutableList()
-            .also { it.shuffle(Random(System.currentTimeMillis())) }
+            .also { it.shuffle(Random(42)) }
 
         val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
 
@@ -207,7 +207,7 @@ class EntityFactory(private val engine: Engine) {
 
     fun generateNormalCities(count: Int, capitalPositions: List<Pair<Int, Int>>) {
         val cityNames = MapData.CITY_NAMES.toMutableList()
-            .also { it.shuffle(Random(System.currentTimeMillis())) }
+            .also { it.shuffle(Random(42)) }
 
         val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
         val allTiles = engine.getEntitiesFor(tileFamily).map { entity ->
@@ -219,7 +219,7 @@ class EntityFactory(private val engine: Engine) {
 
         val placedCities = mutableListOf<Pair<Int, Int>>()
 
-        val shuffled = candidateTiles.shuffled(Random(System.currentTimeMillis()))
+        val shuffled = candidateTiles.shuffled(Random(42))
         for (tile in shuffled) {
             if (placedCities.size >= count) break
             val tooClose = placedCities.any { placed ->
