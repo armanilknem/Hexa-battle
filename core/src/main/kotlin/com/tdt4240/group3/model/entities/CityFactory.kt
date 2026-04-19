@@ -7,7 +7,7 @@ import com.tdt4240.group3.model.components.TeamComponent
 import ktx.ashley.entity
 import ktx.ashley.with
 
-class CityFactory(private val engine: Engine): Factory<CityConfig> {
+class CityFactory(private val engine: Engine): EntityFactory<CityConfig> {
     override fun createEntity(config: CityConfig) = engine.entity {
         with<CityComponent> {
             this.name = config.name

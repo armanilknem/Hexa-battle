@@ -6,7 +6,8 @@ import com.badlogic.gdx.Gdx
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.UnitType
 import com.tdt4240.group3.model.components.*
-import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.model.entities.TroopConfig
+import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
@@ -27,7 +28,7 @@ class MultiplayerManager(
     private val myPlayerId: String,
     private val engine: Engine,
     private val screen: PlayScreen,
-    private val entityFactory: EntityFactory
+    private val troopFactory: TroopFactory
 ) {
     private val client = SupabaseClient.client
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -142,13 +143,13 @@ class MultiplayerManager(
                                     troopEntity.remove(TroopComponent::class.java)
                                 }
                             } else if (strength > 0) {
-                                entityFactory.createTroop(
+                                troopFactory.createEntity(TroopConfig(
                                     team = teamName,
                                     unitType = UnitType.SOLDIER,
                                     strength = strength,
                                     q = q,
                                     r = r
-                                )
+                                ))
                             }
 
                             // Update city

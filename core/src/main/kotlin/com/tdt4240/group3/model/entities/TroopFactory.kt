@@ -11,7 +11,7 @@ import com.tdt4240.group3.config.unit.UnitCatalog
 import ktx.ashley.entity
 import ktx.ashley.with
 
-class TroopFactory(private val engine: Engine) : Factory<TroopConfig> {
+class TroopFactory(private val engine: Engine) : EntityFactory<TroopConfig> {
     override fun createEntity(config: TroopConfig) = engine.entity {
         val unitDef = UnitCatalog.units.getValue(config.unitType)
         with<UnitComponent> {

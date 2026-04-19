@@ -7,7 +7,7 @@ import ktx.ashley.with
 
 //TODO see if players are ever created using the factory
 
-class PlayerFactory(private val engine: Engine): Factory<PlayerConfig> {
+class PlayerFactory(private val engine: Engine): EntityFactory<PlayerConfig> {
     override fun createEntity(config: PlayerConfig) = engine.entity {
         with<PlayerComponent> {
             this.name = config.name

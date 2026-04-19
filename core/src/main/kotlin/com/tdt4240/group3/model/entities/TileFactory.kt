@@ -8,7 +8,7 @@ import com.tdt4240.group3.model.Team
 import ktx.ashley.entity
 import ktx.ashley.with
 
-class TileFactory(private val engine: Engine): Factory<TileConfig> {
+class TileFactory(private val engine: Engine): EntityFactory<TileConfig> {
     override fun createEntity(config: TileConfig) = engine.entity {
         with<TileComponent> {
             this.type = config.type
