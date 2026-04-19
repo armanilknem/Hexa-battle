@@ -12,13 +12,13 @@ import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PlayController
+import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.network.LobbyGameStateService
 import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.SupabaseClient
 import com.tdt4240.group3.network.model.Lobby
 import com.tdt4240.group3.network.model.LobbyStatus
 import com.tdt4240.group3.network.model.PresenceState
-import com.tdt4240.group3.model.team.TeamName
 import com.tdt4240.group3.screens.LobbySelectScreen
 import com.tdt4240.group3.view.View
 import io.github.jan.supabase.realtime.RealtimeChannel
@@ -142,6 +142,8 @@ class LobbyScreen(
                     val sortedOrder = players.sortedBy { it.playerId }.map { it.playerId }
 
                     Gdx.app.postRunnable {
+                        game.resetForNewMatch()
+
                         //game.myTeam = assignTeamForPlayer(game.myPlayerId, connectedPlayers.keys)
                         val playController = PlayController(game, game.engine)
                         val playScreen = playController.createScreen(
@@ -160,10 +162,6 @@ class LobbyScreen(
 
                         game.view = View(game.batch, game.shapeRenderer, playScreen.camera, game.font)
                         game.engine.addSystem(game.view)
-
-                        if (game.containsScreen<PlayScreen>()) {
-                            game.removeScreen<PlayScreen>()
-                        }
 
                         game.addScreen(playScreen)
                         game.setScreen<PlayScreen>()
@@ -216,15 +214,15 @@ class LobbyScreen(
         scope.cancel()
     }
 
-    private fun assignTeamForPlayer(playerId: String, playerIds: Collection<String>): TeamName {
-        val orderedTeams = listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN)
+    private fun assignTeamForPlayer(playerId: String, playerIds: Collection<String>): Team {
+        val orderedTeams = listOf(Team.RED, Team.BLUE, Team.PURPLE, Team.GREEN)
         val orderedPlayerIds = playerIds.sorted()
         val playerIndex = orderedPlayerIds.indexOf(playerId)
 
         return if (playerIndex in orderedTeams.indices) {
             orderedTeams[playerIndex]
         } else {
-            TeamName.RED
+            Team.RED
         }
     }
 }

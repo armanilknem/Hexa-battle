@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.tdt4240.group3.model.ecs.systems.PlayerSystem
+import com.tdt4240.group3.model.systems.PlayerSystem
 import com.tdt4240.group3.view.screens.HowToPlayScreen
 import com.tdt4240.group3.view.View
 import com.tdt4240.group3.network.PlayerService
@@ -15,10 +15,10 @@ import ktx.app.KtxScreen
 import ktx.async.KtxAsync
 import com.tdt4240.group3.view.screens.MenuScreen
 import com.tdt4240.group3.view.screens.OptionsScreen
+import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.view.screens.WinScreen
-import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.model.Team
 import ktx.assets.disposeSafely
-import kotlin.math.sqrt
 import java.util.UUID
 import kotlinx.coroutines.launch
 
@@ -34,7 +34,7 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         private set
     var myPlayerName: String = ""
         private set
-    var myTeam: TeamName = TeamName.NONE
+    var myTeam: Team = Team.NONE
 
     companion object {
         const val WIDTH = 640
@@ -83,7 +83,23 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         }
     }
 
+    fun resetForNewMatch() {
+        if (containsScreen<PlayScreen>()) {
+            removeScreen<PlayScreen>()
+        }
+
+        if (::view.isInitialized) {
+            view.disposeSafely()
+        }
+
+        engine = Engine()
+        engine.addSystem(PlayerSystem())
+    }
+
     override fun dispose() {
+        if (::view.isInitialized) {
+            view.disposeSafely()
+        }
         font.disposeSafely()
         batch.disposeSafely()
         shapeRenderer.disposeSafely()

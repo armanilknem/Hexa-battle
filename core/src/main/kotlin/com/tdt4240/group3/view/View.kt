@@ -12,8 +12,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.utils.Disposable
 import com.tdt4240.group3.model.components.CapitalComponent
-import com.tdt4240.group3.model.ecs.components.*
-import com.tdt4240.group3.model.ecs.components.marker.*
+import com.tdt4240.group3.model.components.*
+import com.tdt4240.group3.model.components.marker.*
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.assets.disposeSafely
@@ -21,10 +21,9 @@ import ktx.graphics.use
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.view.styleRegistries.CityStyleRegistry
 import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
-import com.tdt4240.group3.view.styleRegistries.TroopVisualRegistry
 
 class View(
     private val batch: SpriteBatch,
@@ -214,7 +213,7 @@ class View(
         val strength = troop.strength
 
         // get texture from teamsStyleRegistry based off name and strength
-        val texture = TroopVisualRegistry.getTexture(team.team, strength)
+        val texture = TeamVisualRegistry.getTexture(team.team, strength)
         batch.draw(texture, pos.x - 14f, pos.y - 13.5f, 30f, 32f)
 
         font.draw(
@@ -227,7 +226,7 @@ class View(
 
     private fun drawTerritory(entity: Entity) {
         val team = entity[TeamComponent.mapper]?.team ?: return
-        if (team == TeamName.NONE) return
+        if (team == Team.NONE) return
 
         val pos = entity[PositionComponent.mapper] ?: return
         val x = pos.x
@@ -238,16 +237,16 @@ class View(
         val alpha = if (team == getCurrentTeam()) 0.7f else 0.5f
 
         // get team color from teamStyleRegistry
-        val color = TeamVisualRegistry.getTerritoryColor(team)
+        val color = TeamVisualRegistry.getColor(team)
         shapeRenderer.color = color.apply { a = alpha }
 
         this.drawFullHexTile(x, y, size)
     }
 
-    private fun getCurrentTeam(): TeamName {
+    private fun getCurrentTeam(): Team {
         val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull()
         return gameState?.get(GameStateComponent.mapper)?.currentTeam
-            ?: TeamName.NONE
+            ?: Team.NONE
     }
 
     private fun drawFullHexTile(x: Float, y: Float, size: Float) {
@@ -269,7 +268,7 @@ class View(
 
     override fun dispose() {
         backgroundTexture.disposeSafely()
-        TroopVisualRegistry.dispose()
+        TeamVisualRegistry.dispose()
         CityStyleRegistry.dispose()
     }
 }

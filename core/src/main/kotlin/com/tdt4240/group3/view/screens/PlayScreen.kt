@@ -21,12 +21,12 @@ import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.controller.PauseController
 import com.tdt4240.group3.controller.SelectionController
 import com.tdt4240.group3.controller.TurnController
-import com.tdt4240.group3.model.team.TeamName
-import com.tdt4240.group3.model.ecs.components.*
+import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PauseState
 import com.tdt4240.group3.view.states.PlayerTurnState
-import com.tdt4240.group3.model.ecs.entities.EntityFactory
+import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.network.MultiplayerManager
 import com.tdt4240.group3.view.states.*
 import ktx.actors.onClick
@@ -272,7 +272,7 @@ class PlayScreen(
     }
 
     fun goToMenu() { game.setScreen<MenuScreen>() }
-    fun goToWin(winner: TeamName) {
+    fun goToWin(winner: Team) {
         val winScreen = game.getScreen<WinScreen>()
         winScreen.winner = winner
         winScreen.viewerTeam = game.myTeam

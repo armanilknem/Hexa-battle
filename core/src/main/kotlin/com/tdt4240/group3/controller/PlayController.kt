@@ -3,14 +3,15 @@ package com.tdt4240.group3.controller
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.Hexa_Battle
-import com.tdt4240.group3.model.ecs.components.GameStateComponent
-import com.tdt4240.group3.model.ecs.components.marker.NeedsTroopSpawnComponent
-import com.tdt4240.group3.model.ecs.entities.EntityFactory
-import com.tdt4240.group3.model.ecs.systems.*
-import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.components.GameStateComponent
+import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
+import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.model.systems.*
 import com.tdt4240.group3.network.LobbyGameStateService
 import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
+import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -111,13 +112,7 @@ class PlayController(
     }
 
     private fun setUpInitialGameState(playerCount: Int): Entity {
-        val teamNames = when (playerCount) {
-            1    -> listOf(TeamName.RED)
-            2    -> listOf(TeamName.RED, TeamName.BLUE)
-            3    -> listOf(TeamName.RED, TeamName.BLUE, TeamName.GREEN)
-            4    -> listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN)
-            else -> listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN)
-        }
+        val teamNames = TeamVisualRegistry.visuals.keys.take(playerCount)
         return factory.createGameState(teamNames)
     }
 }
