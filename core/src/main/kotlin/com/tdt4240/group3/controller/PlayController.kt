@@ -17,6 +17,9 @@ import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.model.components.TroopComponent
+import ktx.ashley.allOf
 import ktx.ashley.get
 
 class PlayController(
@@ -29,7 +32,7 @@ class PlayController(
     private val scope = CoroutineScope(Dispatchers.Default)
 
     fun createScreen(lobbyId: Int, myPlayerId: String, playerOrder: List<String>): PlayScreen {
-        val turnSystem = TurnSystem(lobbyId)
+        val turnSystem = TurnSystem(lobbyId, myPlayerId)
         val selectionSystem = SelectionSystem()
         val movementSystem = MovementSystem()
         val collisionSystem = CollisionSystem()
@@ -92,6 +95,12 @@ class PlayController(
         )
 
         winSystem.onWin = { winner -> playScreen.goToWin(winner) }
+        winSystem.onPlayerEliminated = { eliminatedTeam ->
+            engine.getEntitiesFor(allOf(TroopComponent::class, TeamComponent::class).get())
+                .toList()
+                .filter { it[TeamComponent.mapper]?.team == eliminatedTeam }
+                .forEach { engine.removeEntity(it) }
+        }
         turnSystem.onTurnEnded = { playScreen.onTurnChanged(false) }
         return playScreen
     }

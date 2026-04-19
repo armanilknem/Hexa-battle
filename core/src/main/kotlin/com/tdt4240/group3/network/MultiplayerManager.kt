@@ -12,6 +12,7 @@ import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.model.systems.TroopCreationSystem
+import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.model.components.marker.SelectableComponent
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
@@ -114,6 +115,8 @@ class MultiplayerManager(
 
                         // Again: all engine work on main thread.
                         Gdx.app.postRunnable {
+                            engine.getSystem(TurnSystem::class.java)?.resetActivityTimer()
+
                             val gsEntity = engine.getEntitiesFor(
                                 allOf(GameStateComponent::class).get()
                             ).firstOrNull()

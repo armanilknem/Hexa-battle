@@ -12,10 +12,20 @@ import com.tdt4240.group3.model.Team
 import ktx.ashley.allOf
 import ktx.ashley.get
 
-class TurnSystem(private val lobbyId: Int) : EntitySystem() {
+class TurnSystem(
+    private val lobbyId: Int,
+    private val myPlayerId: String
+) : EntitySystem() {
     private val gameStateFamily = allOf(GameStateComponent::class).get()
     private val scope = CoroutineScope(Dispatchers.Default)
     var onTurnEnded: (() -> Unit)? = null
+
+    private var inactivityTimer: Float = 0f
+    private val inactivityTimeoutSeconds: Float = 60f
+
+    fun resetActivityTimer() {
+        inactivityTimer = 0f
+    }
 
     override fun update(deltaTime: Float) {
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
@@ -25,9 +35,19 @@ class TurnSystem(private val lobbyId: Int) : EntitySystem() {
             return
         }
 
+        if (gs.eliminatedTeams.contains(gs.currentTeam)) {
+            endTurn()
+            return
+        }
+
+        val isMyTurn = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
+        inactivityTimer += deltaTime
+
         val selectableTroops = engine.getEntitiesFor(allOf(SelectableComponent::class).get()).toList()
 
         if (selectableTroops.isEmpty() || gs.movesLeft < 1) {
+            endTurn()
+        } else if (!isMyTurn && inactivityTimer >= inactivityTimeoutSeconds) {
             endTurn()
         }
     }
@@ -38,13 +58,30 @@ class TurnSystem(private val lobbyId: Int) : EntitySystem() {
 
         if (gs.playerOrder.isEmpty()) return
 
-        gs.currentPlayerIndex = (gs.currentPlayerIndex + 1) % gs.playerOrder.size
-
-        if (gs.currentPlayerIndex == 0) {
+        // Advance index, incrementing turnCount when we wrap past the last slot
+        var nextIndex = gs.currentPlayerIndex + 1
+        if (nextIndex >= gs.playerOrder.size) {
+            nextIndex = 0
             gs.turnCount++
         }
 
-        gs.movesLeft = 5
+        // Skip over eliminated players
+        var steps = 0
+        while (steps < gs.playerOrder.size) {
+            val team = gs.activeTeams.getOrElse(nextIndex) { Team.NONE }
+            if (team != Team.NONE && !gs.eliminatedTeams.contains(team)) break
+            nextIndex++
+            if (nextIndex >= gs.playerOrder.size) {
+                nextIndex = 0
+                gs.turnCount++
+            }
+            steps++
+        }
+        if (steps >= gs.playerOrder.size) return // all players eliminated — WinSystem handles this
+
+        gs.currentPlayerIndex = nextIndex
+        inactivityTimer = 0f
+
         requestTroopSpawn(gameState)
         onTurnEnded?.invoke()
 

@@ -7,6 +7,7 @@ import ktx.ashley.mapperFor
 
 class GameStateComponent : Component, Pool.Poolable {
     val activeTeams = mutableListOf<Team>()
+    val eliminatedTeams = mutableSetOf<Team>()
     var turnCount: Int = 1
     var movesLeft: Int = 0
 
@@ -19,8 +20,9 @@ class GameStateComponent : Component, Pool.Poolable {
     fun initialize(teams: List<Team>) {
         activeTeams.clear()
         activeTeams.addAll(teams.filter { it != Team.NONE })
+        eliminatedTeams.clear()
         turnCount = 1
-        movesLeft = 1
+        movesLeft = 0
 
         playerOrder = emptyList()
         currentPlayerIndex = 0
@@ -28,8 +30,9 @@ class GameStateComponent : Component, Pool.Poolable {
 
     override fun reset() {
         activeTeams.clear()
+        eliminatedTeams.clear()
         turnCount = 1
-        movesLeft = 5
+        movesLeft = 0
 
         playerOrder = emptyList()
         currentPlayerIndex = 0
