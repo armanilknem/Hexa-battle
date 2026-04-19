@@ -15,6 +15,7 @@ import ktx.ashley.get
 class TurnSystem(private val lobbyId: Int) : EntitySystem() {
     private val gameStateFamily = allOf(GameStateComponent::class).get()
     private val scope = CoroutineScope(Dispatchers.Default)
+    var onTurnEnded: (() -> Unit)? = null
 
     override fun update(deltaTime: Float) {
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
@@ -45,6 +46,7 @@ class TurnSystem(private val lobbyId: Int) : EntitySystem() {
 
         gs.movesLeft = 5
         requestTroopSpawn(gameState)
+        onTurnEnded?.invoke()
 
         scope.launch {
             LobbyGameStateService.updateTurn(

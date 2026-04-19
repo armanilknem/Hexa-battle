@@ -57,6 +57,8 @@ class MultiplayerManager(
                 if (lastSeenTurn == 0 && newTurn == 1) {
                     lastSeenTurn = 1
                     mapStateReady = true
+                    val isMyTurn = updated.currentPlayerId == myPlayerId
+                    Gdx.app.postRunnable { screen.onTurnChanged(isMyTurn) }
                     return@onEach
                 }
 
@@ -76,6 +78,7 @@ class MultiplayerManager(
                                 gs.currentPlayerIndex = idx
                             }
                         }
+                        screen.onTurnChanged(updated.currentPlayerId == myPlayerId)
                     }
                 }
             }.launchIn(scope)

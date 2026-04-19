@@ -88,6 +88,7 @@ class PlayController(
         )
 
         winSystem.onWin = { winner -> playScreen.goToWin(winner) }
+        turnSystem.onTurnEnded = { playScreen.onTurnChanged(false) }
         return playScreen
     }
 
