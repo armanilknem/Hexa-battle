@@ -1,10 +1,10 @@
-package com.tdt4240.group3.model.temporaryFactory
+package com.tdt4240.group3.model.entities
 
 import com.badlogic.ashley.core.Engine
-import com.tdt4240.group3.model.ecs.components.PositionComponent
-import com.tdt4240.group3.model.ecs.components.TeamComponent
-import com.tdt4240.group3.model.ecs.components.TileComponent
-import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.model.components.PositionComponent
+import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.model.components.TileComponent
+import com.tdt4240.group3.model.Team
 import ktx.ashley.entity
 import ktx.ashley.with
 
@@ -19,7 +19,7 @@ class TileFactory(private val engine: Engine): Factory<TileConfig> {
             this.zIndex = 0 // Bottom layer //TODO("should be changed to some sort of global variable for better clarity")
         }
         with<TeamComponent> {
-            this.team = TeamName.NONE
+            this.team = Team.NONE
         }
     }
 }

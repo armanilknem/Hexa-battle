@@ -1,15 +1,16 @@
-package com.tdt4240.group3.model.temporaryFactory
+package com.tdt4240.group3.model.entities
 
-import com.tdt4240.group3.model.ecs.components.TileComponent
-import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.model.components.TileComponent
+import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.UnitType
 
 data class PlayerConfig(
     val name: String
 )
 
 data class TroopConfig(
-    val team: TeamName,
-    val unitKey: String,
+    val team: Team,
+    val unitType: UnitType,
     val strength: Int,
     val q: Int,
     val r: Int
@@ -20,7 +21,7 @@ data class CityConfig(
     val baseProduction: Int,
     val q: Int,
     val r: Int,
-    val team: TeamName
+    val team: Team
 )
 
 data class CapitalConfig(
@@ -28,7 +29,7 @@ data class CapitalConfig(
     val baseProduction: Int,
     val q: Int,
     val r: Int,
-    val team: TeamName
+    val team: Team
 )
 
 data class TileConfig(
@@ -38,5 +39,5 @@ data class TileConfig(
 )
 
 data class GameStateConfig(
-    val activeTeams: List<TeamName>
+    val activeTeams: List<Team>
 )

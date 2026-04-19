@@ -1,9 +1,9 @@
-package com.tdt4240.group3.model.temporaryFactory
+package com.tdt4240.group3.model.entities
 
 import com.badlogic.ashley.core.Engine
-import com.tdt4240.group3.model.ecs.components.CityComponent
-import com.tdt4240.group3.model.ecs.components.PositionComponent
-import com.tdt4240.group3.model.ecs.components.TeamComponent
+import com.tdt4240.group3.model.components.CityComponent
+import com.tdt4240.group3.model.components.PositionComponent
+import com.tdt4240.group3.model.components.TeamComponent
 import ktx.ashley.entity
 import ktx.ashley.with
 

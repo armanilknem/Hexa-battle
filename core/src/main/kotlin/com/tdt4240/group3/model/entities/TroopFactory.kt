@@ -1,21 +1,21 @@
-package com.tdt4240.group3.model.temporaryFactory
+package com.tdt4240.group3.model.entities
 
 import com.badlogic.ashley.core.Engine
-import com.tdt4240.group3.model.ecs.components.CombatComponent
-import com.tdt4240.group3.model.ecs.components.MovementComponent
-import com.tdt4240.group3.model.ecs.components.PositionComponent
-import com.tdt4240.group3.model.ecs.components.TeamComponent
-import com.tdt4240.group3.model.ecs.components.TroopComponent
-import com.tdt4240.group3.model.ecs.components.UnitComponent
-import com.tdt4240.group3.model.unit.UnitCatalog
+import com.tdt4240.group3.model.components.CombatComponent
+import com.tdt4240.group3.model.components.MovementComponent
+import com.tdt4240.group3.model.components.PositionComponent
+import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.model.components.TroopComponent
+import com.tdt4240.group3.model.components.UnitComponent
+import com.tdt4240.group3.config.unit.UnitCatalog
 import ktx.ashley.entity
 import ktx.ashley.with
 
 class TroopFactory(private val engine: Engine) : Factory<TroopConfig> {
     override fun createEntity(config: TroopConfig) = engine.entity {
-        val unitDef = UnitCatalog.units.getValue(config.unitKey)
+        val unitDef = UnitCatalog.units.getValue(config.unitType)
         with<UnitComponent> {
-            this.unitKey = unitDef.key
+            this.unitType = config.unitType
         }
         with<MovementComponent> {
             this.moveRange = unitDef.movement.moveRange
