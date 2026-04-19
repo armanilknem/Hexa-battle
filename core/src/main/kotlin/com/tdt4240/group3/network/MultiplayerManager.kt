@@ -11,6 +11,7 @@ import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
+import com.tdt4240.group3.model.systems.TroopCreationSystem
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
@@ -78,6 +79,7 @@ class MultiplayerManager(
                                 gs.currentPlayerIndex = idx
                             }
                         }
+                        engine.getSystem(TroopCreationSystem::class.java)?.markSelectable(gs)
                         screen.onTurnChanged(updated.currentPlayerId == myPlayerId)
                     }
                 }
