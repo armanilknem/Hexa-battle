@@ -12,6 +12,7 @@ import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.model.systems.TroopCreationSystem
+import com.tdt4240.group3.model.components.marker.SelectableComponent
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
@@ -148,13 +149,16 @@ class MultiplayerManager(
                                     troopEntity.remove(TroopComponent::class.java)
                                 }
                             } else if (strength > 0) {
-                                troopFactory.createEntity(TroopConfig(
+                                val newTroop = troopFactory.createEntity(TroopConfig(
                                     team = teamName,
                                     unitType = UnitType.SOLDIER,
                                     strength = strength,
                                     q = q,
                                     r = r
                                 ))
+                                if (gs != null && teamName == gs.currentTeam) {
+                                    newTroop.add(engine.createComponent(SelectableComponent::class.java))
+                                }
                             }
 
                             // Update city

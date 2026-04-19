@@ -1,6 +1,7 @@
 package com.tdt4240.group3.model.systems
 
 import com.badlogic.ashley.core.EntitySystem
+import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.model.components.marker.*
 import com.tdt4240.group3.model.hexmap.MapCalculations.hexDistance
@@ -9,7 +10,7 @@ import ktx.ashley.get
 import ktx.ashley.has
 import ktx.ashley.remove
 
-class TroopHighlightSystem(private val turnSystem: TurnSystem) : EntitySystem() {
+class TroopHighlightSystem(private val turnSystem: TurnSystem, private val myTeam: Team) : EntitySystem() {
 
     private val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
     private val tileFamily = allOf(PositionComponent::class, TileComponent::class).get()
@@ -30,8 +31,9 @@ class TroopHighlightSystem(private val turnSystem: TurnSystem) : EntitySystem() 
             val team = entity[TeamComponent.mapper] ?: return@forEach
             val isMyTurn = turnSystem.isCurrentTeam(team.team)
             val canMove = entity.has(SelectableComponent.mapper)
+            val isMyTroop = team.team == myTeam
 
-            if (isMyTurn && canMove) {
+            if (isMyTurn && canMove && isMyTroop) {
                 if (!entity.has(HighlightedComponent.mapper)) {
                     entity.add(engine.createComponent(HighlightedComponent::class.java))
                 }
