@@ -1,10 +1,9 @@
 package com.tdt4240.group3.model.entities
 
 import com.badlogic.ashley.core.Engine
+import com.tdt4240.group3.model.MapGenerator
 import com.tdt4240.group3.model.components.*
-import com.tdt4240.group3.model.entities.EntityFactory
 import ktx.ashley.get
-import ktx.ashley.mapperFor
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -12,17 +11,20 @@ import org.junit.Test
 class EntityFactoryTest {
 
     private lateinit var engine: Engine
-    private lateinit var factory: EntityFactory
+    private lateinit var tileFactory: TileFactory
+    private lateinit var mapGenerator: MapGenerator
 
     @Before
     fun setup() {
         engine = Engine()
-        factory = EntityFactory(engine)
+        tileFactory = TileFactory(engine)
+        mapGenerator = MapGenerator(engine)
+
     }
 
     @Test
     fun `createTile adds entity with correct components`() {
-        val tile = factory.createTile(1, 2, TileComponent.TileType.GRASS)
+        val tile = tileFactory.createEntity(TileConfig(1, 2, TileComponent.TileType.GRASS))
 
         val tileComp = tile[TileComponent.mapper]
         val pos = tile[PositionComponent.mapper]
@@ -38,7 +40,7 @@ class EntityFactoryTest {
 
     @Test
     fun `generateRectangularGrid creates correct number of tiles`() {
-        factory.generateRectangularGrid(3, 3)
+        mapGenerator.generateRectangularGrid(3,3)
 
         // A 3x3 grid should have 9 entities
         assertEquals(9, engine.entities.size())
@@ -47,7 +49,7 @@ class EntityFactoryTest {
 
     @Test
     fun `createTile pixel position is non-zero for non-origin hex`() {
-        val tile = factory.createTile(1, 1, TileComponent.TileType.GRASS)
+        val tile = tileFactory.createEntity(TileConfig(1, 1, TileComponent.TileType.GRASS))
         val pos = tile[PositionComponent.mapper]
 
         assertNotNull(pos)

@@ -3,10 +3,12 @@ package com.tdt4240.group3.controller
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.Hexa_Battle
-import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.MapGenerator
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
-import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.model.entities.GameStateConfig
+import com.tdt4240.group3.model.entities.GameStateFactory
+import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.model.systems.*
 import com.tdt4240.group3.network.LobbyGameStateService
 import com.tdt4240.group3.network.model.LobbyMapState
@@ -21,7 +23,9 @@ class PlayController(
     private val game: Hexa_Battle,
     private val engine: Engine,
 ) {
-    private val factory: EntityFactory = EntityFactory(engine)
+    private val mapGenerator = MapGenerator(engine)
+    private val troopFactory = TroopFactory(engine)
+    private val gameStateFactory = GameStateFactory(engine)
     private val scope = CoroutineScope(Dispatchers.Default)
 
     fun createScreen(lobbyId: Int, myPlayerId: String, playerOrder: List<String>): PlayScreen {
@@ -52,8 +56,8 @@ class PlayController(
         setUpWorld()
 
         val isHost = myPlayerId == playerOrder.first()
-        val capitalPositions = factory.generateCapitals(gs.activeTeams)
-        factory.generateNormalCities(count = 20, capitalPositions = capitalPositions)
+        val capitalPositions = mapGenerator.generateCapitals(gs.activeTeams)
+        mapGenerator.generateCities(count = 20, capitalPositions = capitalPositions)
 
         if (isHost) {
             val lobbyMapStates = capitalPositions.mapIndexed { index, capitalPosition ->
@@ -80,7 +84,7 @@ class PlayController(
             selectionController,
             lobbyId,
             myPlayerId,
-            factory
+            troopFactory
         )
 
         winSystem.onWin = { winner -> playScreen.goToWin(winner) }
@@ -108,11 +112,11 @@ class PlayController(
     }
 
     private fun setUpWorld() {
-        factory.generateRectangularGrid(18, 15)
+        MapGenerator(engine).generateRectangularGrid(18, 15)
     }
 
     private fun setUpInitialGameState(playerCount: Int): Entity {
         val teamNames = TeamVisualRegistry.visuals.keys.take(playerCount)
-        return factory.createGameState(teamNames)
+        return gameStateFactory.createEntity(GameStateConfig(teamNames))
     }
 }

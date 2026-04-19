@@ -3,16 +3,16 @@ package com.tdt4240.group3.model.systems
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
+import com.tdt4240.group3.model.MapGenerator
 import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.model.components.marker.*
-import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.UnitType
 import ktx.ashley.allOf
 import ktx.ashley.get
 
 class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
-    private val factory = EntityFactory(engine)
+    private val mapGenerator = MapGenerator(engine)
     private val cityFamily = allOf(CityComponent::class, PositionComponent::class, TeamComponent::class).get()
     private val gameStateFamily = allOf(GameStateComponent::class, NeedsTroopSpawnComponent::class).get()
     private val troopFamily = allOf(
@@ -55,7 +55,7 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
             }
         } else {
             // generate baseTroops from cities
-            val newTroop = factory.createTroopFromCity(cityEntity, UnitType.SOLDIER)
+            val newTroop = mapGenerator.createTroopFromCity(cityEntity, UnitType.SOLDIER)
             newTroop.add(engine.createComponent(SelectableComponent::class.java))
         }
     }
