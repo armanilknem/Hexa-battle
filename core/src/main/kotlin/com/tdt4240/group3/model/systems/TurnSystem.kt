@@ -4,12 +4,17 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
 import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.model.components.marker.*
+import com.tdt4240.group3.network.LobbyGameStateService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import com.tdt4240.group3.model.Team
 import ktx.ashley.allOf
 import ktx.ashley.get
 
-class TurnSystem : EntitySystem() {
+class TurnSystem(private val lobbyId: Int) : EntitySystem() {
     private val gameStateFamily = allOf(GameStateComponent::class).get()
+    private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun update(deltaTime: Float) {
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
@@ -30,16 +35,24 @@ class TurnSystem : EntitySystem() {
         val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
         val gs = gameState[GameStateComponent.mapper] ?: return
 
-        if (gs.activeTeams.isEmpty()) return
+        if (gs.playerOrder.isEmpty()) return
 
-        gs.currentTeamIndex = (gs.currentTeamIndex + 1) % gs.activeTeams.size
+        gs.currentPlayerIndex = (gs.currentPlayerIndex + 1) % gs.playerOrder.size
 
-        if (gs.currentTeamIndex == 0) {
+        if (gs.currentPlayerIndex == 0) {
             gs.turnCount++
         }
 
         gs.movesLeft = 5
         requestTroopSpawn(gameState)
+
+        scope.launch {
+            LobbyGameStateService.updateTurn(
+                lobbyId = lobbyId,
+                nextPlayerId = gs.playerOrder[gs.currentPlayerIndex],
+                turnNumber = gs.turnCount
+            )
+        }
     }
 
     fun isCurrentTeam(team: Team): Boolean {
@@ -53,5 +66,4 @@ class TurnSystem : EntitySystem() {
             gameStateEntity.add(engine.createComponent(NeedsTroopSpawnComponent::class.java))
         }
     }
-
 }

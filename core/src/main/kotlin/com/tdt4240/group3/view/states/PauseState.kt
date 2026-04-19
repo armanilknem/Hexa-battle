@@ -2,10 +2,11 @@ package com.tdt4240.group3.view.states
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
+import com.badlogic.gdx.graphics.Texture
 import com.tdt4240.group3.view.screens.PlayScreen
-import ktx.app.clearScreen
 
 class PauseState : PlaySubState {
+    private val backgroundTexture = Texture(Gdx.files.internal("backgrounds/PauseBackground.png"))
 
     override fun handleInput(screen: PlayScreen) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
@@ -24,8 +25,14 @@ class PauseState : PlaySubState {
     }
 
     override fun render(screen: PlayScreen) {
-        clearScreen(0.1f, 0.1f, 0.35f, 1f)
-        screen.getFont().draw(screen.getBatch(), "Play State", 100f, 150f)
-        screen.getFont().draw(screen.getBatch(), "Pause Substate", 100f, 100f)
+        val batch = screen.getBatch()
+        val previousProjection = batch.projectionMatrix.cpy()
+        batch.projectionMatrix = batch.projectionMatrix.idt()
+        batch.draw(backgroundTexture, -1f, -1f, 2f, 2f)
+        batch.projectionMatrix = previousProjection
+    }
+
+    override fun exit(screen: PlayScreen) {
+        backgroundTexture.dispose()
     }
 }

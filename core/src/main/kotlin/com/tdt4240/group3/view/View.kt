@@ -32,7 +32,7 @@ class View(
     private val font: BitmapFont
 ) : EntitySystem(), Disposable {
     private var stateTime = 0f
-    private val backgroundTexture = Texture(Gdx.files.internal("hexaBackground.png"))
+    private val backgroundTexture = Texture(Gdx.files.internal("backgrounds/GameBackground.png"))
 
     // Three distinct families — one per entity type
     private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
@@ -163,7 +163,7 @@ class View(
         val size = 16f
 
         shapeRenderer.color = Color.BLACK
-        Gdx.gl.glLineWidth(2f)
+        Gdx.gl.glLineWidth(3f)
 
         for (i in 0 until 6) {
             val angle1 = (PI / 180) * (60 * i - 30)
@@ -214,7 +214,7 @@ class View(
 
         // get texture from teamsStyleRegistry based off name and strength
         val texture = TeamVisualRegistry.getTexture(team.team, strength)
-        batch.draw(texture, pos.x - 8f, pos.y - 8f, 16f, 16f)
+        batch.draw(texture, pos.x - 14f, pos.y - 13.5f, 30f, 32f)
 
         font.draw(
             batch,

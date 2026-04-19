@@ -8,7 +8,10 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.scenes.scene2d.Actor
+import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.kotcrab.vis.ui.VisUI
@@ -21,14 +24,28 @@ import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.view.states.PlaySubState
+import com.tdt4240.group3.view.states.PauseState
 import com.tdt4240.group3.view.states.PlayerTurnState
+import com.tdt4240.group3.model.entities.EntityFactory
+import com.tdt4240.group3.network.MultiplayerManager
+import com.tdt4240.group3.view.states.*
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.ashley.allOf
 import ktx.ashley.get
 import ktx.graphics.use
 
-class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, private val turnController: TurnController, private val pauseController: PauseController, private val selectionController: SelectionController) : KtxScreen {
+class PlayScreen(
+    private val game: Hexa_Battle,
+    private val engine: Engine,
+    private val turnController: TurnController,
+    private val pauseController: PauseController,
+    private val selectionController: SelectionController,
+    private val lobbyId: Int,
+    private val myPlayerId: String,
+    private val entityFactory: EntityFactory
+) : KtxScreen {
+
     private var currentState: PlaySubState = PlayerTurnState()
     private var previousState: PlaySubState = PlayerTurnState()
 
@@ -37,7 +54,11 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
     private lateinit var stage: Stage
     private lateinit var turnLabel: VisLabel
     private lateinit var tooltipLabel: VisLabel
+    private lateinit var pauseBtn: VisTextButton
+    private lateinit var endTurnBtn: VisTextButton
+    private lateinit var pauseOverlay: Table
 
+    private var multiplayerManager: MultiplayerManager? = null
 
     init {
         setUpCamera()
@@ -49,6 +70,14 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
         setUpStage()
         setUpUI()
         setUpInput()
+
+        multiplayerManager = MultiplayerManager(
+            lobbyId = lobbyId,
+            myPlayerId = myPlayerId,
+            engine = engine,
+            screen = this,
+            entityFactory = entityFactory
+        ).also { it.start() }
     }
 
     override fun render(delta: Float) {
@@ -67,6 +96,7 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
         }
 
         updateTurnLabel()
+        updateUiForState()
 
         // Stage draws on top of the game world — must be outside batch.use
         stage.act(delta)
@@ -89,8 +119,8 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
         turnLabel  = VisLabel("Team: ${gs.currentTeam}   Turn: ${gs.turnCount} Moves Left: ${gs.movesLeft}")  // now a field
         turnLabel.setFontScale(2f)
 
-        val pauseBtn   = VisTextButton("PAUSE")
-        val endTurnBtn = VisTextButton("END TURN")
+        pauseBtn   = VisTextButton("PAUSE")
+        endTurnBtn = VisTextButton("END TURN")
 
         pauseBtn.onClick   { togglePause() }
         endTurnBtn.onClick { turnController.endTurn() }
@@ -101,6 +131,9 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
         root.add(endTurnBtn).right().pad(8f).row()
 
         stage.addActor(root)
+
+        pauseOverlay = buildPauseOverlay().apply { isVisible = false }
+        stage.addActor(pauseOverlay)
     }
 
     private fun setUpInput() {
@@ -110,6 +143,8 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
         inputMultiplexer.addProcessor(stage)
         inputMultiplexer.addProcessor(object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+                if (currentState is PauseState) return false
+
                 val worldCoords =
                     camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
                 selectionController.handleTouch(worldCoords.x, worldCoords.y)
@@ -159,6 +194,56 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
         }
     }
 
+    private fun updateUiForState() {
+        val isPaused = currentState is PauseState
+        endTurnBtn.isVisible = !isPaused
+        endTurnBtn.touchable = if (isPaused) Touchable.disabled else Touchable.enabled
+        pauseOverlay.isVisible = isPaused
+        pauseOverlay.touchable = if (isPaused) Touchable.enabled else Touchable.disabled
+        if (isPaused) {
+            tooltipLabel.isVisible = false
+        }
+    }
+
+    private fun buildPauseOverlay(): Table {
+        val overlay = Table().apply {
+            setFillParent(true)
+            center()
+        }
+
+        val pauseTitle = VisLabel("PAUSED").apply { setFontScale(3f) }
+        val resumeButton = createShadowButton("RESUME") { resumeGame() }
+        val menuButton = createShadowButton("MAIN MENU") { goToMenu() }
+
+        overlay.add(pauseTitle).padBottom(28f).row()
+        overlay.add(resumeButton).width(300f).height(64f).padBottom(18f).row()
+        overlay.add(menuButton).width(300f).height(64f)
+
+        return overlay
+    }
+
+    private fun createShadowButton(text: String, onClickAction: () -> Unit): Actor {
+        val button = VisTextButton(text)
+        button.onClick { onClickAction() }
+
+        val shadow = VisTextButton(text).apply {
+            color = Color(0f, 0f, 0f, 0.35f)
+            isDisabled = true
+            touchable = Touchable.disabled
+        }
+
+        val stack = Stack().apply {
+            add(Table().apply {
+                add(shadow).expand().fill().padLeft(6f).padTop(6f)
+            })
+            add(Table().apply {
+                add(button).expand().fill().padRight(6f).padBottom(6f)
+            })
+        }
+
+        return stack
+    }
+
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)
     }
@@ -180,13 +265,24 @@ class PlayScreen(private val game: Hexa_Battle, private val engine: Engine, priv
         changeState(pauseController.togglePause(currentState, previousState))
     }
 
+    fun resumeGame() {
+        if (currentState is PauseState) {
+            togglePause()
+        }
+    }
+
     fun goToMenu() { game.setScreen<MenuScreen>() }
     fun goToWin(winner: Team) {
-        game.getScreen<WinScreen>().winner = winner
+        val winScreen = game.getScreen<WinScreen>()
+        winScreen.winner = winner
+        winScreen.viewerTeam = game.myTeam
         game.setScreen<WinScreen>()
     }
     fun getBatch() = game.batch
     fun getFont()  = game.font
 
-    override fun dispose() { super.dispose() }
+    override fun dispose() {
+        multiplayerManager?.dispose()
+        super.dispose()
+    }
 }
