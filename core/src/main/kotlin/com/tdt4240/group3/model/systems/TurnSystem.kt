@@ -45,7 +45,7 @@ class TurnSystem(
 
         val selectableTroops = engine.getEntitiesFor(allOf(SelectableComponent::class).get()).toList()
 
-        if (isMyTurn && (selectableTroops.isEmpty() || gs.movesLeft < 1)) {
+        if (selectableTroops.isEmpty() || gs.movesLeft < 1) {
             endTurn()
         } else if (!isMyTurn && inactivityTimer >= inactivityTimeoutSeconds) {
             endTurn()
