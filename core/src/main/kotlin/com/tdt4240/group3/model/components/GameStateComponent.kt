@@ -8,7 +8,7 @@ import ktx.ashley.mapperFor
 class GameStateComponent : Component, Pool.Poolable {
     val activeTeams = mutableListOf<Team>()
     var turnCount: Int = 1
-    var movesLeft: Int = 5
+    var movesLeft: Int = 0
 
     var playerOrder: List<String> = emptyList()
     var currentPlayerIndex: Int = 0
@@ -20,7 +20,7 @@ class GameStateComponent : Component, Pool.Poolable {
         activeTeams.clear()
         activeTeams.addAll(teams.filter { it != Team.NONE })
         turnCount = 1
-        movesLeft = 5
+        movesLeft = 1
 
         playerOrder = emptyList()
         currentPlayerIndex = 0

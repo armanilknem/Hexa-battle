@@ -29,6 +29,8 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
 
         createTroopsForTeam(gs.currentTeam)
         markSelectable(gs)
+        val troopCount = engine.getEntitiesFor(allOf(SelectableComponent::class).get()).size()
+        gs.movesLeft = troopCount.coerceAtMost(5)
         gameStateEntity.remove(NeedsTroopSpawnComponent::class.java)
     }
 
