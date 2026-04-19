@@ -57,7 +57,8 @@ class PlayController(
             pauseController,
             selectionController,
             lobbyId,
-            myPlayerId
+            myPlayerId,
+            factory
         )
 
         winSystem.onWin = { winner -> playScreen.goToWin(winner) }

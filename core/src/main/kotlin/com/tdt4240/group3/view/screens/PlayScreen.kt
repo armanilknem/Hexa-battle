@@ -20,6 +20,7 @@ import com.tdt4240.group3.controller.SelectionController
 import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.model.team.TeamName
 import com.tdt4240.group3.model.ecs.components.*
+import com.tdt4240.group3.model.ecs.entities.EntityFactory
 import com.tdt4240.group3.network.MultiplayerManager
 import com.tdt4240.group3.view.states.*
 import ktx.actors.onClick
@@ -35,7 +36,8 @@ class PlayScreen(
     private val pauseController: PauseController,
     private val selectionController: SelectionController,
     private val lobbyId: Int,
-    private val myPlayerId: String
+    private val myPlayerId: String,
+    private val entityFactory: EntityFactory
 ) : KtxScreen {
 
     private var currentState: PlaySubState = PlayerTurnState()
@@ -64,7 +66,8 @@ class PlayScreen(
             lobbyId = lobbyId,
             myPlayerId = myPlayerId,
             engine = engine,
-            screen = this
+            screen = this,
+            entityFactory = entityFactory
         ).also { it.start() }
     }
 
