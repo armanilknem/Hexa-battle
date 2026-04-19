@@ -4,7 +4,11 @@ import com.badlogic.ashley.core.Engine
 import com.tdt4240.group3.model.ecs.components.GameStateComponent
 import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.view.screens.PlayScreen
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
+import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
+import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.postgresListDataFlow
 import io.github.jan.supabase.realtime.postgresSingleDataFlow
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.launchIn
@@ -35,6 +39,19 @@ class MultiplayerManager(
 
                 gs?.turnCount = updatedGamestate.turnNumber
                 gs?.currentPlayerIndex = gs.playerOrder.indexOf(updatedGamestate.currentPlayerId!!)
+            }.launchIn(scope)
+
+            val mapstateFlow = channel.postgresChangeFlow<PostgresAction>(schema="public") {
+                table = "lobby_map_state"
+                filter("lobby_id", FilterOperator.EQ, lobbyId)
+            }
+            mapstateFlow.onEach {
+                when(it) {
+                    is PostgresAction.Delete -> println("Deleted: ${it.oldRecord}")
+                    is PostgresAction.Insert -> println("Inserted: ${it.record}")
+                    is PostgresAction.Select -> println("Selected: ${it.record}")
+                    is PostgresAction.Update -> println("Updated: ${it.oldRecord} with ${it.record}")
+                }
             }.launchIn(scope)
 
             channel.subscribe()

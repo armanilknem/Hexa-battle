@@ -7,6 +7,9 @@ import com.tdt4240.group3.model.ecs.components.GameStateComponent
 import com.tdt4240.group3.model.ecs.entities.EntityFactory
 import com.tdt4240.group3.model.ecs.systems.*
 import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.network.LobbyGameStateService
+import com.tdt4240.group3.network.SupabaseClient
+import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,14 +29,13 @@ class PlayController(
         val movementSystem = MovementSystem()
         val collisionSystem = CollisionSystem()
         val troopCreationSystem = TroopCreationSystem(engine)
-        val territorySystem = TerritorySystem()
+        val territorySystem = TerritorySystem(lobbyId)
         val troopHighlightSystem = TroopHighlightSystem(turnSystem)
         val winSystem = WinSystem()
 
         this.setUpSystems(turnSystem, selectionSystem, movementSystem, collisionSystem, troopCreationSystem, territorySystem, troopHighlightSystem, winSystem)
 
         val turnController = TurnController(turnSystem = turnSystem)
-
         val troopCreationController = TroopCreationController(troopCreationSystem)
         val pauseController = PauseController()
         val selectionController = SelectionController(engine)
@@ -45,7 +47,7 @@ class PlayController(
         gs.currentPlayerIndex = playerOrder.indexOf(myPlayerId)
 
         setUpWorld()
-        initializeCities(gameStateEntity, lobbyId)
+        initializeCities(gameStateEntity, lobbyId, myPlayerId == playerOrder.first())
         initializeTroops(troopCreationController, gameStateEntity)
 
         val playScreen = PlayScreen(
@@ -77,9 +79,22 @@ class PlayController(
         factory.generateRectangularGrid(18, 15)
     }
 
-    private fun initializeCities(gameStateEntity: Entity, lobbyId: Int) {
+    private fun initializeCities(gameStateEntity: Entity, lobbyId: Int, isHost: Boolean) {
         val gs = gameStateEntity[GameStateComponent.mapper] ?: return
         val capitalPositions = factory.generateCapitals(gs.activeTeams)
+
+        val lobbyMapStates = capitalPositions.mapIndexed { index, capitalPosition ->
+            LobbyMapState(
+                lobbyId = lobbyId,
+                q = capitalPosition.first,
+                r = capitalPosition.second,
+                ownerId = gs.playerOrder[index],
+                strength = 0
+            )
+        }
+        scope.launch {
+            LobbyGameStateService.setLobbyMapStates(lobbyMapStates)
+        }
 
         factory.generateNormalCities(
             count = 20,

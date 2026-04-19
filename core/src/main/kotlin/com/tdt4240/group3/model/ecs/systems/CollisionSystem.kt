@@ -8,6 +8,7 @@ import com.tdt4240.group3.model.ecs.components.TeamComponent
 import com.tdt4240.group3.model.ecs.components.TroopComponent
 import com.tdt4240.group3.model.ecs.components.marker.CollidingComponent
 import com.tdt4240.group3.model.ecs.components.CityComponent
+import com.tdt4240.group3.model.ecs.components.marker.TerritoryComponent
 import com.tdt4240.group3.model.team.TeamName
 import ktx.ashley.allOf
 import ktx.ashley.get
@@ -43,6 +44,7 @@ class CollisionSystem : IteratingSystem(allOf(
 
         if (targetTroopEntity != null) {
             val otherTroop = targetTroopEntity[TroopComponent.mapper]!!
+            val otherPosition = targetTroopEntity[PositionComponent.mapper]!!
             val otherCombat = targetTroopEntity.getComponent(CombatComponent::class.java) ?: return
             val otherTeam = targetTroopEntity[TeamComponent.mapper]?.team ?: TeamName.NONE
 
@@ -52,7 +54,7 @@ class CollisionSystem : IteratingSystem(allOf(
                 if (fullyMerged) movingTroopSurvived = false
             } else {
                 // Enemy: Combat. returns true if moving troop won and stayed on tile
-                movingTroopSurvived = handleCombat(movingEntity, troop, combat, targetTroopEntity, otherTroop, otherCombat)
+                movingTroopSurvived = handleCombat(movingEntity, pos, troop, combat, targetTroopEntity, otherPosition, otherTroop, otherCombat)
             }
         }
 
@@ -86,28 +88,44 @@ class CollisionSystem : IteratingSystem(allOf(
             return false
         }
 
+        val movingPos = movingEntity[PositionComponent.mapper]!!
+        val stationaryPos = stationaryEntity[PositionComponent.mapper]!!
+
         val total = movingTroop.strength + stationaryTroop.strength
         val maxStack = stationaryCombat.maxStackSize
 
         return if (total <= maxStack) {
-            // Success: Combine all into the target tile
+            stationaryPos.prevQ = movingPos.prevQ
+            stationaryPos.prevR = movingPos.prevR
+
             stationaryTroop.strength = total
+            stationaryEntity.add(TerritoryComponent())
             engine.removeEntity(movingEntity)
             true
         } else {
-            // Overflow: Target tile hits 99, moving troop bounces back with remainder
             stationaryTroop.strength = maxStack
             movingTroop.strength = total - maxStack
+
+            val oldQ = movingPos.q
+            val oldR = movingPos.r
+
             bounceBack(movingEntity)
+
+            movingPos.prevQ = oldQ
+            movingPos.prevR = oldR
+
             false
         }
     }
 
+
     private fun handleCombat(
         movingEntity: Entity,
+        movingPosition: PositionComponent,
         movingTroop: TroopComponent,
         movingCombat: CombatComponent,
         enemyEntity: Entity,
+        enemyPosition: PositionComponent,
         enemyTroop: TroopComponent,
         enemyCombat: CombatComponent
     ): Boolean {
@@ -124,9 +142,28 @@ class CollisionSystem : IteratingSystem(allOf(
             diff < 0 -> { // Enemy troop wins (stationary wins)
                 enemyTroop.strength = max(1, ceil((-diff) / enemyCombat.defenseMultiplier).toInt())
                 engine.removeEntity(movingEntity)
+                enemyPosition.prevQ = movingPosition.prevQ
+                enemyPosition.prevR = movingPosition.prevR
+                enemyEntity.add(TerritoryComponent())
                 false
             }
             else -> { // Mutual destruction
+                for (entity in engine.entities) {
+                    val p = entity[PositionComponent.mapper] ?: continue
+                    if (p.q == movingPosition.prevQ && p.r == movingPosition.prevR) {
+                        entity.add(TerritoryComponent())
+                        break
+                    }
+                }
+
+                for (entity in engine.entities) {
+                    val p = entity[PositionComponent.mapper] ?: continue
+                    if (p.q == enemyPosition.q && p.r == enemyPosition.r) {
+                        entity.add(TerritoryComponent())
+                        break
+                    }
+                }
+
                 engine.removeEntity(movingEntity)
                 engine.removeEntity(enemyEntity)
                 false
