@@ -37,7 +37,7 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
         backgroundTexture = Texture(Gdx.files.internal("backgrounds/MenuBackground.png"))
         if (!VisUI.isLoaded()) VisUI.load()
 
-        statusLabel = VisLabel("").apply { color = Color.BLACK }
+        statusLabel = VisLabel("").apply { color = Color.WHITE }
 
         Gdx.input.inputProcessor = stage
         stage.clear()

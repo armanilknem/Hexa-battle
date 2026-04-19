@@ -82,16 +82,21 @@ class LobbyScreen(
             background = TextureRegionDrawable(TextureRegion(backgroundTexture))
         }
 
-        root.add(backBtn).left().pad(10f).row()
+        val card = Table().apply {
+            pad(24f)
+            background = VisUI.getSkin().newDrawable("white", Color(1f, 1f, 1f, 0.6f))
+        }
+
+        card.add(backBtn).left().pad(10f).row()
         backBtn.onClick { game.setScreen<LobbySelectScreen>() }
 
-        root.add(codeLabel).padBottom(10f).row()
-        root.add(countLabel).padBottom(20f).row()
-        root.add(VisLabel("CONNECTED PLAYERS:").apply { color = Color.BLACK }).padBottom(10f).row()
-        root.add(playerTable).padBottom(30f).row()
+        card.add(codeLabel).padBottom(10f).row()
+        card.add(countLabel).padBottom(20f).row()
+        card.add(VisLabel("CONNECTED PLAYERS:").apply { color = Color.BLACK }).padBottom(10f).row()
+        card.add(playerTable).padBottom(30f).row()
 
         if (lobby.hostId == game.myPlayerId) {
-            root.add(startBtn).width(280f).height(60f).row()
+            card.add(startBtn).width(280f).height(60f).row()
             startBtn.onClick {
                 startBtn.isDisabled = true
                 scope.launch {
@@ -106,9 +111,10 @@ class LobbyScreen(
                 }
             }
         } else {
-            root.add(VisLabel("Waiting for host...").apply { color = Color.BLACK }).row()
+            card.add(VisLabel("Waiting for host...").apply { color = Color.BLACK }).row()
         }
 
+        root.add(card)
         stage.addActor(root)
     }
 
