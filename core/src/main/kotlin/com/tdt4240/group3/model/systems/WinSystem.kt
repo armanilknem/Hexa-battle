@@ -12,6 +12,7 @@ class WinSystem : EntitySystem() {
     var onWin: ((Team) -> Unit)? = null
     var onPlayerEliminated: ((Team) -> Unit)? = null
     private var winTriggered = false
+    private val notifiedEliminations = mutableSetOf<Team>()
 
     private val capitalFamily = allOf(CapitalComponent::class, TeamComponent::class).get()
     private val gameStateFamily = allOf(GameStateComponent::class).get()
@@ -30,6 +31,12 @@ class WinSystem : EntitySystem() {
         val capitalOwners = capitals.map { it[TeamComponent.mapper]?.team ?: Team.NONE }
         checkEliminations(gs, capitalOwners)
 
+        gs.eliminatedTeams.forEach { team ->
+            if (notifiedEliminations.add(team)) {
+                onPlayerEliminated?.invoke(team)
+            }
+        }
+
         val survivors = gs.activeTeams.filter { !gs.eliminatedTeams.contains(it) }
         if (survivors.size == 1) {
             winTriggered = true
@@ -42,12 +49,12 @@ class WinSystem : EntitySystem() {
             if (gs.eliminatedTeams.contains(team)) return@forEach
             if (capitalOwners.none { it == team }) {
                 gs.eliminatedTeams.add(team)
-                onPlayerEliminated?.invoke(team)
             }
         }
     }
 
     fun reset() {
         winTriggered = false
+        notifiedEliminations.clear()
     }
 }

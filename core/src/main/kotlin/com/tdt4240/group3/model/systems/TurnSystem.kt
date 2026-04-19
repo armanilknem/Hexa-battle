@@ -21,10 +21,15 @@ class TurnSystem(
     var onTurnEnded: (() -> Unit)? = null
 
     private var inactivityTimer: Float = 0f
-    private val inactivityTimeoutSeconds: Float = 60f
+    private val inactivityTimeoutSeconds: Float = 30f
+    private val inactivityStrikeLimit: Int = 3
+    private val inactivityCounts = mutableMapOf<Int, Int>()
 
     fun resetActivityTimer() {
         inactivityTimer = 0f
+        val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
+            ?.get(GameStateComponent.mapper) ?: return
+        inactivityCounts[gs.currentPlayerIndex] = 0
     }
 
     override fun update(deltaTime: Float) {
@@ -44,10 +49,18 @@ class TurnSystem(
         inactivityTimer += deltaTime
 
         val selectableTroops = engine.getEntitiesFor(allOf(SelectableComponent::class).get()).toList()
+        gs.movesLeft = minOf(selectableTroops.size, 5)
 
         if (selectableTroops.isEmpty() || gs.movesLeft < 1) {
             endTurn()
         } else if (!isMyTurn && inactivityTimer >= inactivityTimeoutSeconds) {
+            val idx = gs.currentPlayerIndex
+            val strikes = (inactivityCounts[idx] ?: 0) + 1
+            inactivityCounts[idx] = strikes
+            if (strikes >= inactivityStrikeLimit) {
+                gs.eliminatedTeams.add(gs.currentTeam)
+                inactivityCounts.remove(idx)
+            }
             endTurn()
         }
     }
