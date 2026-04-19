@@ -1,8 +1,11 @@
 package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
@@ -15,6 +18,7 @@ import com.tdt4240.group3.network.SupabaseClient
 import com.tdt4240.group3.network.model.Lobby
 import com.tdt4240.group3.network.model.LobbyStatus
 import com.tdt4240.group3.network.model.PresenceState
+import com.tdt4240.group3.model.team.TeamName
 import com.tdt4240.group3.screens.LobbySelectScreen
 import com.tdt4240.group3.view.View
 import io.github.jan.supabase.realtime.RealtimeChannel
@@ -39,6 +43,7 @@ class LobbyScreen(
 
     private val stage = Stage(ScreenViewport())
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private val backgroundTexture = Texture(Gdx.files.internal("backgrounds/MenuBackground.png"))
 
     private var lobby = initialLobby
     private var channel: RealtimeChannel? = null
@@ -72,6 +77,7 @@ class LobbyScreen(
         val root = Table().apply {
             setFillParent(true)
             center()
+            background = TextureRegionDrawable(TextureRegion(backgroundTexture))
         }
 
         root.add(backBtn).left().pad(10f).row()
@@ -136,6 +142,7 @@ class LobbyScreen(
                     val sortedOrder = players.sortedBy { it.playerId }.map { it.playerId }
 
                     Gdx.app.postRunnable {
+                        //game.myTeam = assignTeamForPlayer(game.myPlayerId, connectedPlayers.keys)
                         val playController = PlayController(game, game.engine)
                         val playScreen = playController.createScreen(
                             lobbyId = lobby.id!!,
@@ -204,6 +211,20 @@ class LobbyScreen(
 
     override fun dispose() {
         stage.dispose()
+        backgroundTexture.dispose()
+        if (VisUI.isLoaded()) VisUI.dispose()
         scope.cancel()
+    }
+
+    private fun assignTeamForPlayer(playerId: String, playerIds: Collection<String>): TeamName {
+        val orderedTeams = listOf(TeamName.RED, TeamName.BLUE, TeamName.PURPLE, TeamName.GREEN)
+        val orderedPlayerIds = playerIds.sorted()
+        val playerIndex = orderedPlayerIds.indexOf(playerId)
+
+        return if (playerIndex in orderedTeams.indices) {
+            orderedTeams[playerIndex]
+        } else {
+            TeamName.RED
+        }
     }
 }
