@@ -2,6 +2,7 @@ package com.tdt4240.group3.network
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
+import com.badlogic.gdx.Gdx
 import com.tdt4240.group3.model.ecs.components.*
 import com.tdt4240.group3.model.ecs.entities.EntityFactory
 import com.tdt4240.group3.model.team.TeamName
@@ -30,6 +31,10 @@ class MultiplayerManager(
     private val client = SupabaseClient.client
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
+    private var lastSeenTurn: Int = 0
+
+    private var mapStateReady: Boolean = false
+
     fun start() {
         val channel = client.channel("lobby_gamestate_$lobbyId")
 
@@ -41,15 +46,35 @@ class MultiplayerManager(
             ) {
                 eq("lobby_id", lobbyId)
             }
-            gamestateFlow.onEach { updated ->
-                val gameStateEntity = engine.getEntitiesFor(
-                    allOf(GameStateComponent::class).get()
-                ).firstOrNull()
 
-                val gs = gameStateEntity?.get(GameStateComponent.mapper)
-                if (gs != null) {
-                    gs.turnCount = updated.turnNumber
-                    gs.currentPlayerIndex = gs.playerOrder.indexOf(updated.currentPlayerId!!)
+            gamestateFlow.onEach { updated ->
+                val newTurn = updated.turnNumber
+
+                // First snapshot (turn 1): enable syncing, but DO NOT touch
+                // the locally initialized GameStateComponent.
+                if (lastSeenTurn == 0 && newTurn == 1) {
+                    lastSeenTurn = 1
+                    mapStateReady = true
+                    return@onEach
+                }
+
+                Gdx.app.postRunnable {
+                    val gameStateEntity = engine.getEntitiesFor(
+                        allOf(GameStateComponent::class).get()
+                    ).firstOrNull()
+
+                    val gs = gameStateEntity?.get(GameStateComponent.mapper)
+                    if (gs != null) {
+                        gs.turnCount = newTurn
+
+                        val currentId = updated.currentPlayerId
+                        if (currentId != null) {
+                            val idx = gs.playerOrder.indexOf(currentId)
+                            if (idx >= 0) {
+                                gs.currentPlayerIndex = idx
+                            }
+                        }
+                    }
                 }
             }.launchIn(scope)
 
@@ -57,9 +82,14 @@ class MultiplayerManager(
                 table = "lobby_map_state"
                 filter("lobby_id", FilterOperator.EQ, lobbyId)
             }
+
             mapstateFlow.onEach { action ->
+                // Only start applying map state once we've seen at least the
+                // first gamestate snapshot.
+                if (!mapStateReady) return@onEach
+
                 when (action) {
-                    is PostgresAction.Delete, // Doesn't happen
+                    is PostgresAction.Delete,
                     is PostgresAction.Select -> {}
 
                     is PostgresAction.Insert,
@@ -74,79 +104,72 @@ class MultiplayerManager(
                         val strength = mapState.strength ?: 0
                         val ownerId = mapState.ownerId
 
-                        val gsEntity = engine.getEntitiesFor(
-                            allOf(GameStateComponent::class).get()
-                        ).firstOrNull()
-                        val gs = gsEntity?.get(GameStateComponent.mapper)
+                        // Again: all engine work on main thread.
+                        Gdx.app.postRunnable {
+                            val gsEntity = engine.getEntitiesFor(
+                                allOf(GameStateComponent::class).get()
+                            ).firstOrNull()
+                            val gs = gsEntity?.get(GameStateComponent.mapper)
 
-                        val teamName: TeamName =
-                            if (ownerId != null && gs != null) {
-                                val idx = gs.playerOrder.indexOf(ownerId)
-                                if (idx >= 0 && idx < gs.activeTeams.size) gs.activeTeams[idx] else TeamName.NONE
-                            } else TeamName.NONE
+                            val teamName: TeamName =
+                                if (ownerId != null && gs != null) {
+                                    val idx = gs.playerOrder.indexOf(ownerId)
+                                    if (idx >= 0 && idx < gs.activeTeams.size) gs.activeTeams[idx]
+                                    else TeamName.NONE
+                                } else TeamName.NONE
 
-                        // Update troop first
-                        val troopsAtTile = mutableListOf<Entity>()
-                        val entities = engine.entities
-                        val size = entities.size()
+                            val entities = engine.entities
+                            val size = entities.size()
 
-                        for (i in 0 until size) {
-                            val entity = entities[i]
-                            val pos = entity[PositionComponent.mapper] ?: continue
-                            if (pos.q == q && pos.r == r && entity[TroopComponent.mapper] != null) {
-                                troopsAtTile.add(entity)
+                            // Update troop
+                            val troopsAtTile = mutableListOf<Entity>()
+                            for (i in 0 until size) {
+                                val entity = entities[i]
+                                val pos = entity[PositionComponent.mapper] ?: continue
+                                if (pos.q == q && pos.r == r && entity[TroopComponent.mapper] != null) {
+                                    troopsAtTile.add(entity)
+                                }
                             }
-                        }
 
-                        if (troopsAtTile.isNotEmpty()) {
-                            val troopEntity = troopsAtTile.first()
-                            val troop = troopEntity[TroopComponent.mapper]!!
-                            if (strength > 0) {
-                                troop.strength = strength
-                                troopEntity[TeamComponent.mapper]?.team = teamName
-                            } else {
-                                troopEntity.remove(TroopComponent::class.java)
+                            if (troopsAtTile.isNotEmpty()) {
+                                val troopEntity = troopsAtTile.first()
+                                val troop = troopEntity[TroopComponent.mapper]!!
+                                if (strength > 0) {
+                                    troop.strength = strength
+                                    troopEntity[TeamComponent.mapper]?.team = teamName
+                                } else {
+                                    troopEntity.remove(TroopComponent::class.java)
+                                }
+                            } else if (strength > 0) {
+                                entityFactory.createTroop(
+                                    team = teamName,
+                                    unitKey = "baseTroop",
+                                    strength = strength,
+                                    q = q,
+                                    r = r
+                                )
                             }
-                        } else if (strength > 0) {
-                            entityFactory.createTroop(
-                                team = teamName,
-                                unitKey = "baseTroop",
-                                strength = strength,
-                                q = q,
-                                r = r
-                            )
-                        }
 
-                        // Then city
-                        val citiesAtTile = mutableListOf<Entity>()
-                        for (i in 0 until size) {
-                            val entity = entities[i]
-                            val pos = entity[PositionComponent.mapper] ?: continue
-                            if (pos.q == q && pos.r == r && entity[CityComponent.mapper] != null) {
-                                citiesAtTile.add(entity)
+                            // Update city
+                            for (i in 0 until size) {
+                                val entity = entities[i]
+                                val pos = entity[PositionComponent.mapper] ?: continue
+                                if (pos.q == q && pos.r == r && entity[CityComponent.mapper] != null) {
+                                    entity[TeamComponent.mapper]?.team = teamName
+                                }
                             }
-                        }
 
-                        for (entity in citiesAtTile) {
-                            entity[TeamComponent.mapper]?.team = teamName
-                        }
-
-                        // Then tile
-                        val tilesAtTile = mutableListOf<Entity>()
-                        for (i in 0 until size) {
-                            val entity = entities[i]
-                            val pos = entity[PositionComponent.mapper] ?: continue
-                            if (pos.q == q && pos.r == r && entity[TileComponent.mapper] != null) {
-                                tilesAtTile.add(entity)
+                            // Update tile
+                            for (i in 0 until size) {
+                                val entity = entities[i]
+                                val pos = entity[PositionComponent.mapper] ?: continue
+                                if (pos.q == q && pos.r == r && entity[TileComponent.mapper] != null) {
+                                    entity[TeamComponent.mapper]?.team = teamName
+                                }
                             }
-                        }
-
-                        for (entity in tilesAtTile) {
-                            entity[TeamComponent.mapper]?.team = teamName
                         }
                     }
                 }
-
             }.launchIn(scope)
 
             channel.subscribe()

@@ -2,8 +2,6 @@ package com.tdt4240.group3.network
 
 import com.tdt4240.group3.network.model.*
 import io.github.jan.supabase.postgrest.from
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonPrimitive
 
 object LobbyGameStateService {
     private val client = SupabaseClient.client
@@ -30,8 +28,6 @@ object LobbyGameStateService {
     }
 
     suspend fun setLobbyMapStates(lobbyMapStates: List<LobbyMapState>) {
-        println("Sending to Supabase: " + Json.encodeToString(lobbyMapStates))
-
         client.from("lobby_map_state").upsert(lobbyMapStates)
     }
 }

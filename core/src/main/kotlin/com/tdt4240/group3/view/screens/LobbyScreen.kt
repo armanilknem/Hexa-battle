@@ -51,6 +51,8 @@ class LobbyScreen(
     private lateinit var startBtn: VisTextButton
     private lateinit var backBtn: VisTextButton
 
+    private var transitioningToPlay = false
+
     override fun show() {
         if (!VisUI.isLoaded()) VisUI.load()
 
@@ -73,9 +75,7 @@ class LobbyScreen(
         }
 
         root.add(backBtn).left().pad(10f).row()
-        backBtn.onClick {
-            game.setScreen<LobbySelectScreen>()
-        }
+        backBtn.onClick { game.setScreen<LobbySelectScreen>() }
 
         root.add(codeLabel).padBottom(10f).row()
         root.add(countLabel).padBottom(20f).row()
@@ -85,13 +85,16 @@ class LobbyScreen(
         if (lobby.hostId == game.myPlayerId) {
             root.add(startBtn).width(280f).height(60f).row()
             startBtn.onClick {
+                startBtn.isDisabled = true
                 scope.launch {
+                    val sortedOrder = connectedPlayers.keys.sorted()
+
                     LobbyGameStateService.createInitialGameState(
                         lobbyId = lobby.id!!,
-                        currentPlayerId = game.myPlayerId
+                        currentPlayerId = sortedOrder.first()
                     )
 
-                    LobbyService.startGame(lobby.id!!, connectedPlayers.keys.toList())
+                    LobbyService.startGame(lobby.id!!, sortedOrder)
                 }
             }
         } else {
@@ -115,17 +118,23 @@ class LobbyScreen(
         }.launchIn(scope)
 
         scope.launch {
-            val lobbyFlow = channel.postgresSingleDataFlow(schema="public", table="lobbies", primaryKey=Lobby::id) {
+            val lobbyFlow = channel.postgresSingleDataFlow(
+                schema = "public",
+                table = "lobbies",
+                primaryKey = Lobby::id
+            ) {
                 eq("id", lobby.id!!)
             }
 
             lobbyFlow.onEach { updatedLobby ->
                 lobby = updatedLobby
 
-                val players = LobbyService.getLobbyPlayers(lobby.id!!)
-                val sortedOrder = players.sortedBy { it.playerId }.map { it.playerId }
+                if (lobby.status == LobbyStatus.PLAYING && !transitioningToPlay) {
+                    transitioningToPlay = true
 
-                if (lobby.status == LobbyStatus.PLAYING) {
+                    val players = LobbyService.getLobbyPlayers(lobby.id!!)
+                    val sortedOrder = players.sortedBy { it.playerId }.map { it.playerId }
+
                     Gdx.app.postRunnable {
                         val playController = PlayController(game, game.engine)
                         val playScreen = playController.createScreen(
@@ -156,7 +165,11 @@ class LobbyScreen(
             }.launchIn(scope)
 
             channel.subscribe(blockUntilSubscribed = true)
-            channel.track(Json.encodeToJsonElement(PresenceState(game.myPlayerId, game.myPlayerName)).jsonObject)
+            channel.track(
+                Json.encodeToJsonElement(
+                    PresenceState(game.myPlayerId, game.myPlayerName)
+                ).jsonObject
+            )
         }
     }
 
@@ -167,9 +180,7 @@ class LobbyScreen(
 
             connectedPlayers.forEach { (playerId, displayName) ->
                 val isHost = playerId == lobby.hostId
-                val label = VisLabel(
-                    if (isHost) "$displayName (HOST)" else displayName
-                )
+                val label = VisLabel(if (isHost) "$displayName (HOST)" else displayName)
                 playerTable.add(label).padBottom(5f).row()
             }
         }
@@ -183,14 +194,11 @@ class LobbyScreen(
 
     override fun hide() {
         Gdx.input.inputProcessor = null
-
         scope.launch {
             try {
                 channel?.untrack()
                 channel?.unsubscribe()
-            } catch (_: Exception) {
-                // ignore
-            }
+            } catch (_: Exception) {}
         }
     }
 
