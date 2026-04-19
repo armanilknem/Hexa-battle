@@ -37,10 +37,10 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
         // Round 1 non-initial turns: skip — starting troops already created above
         markSelectable(gs)
 
-        val selectableCount = engine.getEntitiesFor(
-            allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
-        ).count { it[TeamComponent.mapper]?.team == gs.currentTeam }
-        gs.movesLeft = selectableCount.coerceAtMost(5)
+//        val selectableCount = engine.getEntitiesFor(
+//            allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
+//        ).count { it[TeamComponent.mapper]?.team == gs.currentTeam }
+//        gs.movesLeft = selectableCount.coerceAtMost(5)
 
         gameStateEntity.remove(NeedsTroopSpawnComponent::class.java)
     }

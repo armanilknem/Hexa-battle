@@ -51,6 +51,7 @@ class TurnSystem(
 
         val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
             .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
+        gs.movesLeft = minOf(selectableTroops.size, 5)
 
         if (selectableTroops.isEmpty() || gs.movesLeft < 1) {
             endTurn()
