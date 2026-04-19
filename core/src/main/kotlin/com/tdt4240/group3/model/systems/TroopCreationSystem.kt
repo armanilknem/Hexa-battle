@@ -28,11 +28,20 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
         val gs = gameStateEntity[GameStateComponent.mapper] ?: return
 
         if (gs.turnCount == 1 && gs.currentPlayerIndex == 0) {
+            // Game start: give every team one starting troop, no production bonus yet
             gs.activeTeams.forEach { team -> createTroopsForTeam(team) }
-        } else {
+        } else if (gs.turnCount > 1) {
+            // Normal turns: spawn/reinforce for the current team only
             createTroopsForTeam(gs.currentTeam)
         }
+        // Round 1 non-initial turns: skip — starting troops already created above
         markSelectable(gs)
+
+        val selectableCount = engine.getEntitiesFor(
+            allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
+        ).count { it[TeamComponent.mapper]?.team == gs.currentTeam }
+        gs.movesLeft = selectableCount.coerceAtMost(5)
+
         gameStateEntity.remove(NeedsTroopSpawnComponent::class.java)
     }
 

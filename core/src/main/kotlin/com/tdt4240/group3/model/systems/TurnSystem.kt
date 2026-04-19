@@ -17,6 +17,7 @@ class TurnSystem(
     private val myPlayerId: String
 ) : EntitySystem() {
     private val gameStateFamily = allOf(GameStateComponent::class).get()
+    private val selectableTroopFamily = allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
     private val scope = CoroutineScope(Dispatchers.Default)
     var onTurnEnded: (() -> Unit)? = null
 
@@ -48,8 +49,8 @@ class TurnSystem(
         val isMyTurn = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
         inactivityTimer += deltaTime
 
-        val selectableTroops = engine.getEntitiesFor(allOf(SelectableComponent::class).get()).toList()
-        gs.movesLeft = minOf(selectableTroops.size, 5)
+        val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
+            .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
 
         if (selectableTroops.isEmpty() || gs.movesLeft < 1) {
             endTurn()
