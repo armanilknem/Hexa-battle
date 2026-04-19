@@ -67,13 +67,13 @@ class PlayScreen(
     private lateinit var pauseOverlay: Table
 
     // All sizing derived from V_HEIGHT so it scales consistently on any device
-    private val barH      = ViewConfig.V_HEIGHT * 0.08f   // was 0.10f
-    private val fontScale = ViewConfig.V_HEIGHT * 0.0028f // was 0.0035f
-    private val btnFontSc = ViewConfig.V_HEIGHT * 0.0020f // was 0.0025f
-    private val btnH      = ViewConfig.V_HEIGHT * 0.075f  // was 0.09f
-    private val btnW      = ViewConfig.V_WIDTH  * 0.15f   // was 0.18f
-    private val padSm     = ViewConfig.V_HEIGHT * 0.010f  // was 0.016f
-    private val padMed    = ViewConfig.V_HEIGHT * 0.015f  // was 0.025f
+    private val barH      = ViewConfig.V_HEIGHT * 0.08f
+    private val fontScale = ViewConfig.V_HEIGHT * 0.0028f
+    private val btnFontSc = ViewConfig.V_HEIGHT * 0.0020f
+    private val btnH      = ViewConfig.V_HEIGHT * 0.075f
+    private val btnW      = ViewConfig.V_WIDTH  * 0.15f
+    private val padSm     = ViewConfig.V_HEIGHT * 0.010f
+    private val padMed    = ViewConfig.V_HEIGHT * 0.015f
 
     private var multiplayerManager: MultiplayerManager? = null
 
