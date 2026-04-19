@@ -27,7 +27,11 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
         val gs = gameStateEntity[GameStateComponent.mapper] ?: return
 
-        createTroopsForTeam(gs.currentTeam)
+        if (gs.turnCount == 1 && gs.currentPlayerIndex == 0) {
+            gs.activeTeams.forEach { team -> createTroopsForTeam(team) }
+        } else {
+            createTroopsForTeam(gs.currentTeam)
+        }
         markSelectable(gs)
         val troopCount = engine.getEntitiesFor(allOf(SelectableComponent::class).get()).size()
         gs.movesLeft = troopCount.coerceAtMost(5)

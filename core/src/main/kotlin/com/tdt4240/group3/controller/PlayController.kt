@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.model.MapGenerator
+import com.tdt4240.group3.model.components.CapitalComponent
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
 import com.tdt4240.group3.model.entities.GameStateConfig
@@ -64,6 +65,10 @@ class PlayController(
 
         val isHost = myPlayerId == playerOrder.first()
         val capitalPositions = mapGenerator.generateCapitals(gs.activeTeams)
+        engine.getEntitiesFor(allOf(CapitalComponent::class).get()).forEach { capitalEntity ->
+            val team = capitalEntity[TeamComponent.mapper]?.team ?: com.tdt4240.group3.model.Team.NONE
+            capitalEntity[CapitalComponent.mapper]?.originalTeam = team
+        }
         mapGenerator.generateCities(count = 20, capitalPositions = capitalPositions)
 
         if (isHost) {
@@ -100,6 +105,22 @@ class PlayController(
                 .toList()
                 .filter { it[TeamComponent.mapper]?.team == eliminatedTeam }
                 .forEach { engine.removeEntity(it) }
+
+            val conquerorTeam = engine.getEntitiesFor(allOf(CapitalComponent::class, TeamComponent::class).get())
+                .toList()
+                .firstOrNull { it[CapitalComponent.mapper]?.originalTeam == eliminatedTeam }
+                ?.get(TeamComponent.mapper)?.team ?: com.tdt4240.group3.model.Team.NONE
+
+            if (conquerorTeam != com.tdt4240.group3.model.Team.NONE) {
+                engine.entities.toList().forEach { entity ->
+                    val teamComp = entity[TeamComponent.mapper] ?: return@forEach
+                    if (teamComp.team == eliminatedTeam) teamComp.team = conquerorTeam
+                }
+            }
+
+            if (eliminatedTeam == game.myTeam) {
+                playScreen.goToEliminated()
+            }
         }
         turnSystem.onTurnEnded = { playScreen.onTurnChanged(false) }
         return playScreen

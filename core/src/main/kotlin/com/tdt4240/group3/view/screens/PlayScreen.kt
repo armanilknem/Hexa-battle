@@ -295,6 +295,13 @@ class PlayScreen(
         winScreen.viewerTeam = game.myTeam
         game.setScreen<WinScreen>()
     }
+
+    fun goToEliminated() {
+        val winScreen = game.getScreen<WinScreen>()
+        winScreen.winner = Team.NONE
+        winScreen.viewerTeam = game.myTeam
+        game.setScreen<WinScreen>()
+    }
     fun getBatch() = game.batch
 //    fun getFont()  = game.font
 
