@@ -35,13 +35,7 @@ class PlayController(
         val collisionSystem = CollisionSystem()
         val troopCreationSystem = TroopCreationSystem(engine)
         val territorySystem = TerritorySystem(lobbyId)
-        val troopHighlightSystem = TroopHighlightSystem(turnSystem)
         val winSystem = WinSystem()
-
-        setUpSystems(
-            turnSystem, selectionSystem, movementSystem, collisionSystem,
-            troopCreationSystem, territorySystem, troopHighlightSystem, winSystem
-        )
 
         val turnController = TurnController(turnSystem = turnSystem)
         val pauseController = PauseController()
@@ -49,6 +43,16 @@ class PlayController(
 
         val gameStateEntity = setUpInitialGameState(playerOrder.size)
         val gs = gameStateEntity[GameStateComponent.mapper]!!
+
+        val myIndex = playerOrder.indexOf(myPlayerId)
+        val myTeam = gs.activeTeams.getOrElse(myIndex) { com.tdt4240.group3.model.Team.NONE }
+        game.myTeam = myTeam
+        val troopHighlightSystem = TroopHighlightSystem(turnSystem, myTeam)
+
+        setUpSystems(
+            turnSystem, selectionSystem, movementSystem, collisionSystem,
+            troopCreationSystem, territorySystem, troopHighlightSystem, winSystem
+        )
 
         gs.playerOrder = playerOrder
         gs.currentPlayerIndex = 0
@@ -88,6 +92,7 @@ class PlayController(
         )
 
         winSystem.onWin = { winner -> playScreen.goToWin(winner) }
+        turnSystem.onTurnEnded = { playScreen.onTurnChanged(false) }
         return playScreen
     }
 

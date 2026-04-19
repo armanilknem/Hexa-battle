@@ -71,6 +71,10 @@ class PlayScreen(
         setUpUI()
         setUpInput()
 
+        val gs = getGameState()
+        val isMyTurn = gs.playerOrder.isNotEmpty() && gs.playerOrder[gs.currentPlayerIndex] == myPlayerId
+        onTurnChanged(isMyTurn)
+
         multiplayerManager = MultiplayerManager(
             lobbyId = lobbyId,
             myPlayerId = myPlayerId,
@@ -143,7 +147,7 @@ class PlayScreen(
         inputMultiplexer.addProcessor(stage)
         inputMultiplexer.addProcessor(object : InputAdapter() {
             override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-                if (currentState is PauseState) return false
+                if (currentState is PauseState || currentState is EnemyTurnState) return false
 
                 val worldCoords =
                     camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
@@ -196,8 +200,9 @@ class PlayScreen(
 
     private fun updateUiForState() {
         val isPaused = currentState is PauseState
-        endTurnBtn.isVisible = !isPaused
-        endTurnBtn.touchable = if (isPaused) Touchable.disabled else Touchable.enabled
+        val isMyTurn = currentState is PlayerTurnState
+        endTurnBtn.isVisible = !isPaused && isMyTurn
+        endTurnBtn.touchable = if (!isPaused && isMyTurn) Touchable.enabled else Touchable.disabled
         pauseOverlay.isVisible = isPaused
         pauseOverlay.touchable = if (isPaused) Touchable.enabled else Touchable.disabled
         if (isPaused) {
@@ -248,6 +253,15 @@ class PlayScreen(
         stage.viewport.update(width, height, true)
     }
 
+    fun onTurnChanged(isMyTurn: Boolean) {
+        val newState = if (isMyTurn) PlayerTurnState() else EnemyTurnState()
+        if (currentState is PauseState) {
+            previousState = newState
+        } else {
+            changeState(newState)
+        }
+    }
+
     fun changeState(newState: PlaySubState) {
         currentState.exit(this)
         previousState = currentState
@@ -279,7 +293,7 @@ class PlayScreen(
         game.setScreen<WinScreen>()
     }
     fun getBatch() = game.batch
-    fun getFont()  = game.font
+//    fun getFont()  = game.font
 
     override fun dispose() {
         multiplayerManager?.dispose()
