@@ -3,7 +3,7 @@ package com.tdt4240.group3.screens
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
@@ -11,6 +11,7 @@ import com.kotcrab.vis.ui.widget.VisTextField
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.model.LobbyResult
+import com.tdt4240.group3.view.ViewConfig
 import com.tdt4240.group3.view.screens.LobbyScreen
 import com.tdt4240.group3.view.screens.MenuScreen
 import kotlinx.coroutines.CoroutineScope
@@ -23,7 +24,7 @@ import ktx.app.KtxScreen
 import ktx.app.clearScreen
 
 class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
-    private val stage = Stage(ScreenViewport())
+    private val stage = Stage(ExtendViewport(ViewConfig.V_WIDTH, ViewConfig.V_HEIGHT))
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private lateinit var statusLabel: VisLabel
 

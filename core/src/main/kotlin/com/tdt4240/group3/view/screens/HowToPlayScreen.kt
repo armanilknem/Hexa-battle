@@ -1,18 +1,23 @@
 package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.math.Rectangle
+import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
+import com.kotcrab.vis.ui.VisUI
+import com.kotcrab.vis.ui.widget.VisLabel
+import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.view.ViewConfig
+import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
-import ktx.graphics.use
 
 class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
-    private val viewport = ExtendViewport(800f, 480f)
-    private val camera = OrthographicCamera()
+
+    private lateinit var stage: Stage
+    private lateinit var cardLabel: VisLabel
+    private lateinit var indexLabel: VisLabel
 
     private val cards = listOf(
         "Goal:\nCapture the enemy Capital.",
@@ -30,75 +35,83 @@ class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
 
     private var currentCard = 0
 
-    private val backButton = Rectangle(
-        Gdx.graphics.width - 150f,
-        Gdx.graphics.height - 80f,
-        130f,
-        50f
-    )
+    override fun show() {
+        if (!VisUI.isLoaded()) VisUI.load()
+
+        stage = Stage(ExtendViewport(ViewConfig.V_WIDTH, ViewConfig.V_HEIGHT))
+        Gdx.input.inputProcessor = stage
+
+        cardLabel = VisLabel(cards[currentCard]).apply {
+            setFontScale(1.6f)
+            wrap = true
+        }
+
+        indexLabel = VisLabel("1/${cards.size}").apply {
+            setFontScale(1.2f)
+        }
+
+        val prevBtn = VisTextButton("< PREV").apply {
+            onClick {
+                if (currentCard > 0) {
+                    currentCard--
+                    updateCard()
+                }
+            }
+        }
+
+        val nextBtn = VisTextButton("NEXT >").apply {
+            onClick {
+                if (currentCard < cards.lastIndex) {
+                    currentCard++
+                    updateCard()
+                }
+            }
+        }
+
+        val backBtn = VisTextButton("BACK TO MENU").apply {
+            onClick { game.setScreen<MenuScreen>() }
+        }
+
+        val root = Table().apply {
+            setFillParent(true)
+            center()
+            pad(40f)
+        }
+
+        // Card text — give it a fixed width so wrap works properly
+        root.add(cardLabel).width(500f).center().padBottom(40f).row()
+        root.add(indexLabel).center().padBottom(24f).row()
+
+        val navRow = Table()
+        navRow.add(prevBtn).width(140f).height(56f).padRight(24f)
+        navRow.add(nextBtn).width(140f).height(56f)
+
+        root.add(navRow).padBottom(28f).row()
+        root.add(backBtn).width(240f).height(56f)
+
+        stage.addActor(root)
+    }
+
+    private fun updateCard() {
+        cardLabel.setText(cards[currentCard])
+        indexLabel.setText("${currentCard + 1}/${cards.size}")
+    }
 
     override fun render(delta: Float) {
         clearScreen(0.2f, 0.2f, 0.15f, 1f)
-
-        handleInput()
-
-        game.batch.use { batch ->
-
-            // Draw current tutorial card (centered-ish)
-            game.font.draw(
-                batch,
-                cards[currentCard],
-                100f,
-                Gdx.graphics.height / 2f
-            )
-
-            // Draw card index
-            game.font.draw(
-                batch,
-                "${currentCard + 1}/${cards.size}",
-                Gdx.graphics.width / 2f - 20f,
-                50f
-            )
-
-            // Draw BACK button
-            game.font.color = Color.WHITE
-            game.font.draw(
-                batch,
-                "BACK",
-                backButton.x + 30f,
-                backButton.y + 35f
-            )
-        }
-    }
-
-    private fun handleInput() {
-
-        // Touch input
-        if (Gdx.input.justTouched()) {
-            val touchX = Gdx.input.x.toFloat()
-            val touchY = Gdx.graphics.height - Gdx.input.y.toFloat()
-
-            // Back button click
-            if (backButton.contains(touchX, touchY)) {
-                game.setScreen<MenuScreen>()
-                return
-            }
-
-            // Tap right side → next card
-            if (touchX > Gdx.graphics.width / 2f) {
-                currentCard = (currentCard + 1).coerceAtMost(cards.lastIndex)
-            } else {
-                // Tap left side → previous card
-                currentCard = (currentCard - 1).coerceAtLeast(0)
-            }
-        }
+        stage.act(delta)
+        stage.draw()
     }
 
     override fun resize(width: Int, height: Int) {
-        viewport.update(width, height, true)
+        stage.viewport.update(width, height, true)
+    }
+
+    override fun hide() {
+        Gdx.input.inputProcessor = null
     }
 
     override fun dispose() {
-        super.dispose()
+        stage.dispose()
     }
 }

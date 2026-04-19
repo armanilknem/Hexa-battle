@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
-import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
@@ -21,6 +21,7 @@ import com.tdt4240.group3.network.model.LobbyStatus
 import com.tdt4240.group3.network.model.PresenceState
 import com.tdt4240.group3.screens.LobbySelectScreen
 import com.tdt4240.group3.view.View
+import com.tdt4240.group3.view.ViewConfig
 import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresSingleDataFlow
@@ -41,7 +42,7 @@ class LobbyScreen(
     initialLobby: Lobby
 ) : KtxScreen {
 
-    private val stage = Stage(ScreenViewport())
+    private val stage = Stage(ExtendViewport(ViewConfig.V_WIDTH, ViewConfig.V_HEIGHT))
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val backgroundTexture = Texture(Gdx.files.internal("backgrounds/MenuBackground.png"))
 
@@ -144,7 +145,6 @@ class LobbyScreen(
                     Gdx.app.postRunnable {
                         game.resetForNewMatch()
 
-                        //game.myTeam = assignTeamForPlayer(game.myPlayerId, connectedPlayers.keys)
                         val playController = PlayController(game, game.engine)
                         val playScreen = playController.createScreen(
                             lobbyId = lobby.id!!,
@@ -195,6 +195,10 @@ class LobbyScreen(
         clearScreen(0.055f, 0.067f, 0.094f, 1f)
         stage.act(delta)
         stage.draw()
+    }
+
+    override fun resize(width: Int, height: Int) {
+        stage.viewport.update(width, height, true)
     }
 
     override fun hide() {

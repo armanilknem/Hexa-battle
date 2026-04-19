@@ -6,13 +6,14 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
-import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.screens.LobbySelectScreen
+import com.tdt4240.group3.view.ViewConfig
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
@@ -25,7 +26,7 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
     override fun show() {
         if (!VisUI.isLoaded()) VisUI.load()
 
-        stage = Stage(ScreenViewport())
+        stage = Stage(ExtendViewport(ViewConfig.V_WIDTH, ViewConfig.V_HEIGHT))
         Gdx.input.inputProcessor = stage
 
         val root = Table().apply {
@@ -39,9 +40,8 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
         val howToBtn    = VisTextButton("HOW TO PLAY")
         val optionsBtn  = VisTextButton("OPTIONS")
 
-        playBtn.onClick    {
+        playBtn.onClick {
             game.myTeam = Team.RED
-            // game.setScreen<PlayScreen>()
             game.setScreen<LobbySelectScreen>()
         }
         howToBtn.onClick   { game.setScreen<HowToPlayScreen>() }
