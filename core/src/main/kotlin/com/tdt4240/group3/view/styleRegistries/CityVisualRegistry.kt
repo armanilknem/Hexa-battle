@@ -13,150 +13,74 @@ data class CityVisuals(
     val texture: Texture,
     val width: Float,
     val height: Float,
-    val xOffset: Float,
-    val yOffset: Float
+    val xOffset: Float = 0f,
+    val yOffset: Float = 0f,
+)
+
+private data class CitySize(
+    val width: Float,
+    val height: Float,
+    val xOffset: Float = 0f,
+    val yOffset: Float = 0f,
+)
+
+private val CAPITAL_SIZE = CitySize(width = 40f, height = 44f, xOffset = 1f, yOffset = 5.5f)
+private val NORMAL_SIZE  = CitySize(width = 39f, height = 40f, xOffset = 0f, yOffset = 2f)
+
+// Legg til nytt team: én linje her og én i NORMAL_PATHS
+private val CAPITAL_PATHS: Map<TeamName, String> = mapOf(
+    TeamName.NONE   to "normalCities/NormalCity.png", // midlertidig fallback
+    TeamName.RED    to "capitals/RedCapital.png",
+    TeamName.BLUE   to "capitals/BlueCapital.png",
+    TeamName.GREEN  to "capitals/GreenCapital.png",
+    TeamName.PURPLE to "capitals/PurpleCapital.png",
+)
+
+private val NORMAL_PATHS: Map<TeamName, String> = mapOf(
+    TeamName.NONE   to "normalCities/NormalCity.png",
+    TeamName.RED    to "normalCities/RedCity.png",
+    TeamName.BLUE   to "normalCities/BlueCity.png",
+    TeamName.GREEN  to "normalCities/GreenCity.png",
+    TeamName.PURPLE to "normalCities/PurpleCity.png",
 )
 
 object CityStyleRegistry : Disposable {
-    private lateinit var neutralCapitalVisuals: CityVisuals
-    private lateinit var neutralNormalVisuals: CityVisuals
-    private lateinit var redCapitalVisuals: CityVisuals
-    private lateinit var blueCapitalVisuals: CityVisuals
-    private lateinit var greenCapitalVisuals: CityVisuals
-    private lateinit var purpleCapitalVisuals: CityVisuals
-    private lateinit var redNormalVisuals: CityVisuals
-    private lateinit var blueNormalVisuals: CityVisuals
-    private lateinit var greenNormalVisuals: CityVisuals
-    private lateinit var purpleNormalVisuals: CityVisuals
+    private val capitalVisuals = mutableMapOf<TeamName, CityVisuals>()
+    private val normalVisuals  = mutableMapOf<TeamName, CityVisuals>()
     private var initialized = false
 
     fun init() {
         if (initialized) return
 
-        // Below can be used for when a player takes over another players capital
-        neutralCapitalVisuals = CityVisuals(
-            texture = Texture(Gdx.files.internal("CapitalCity.png")),
-            width = 40f,
-            height = 44f,
-            xOffset = 1f,
-            yOffset = 5.5f
-        )
+        fun loadAll(paths: Map<TeamName, String>, size: CitySize): Map<TeamName, CityVisuals> =
+            paths.mapValues { (_, path) ->
+                CityVisuals(
+                    texture = Texture(Gdx.files.internal(path)),
+                    width   = size.width,
+                    height  = size.height,
+                    xOffset = size.xOffset,
+                    yOffset = size.yOffset,
+                )
+            }
 
-        redCapitalVisuals = CityVisuals(
-            texture = Texture(Gdx.files.internal("capitals/RedCapital.png")),
-            width = 40f,
-            height = 44f,
-            xOffset = 1f,
-            yOffset = 5.5f
-        )
-
-        blueCapitalVisuals = CityVisuals(
-            texture = Texture(Gdx.files.internal("capitals/BlueCapital.png")),
-            width = 40f,
-            height = 44f,
-            xOffset = 1f,
-            yOffset = 5.5f
-        )
-
-        greenCapitalVisuals = CityVisuals(
-            texture = Texture(Gdx.files.internal("capitals/GreenCapital.png")),
-            width = 40f,
-            height = 44f,
-            xOffset = 1f,
-            yOffset = 5.5f
-        )
-
-        purpleCapitalVisuals = CityVisuals(
-            texture = Texture(Gdx.files.internal("capitals/PurpleCapital.png")),
-            width = 40f,
-            height = 44f,
-            xOffset = 1f,
-            yOffset = 5.5f
-        )
-
-        neutralNormalVisuals = CityVisuals(
-            texture = Texture(Gdx.files.internal("normalCities/NormalCity.png")),
-            width = 39f,
-            height = 40f,
-            xOffset = 0f,
-            yOffset = 2f
-        )
-
-        redNormalVisuals = CityVisuals(
-            texture = Texture(Gdx.files.internal("normalCities/RedCity.png")),
-            width = 39f,
-            height = 40f,
-            xOffset = 0f,
-            yOffset = 2f
-        )
-
-        blueNormalVisuals = CityVisuals(
-            texture = Texture(Gdx.files.internal("normalCities/BlueCity.png")),
-            width = 39f,
-            height = 40f,
-            xOffset = 0f,
-            yOffset = 2f
-        )
-
-        greenNormalVisuals = CityVisuals(
-            texture = Texture(Gdx.files.internal("normalCities/GreenCity.png")),
-            width = 39f,
-            height = 40f,
-            xOffset = 0f,
-            yOffset = 2f
-        )
-
-        purpleNormalVisuals = CityVisuals(
-            texture = Texture(Gdx.files.internal("normalCities/PurpleCity.png")),
-            width = 39f,
-            height = 40f,
-            xOffset = 0f,
-            yOffset = 2f
-        )
-
+        capitalVisuals.putAll(loadAll(CAPITAL_PATHS, CAPITAL_SIZE))
+        normalVisuals.putAll(loadAll(NORMAL_PATHS, NORMAL_SIZE))
         initialized = true
     }
 
     fun getFor(entity: Entity): CityVisuals {
         if (!initialized) init()
-
         val team = entity[TeamComponent.mapper]?.team ?: TeamName.NONE
-
-        return if (entity.getComponent(CapitalComponent::class.java) != null) {
-            getCapitalVisuals(team)
-        } else {
-            getNormalVisuals(team)
-        }
-    }
-
-    private fun getCapitalVisuals(team: TeamName): CityVisuals = when (team) {
-        TeamName.RED -> redCapitalVisuals
-        TeamName.BLUE -> blueCapitalVisuals
-        TeamName.GREEN -> greenCapitalVisuals
-        TeamName.PURPLE -> purpleCapitalVisuals
-        TeamName.NONE -> neutralCapitalVisuals
-    }
-
-    private fun getNormalVisuals(team: TeamName): CityVisuals = when (team) {
-        TeamName.RED -> redNormalVisuals
-        TeamName.BLUE -> blueNormalVisuals
-        TeamName.GREEN -> greenNormalVisuals
-        TeamName.PURPLE -> purpleNormalVisuals
-        TeamName.NONE -> neutralNormalVisuals
+        val map  = if (entity.getComponent(CapitalComponent::class.java) != null)
+            capitalVisuals else normalVisuals
+        return map[team] ?: error("Ingen CityVisuals registrert for team: $team")
     }
 
     override fun dispose() {
         if (!initialized) return
-        neutralCapitalVisuals.texture.dispose()
-        neutralNormalVisuals.texture.dispose()
-        redCapitalVisuals.texture.dispose()
-        blueCapitalVisuals.texture.dispose()
-        greenCapitalVisuals.texture.dispose()
-        purpleCapitalVisuals.texture.dispose()
-        redNormalVisuals.texture.dispose()
-        blueNormalVisuals.texture.dispose()
-        greenNormalVisuals.texture.dispose()
-        purpleNormalVisuals.texture.dispose()
+        (capitalVisuals.values + normalVisuals.values).forEach { it.texture.dispose() }
+        capitalVisuals.clear()
+        normalVisuals.clear()
         initialized = false
     }
 }
