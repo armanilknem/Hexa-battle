@@ -1,4 +1,4 @@
-package com.tdt4240.group3.model.ecs.entities
+package com.tdt4240.group3.model.temporaryFactory
 
 import com.tdt4240.group3.model.ecs.components.TileComponent
 import com.tdt4240.group3.model.team.TeamName

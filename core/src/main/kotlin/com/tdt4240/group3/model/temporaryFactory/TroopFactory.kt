@@ -1,4 +1,4 @@
-package com.tdt4240.group3.model.ecs.entities
+package com.tdt4240.group3.model.temporaryFactory
 
 import com.badlogic.ashley.core.Engine
 import com.tdt4240.group3.model.ecs.components.CombatComponent
