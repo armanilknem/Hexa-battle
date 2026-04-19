@@ -1,7 +1,6 @@
 package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
@@ -12,6 +11,8 @@ import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.view.styleRegistries.BackgroundTier
+import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 
@@ -19,20 +20,24 @@ class WinScreen(private val game: Hexa_Battle) : KtxScreen {
     var winner: Team = Team.NONE
     var viewerTeam: Team = Team.NONE
     private lateinit var stage: Stage
-    private var backgroundTexture: Texture? = null
 
     override fun show() {
         if (!VisUI.isLoaded()) VisUI.load()
 
         stage = Stage(ScreenViewport())
         Gdx.input.inputProcessor = stage
-        val texture = Texture(Gdx.files.internal(backgroundPathFor(winner, viewerTeam)))
-        backgroundTexture = texture
+
+        val isWinner = winner != Team.NONE && winner == viewerTeam
+        val backgroundTier = if (isWinner) BackgroundTier.WIN else BackgroundTier.DEFEAT
+
+        val backgroundTexture = TeamVisualRegistry.visuals[winner]?.backgrounds?.get(backgroundTier)
 
         val root = Table().apply {
             setFillParent(true)
             center()
-            background = TextureRegionDrawable(TextureRegion(texture))
+            backgroundTexture?.let {
+                background = TextureRegionDrawable(TextureRegion(it))
+            }
         }
 
         val resultLabel = VisLabel(labelTextFor(winner, viewerTeam)).apply { setFontScale(3.5f) }
@@ -60,23 +65,9 @@ class WinScreen(private val game: Hexa_Battle) : KtxScreen {
     override fun hide() {
         Gdx.input.inputProcessor = null
         stage.dispose()
-        backgroundTexture?.dispose()
-        backgroundTexture = null
     }
 
     private fun labelTextFor(winner: Team, viewerTeam: Team): String {
         return if (winner != Team.NONE && winner == viewerTeam) "${winner.name} WINS!" else "DEFEAT"
-    }
-
-    private fun backgroundPathFor(winner: Team, viewerTeam: Team): String {
-        if (winner != viewerTeam) return "backgrounds/DefeatBackground.png"
-
-        return when (winner) {
-            Team.RED -> "backgrounds/RedWinBackground.png"
-            Team.BLUE -> "backgrounds/BlueWinBackground.png"
-            Team.GREEN -> "backgrounds/GreenWinBackground.png"
-            Team.PURPLE -> "backgrounds/PurpleWinBackground.png"
-            Team.NONE -> "backgrounds/DefeatBackground.png"
-        }
     }
 }

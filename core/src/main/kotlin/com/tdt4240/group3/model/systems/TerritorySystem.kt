@@ -11,6 +11,9 @@ import com.tdt4240.group3.model.hexmap.HexMapQueries.hasCityAt
 import com.tdt4240.group3.model.hexmap.HexMapQueries.hasTroopAt
 import com.tdt4240.group3.model.hexmap.MapCalculations.hexDistance
 import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.components.CityComponent
+import com.tdt4240.group3.model.components.GameStateComponent
+import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.network.LobbyGameStateService
 import com.tdt4240.group3.network.model.LobbyMapState
 import kotlinx.coroutines.CoroutineScope

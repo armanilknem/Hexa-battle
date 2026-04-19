@@ -8,6 +8,7 @@ import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.components.marker.CollidingComponent
 import com.tdt4240.group3.model.components.CityComponent
+import com.tdt4240.group3.model.components.marker.TerritoryComponent
 import com.tdt4240.group3.model.Team
 import ktx.ashley.allOf
 import ktx.ashley.get

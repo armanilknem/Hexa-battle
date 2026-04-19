@@ -3,9 +3,10 @@ package com.tdt4240.group3.network
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.Gdx
-import com.tdt4240.group3.model.ecs.components.*
-import com.tdt4240.group3.model.ecs.entities.EntityFactory
-import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.UnitType
+import com.tdt4240.group3.model.components.*
+import com.tdt4240.group3.model.entities.EntityFactory
 import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
@@ -111,12 +112,12 @@ class MultiplayerManager(
                             ).firstOrNull()
                             val gs = gsEntity?.get(GameStateComponent.mapper)
 
-                            val teamName: TeamName =
+                            val teamName: Team =
                                 if (ownerId != null && gs != null) {
                                     val idx = gs.playerOrder.indexOf(ownerId)
                                     if (idx >= 0 && idx < gs.activeTeams.size) gs.activeTeams[idx]
-                                    else TeamName.NONE
-                                } else TeamName.NONE
+                                    else Team.NONE
+                                } else Team.NONE
 
                             val entities = engine.entities
                             val size = entities.size()
@@ -143,7 +144,7 @@ class MultiplayerManager(
                             } else if (strength > 0) {
                                 entityFactory.createTroop(
                                     team = teamName,
-                                    unitKey = "baseTroop",
+                                    unitType = UnitType.SOLDIER,
                                     strength = strength,
                                     q = q,
                                     r = r

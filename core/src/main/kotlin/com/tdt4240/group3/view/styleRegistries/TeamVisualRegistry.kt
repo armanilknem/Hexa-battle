@@ -14,7 +14,8 @@ import com.badlogic.gdx.utils.Disposable
  */
 data class TeamVisuals(
     val territoryColor: Color,
-    val textures: Map<UnitTier, Texture>
+    val textures: Map<UnitTier, Texture>,
+    val backgrounds: Map<BackgroundTier, Texture>
 )
 
 /**
@@ -27,6 +28,11 @@ enum class UnitTier {
     TIER_1,
     TIER_2,
     TIER_3
+}
+
+enum class BackgroundTier {
+    DEFEAT,
+    WIN,
 }
 
 /**
@@ -45,6 +51,10 @@ object TeamVisualRegistry : Disposable {
                 UnitTier.TIER_1 to Texture(Gdx.files.internal("troopSprites/red_soldier.png")),
                 UnitTier.TIER_2 to Texture(Gdx.files.internal("troopSprites/red_tank.png")),
                 UnitTier.TIER_3 to Texture(Gdx.files.internal("troopSprites/red_plane.png")),
+            ),
+            backgrounds = mapOf(
+                BackgroundTier.DEFEAT to Texture(Gdx.files.internal("backgrounds/DefeatBackground.png")),
+                BackgroundTier.WIN to Texture(Gdx.files.internal("backgrounds/RedWinBackground.png"))
             )
         ),
         Team.BLUE to TeamVisuals(
@@ -53,6 +63,10 @@ object TeamVisualRegistry : Disposable {
                 UnitTier.TIER_1 to Texture(Gdx.files.internal("troopSprites/blue_soldier.png")),
                 UnitTier.TIER_2 to Texture(Gdx.files.internal("troopSprites/blue_tank.png")),
                 UnitTier.TIER_3 to Texture(Gdx.files.internal("troopSprites/blue_plane.png")),
+            ),
+            backgrounds = mapOf(
+                BackgroundTier.DEFEAT to Texture(Gdx.files.internal("backgrounds/DefeatBackground.png")),
+                BackgroundTier.WIN to Texture(Gdx.files.internal("backgrounds/BlueWinBackground.png"))
             )
         ),
         Team.PURPLE to TeamVisuals(
@@ -61,6 +75,10 @@ object TeamVisualRegistry : Disposable {
                 UnitTier.TIER_1 to Texture(Gdx.files.internal("troopSprites/purple_soldier.png")),
                 UnitTier.TIER_2 to Texture(Gdx.files.internal("troopSprites/purple_tank.png")),
                 UnitTier.TIER_3 to Texture(Gdx.files.internal("troopSprites/purple_plane.png")),
+            ),
+            backgrounds = mapOf(
+                BackgroundTier.DEFEAT to Texture(Gdx.files.internal("backgrounds/DefeatBackground.png")),
+                BackgroundTier.WIN to Texture(Gdx.files.internal("backgrounds/PurpleWinBackground.png"))
             )
         ),
         Team.GREEN to TeamVisuals(
@@ -69,6 +87,10 @@ object TeamVisualRegistry : Disposable {
                 UnitTier.TIER_1 to Texture(Gdx.files.internal("troopSprites/green_soldier.png")),
                 UnitTier.TIER_2 to Texture(Gdx.files.internal("troopSprites/green_tank.png")),
                 UnitTier.TIER_3 to Texture(Gdx.files.internal("troopSprites/green_plane.png")),
+            ),
+            backgrounds = mapOf(
+                BackgroundTier.DEFEAT to Texture(Gdx.files.internal("backgrounds/DefeatBackground.png")),
+                BackgroundTier.WIN to Texture(Gdx.files.internal("backgrounds/GreenWinBackground.png"))
             )
         )
     )

@@ -15,10 +15,10 @@ import ktx.app.KtxScreen
 import ktx.async.KtxAsync
 import com.tdt4240.group3.view.screens.MenuScreen
 import com.tdt4240.group3.view.screens.OptionsScreen
+import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.view.screens.WinScreen
 import com.tdt4240.group3.model.Team
 import ktx.assets.disposeSafely
-import kotlin.math.sqrt
 import java.util.UUID
 import kotlinx.coroutines.launch
 
@@ -83,7 +83,23 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         }
     }
 
+    fun resetForNewMatch() {
+        if (containsScreen<PlayScreen>()) {
+            removeScreen<PlayScreen>()
+        }
+
+        if (::view.isInitialized) {
+            view.disposeSafely()
+        }
+
+        engine = Engine()
+        engine.addSystem(PlayerSystem())
+    }
+
     override fun dispose() {
+        if (::view.isInitialized) {
+            view.disposeSafely()
+        }
         font.disposeSafely()
         batch.disposeSafely()
         shapeRenderer.disposeSafely()
