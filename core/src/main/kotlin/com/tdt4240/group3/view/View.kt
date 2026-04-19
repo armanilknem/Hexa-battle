@@ -235,7 +235,7 @@ class View(
         val size = 16f
 
         // make territory semi-transparent for other teams
-        val alpha = if (team == getCurrentTeam()) 0.6f else 0.3f
+        val alpha = if (team == getCurrentTeam()) 0.7f else 0.5f
 
         // get team color from teamStyleRegistry
         val color = TeamVisualRegistry.getTerritoryColor(team)

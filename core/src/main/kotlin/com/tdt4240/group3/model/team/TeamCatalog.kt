@@ -9,7 +9,7 @@ object TeamCatalog {
         "red" to TeamDefinition(
             teamName = TeamName.RED,
             displayName = "Red",
-            territoryColorHex = "#FF0000",
+            territoryColorHex = "#880808",
             troopTextures = mapOf(
                 UnitTier.TIER_1 to "troopSprites/red_soldier.png",
                 UnitTier.TIER_2 to "troopSprites/red_tank.png",
@@ -39,7 +39,7 @@ object TeamCatalog {
         "green" to TeamDefinition(
             teamName = TeamName.GREEN,
             displayName = "Green",
-            territoryColorHex = "#00FF00",
+            territoryColorHex = "#004700",
             troopTextures = mapOf(
                 UnitTier.TIER_1 to "troopSprites/green_soldier.png",
                 UnitTier.TIER_2 to "troopSprites/green_tank.png",
