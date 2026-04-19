@@ -1,8 +1,13 @@
 package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.TextureRegion
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
@@ -15,6 +20,7 @@ import ktx.app.clearScreen
 
 class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
 
+    private var backgroundTexture: Texture? = null
     private lateinit var stage: Stage
     private lateinit var cardLabel: VisLabel
     private lateinit var indexLabel: VisLabel
@@ -36,6 +42,7 @@ class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
     private var currentCard = 0
 
     override fun show() {
+        backgroundTexture = Texture(Gdx.files.internal("backgrounds/TutorialBackground.png"))
         if (!VisUI.isLoaded()) VisUI.load()
 
         stage = Stage(ExtendViewport(ViewConfig.V_WIDTH, ViewConfig.V_HEIGHT))
@@ -44,10 +51,14 @@ class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
         cardLabel = VisLabel(cards[currentCard]).apply {
             setFontScale(1.6f)
             wrap = true
+            color = Color.BLACK
+            setAlignment(Align.center)
         }
 
         indexLabel = VisLabel("1/${cards.size}").apply {
             setFontScale(1.2f)
+            color = Color.BLACK
+            setAlignment(Align.center)
         }
 
         val prevBtn = VisTextButton("< PREV").apply {
@@ -57,6 +68,7 @@ class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
                     updateCard()
                 }
             }
+            color = Color.BLACK
         }
 
         val nextBtn = VisTextButton("NEXT >").apply {
@@ -66,16 +78,19 @@ class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
                     updateCard()
                 }
             }
+            color = Color.BLACK
         }
 
         val backBtn = VisTextButton("BACK TO MENU").apply {
             onClick { game.setScreen<MenuScreen>() }
+            color = Color.BLACK
         }
 
         val root = Table().apply {
             setFillParent(true)
             center()
             pad(40f)
+            background = TextureRegionDrawable(TextureRegion(backgroundTexture))
         }
 
         // Card text — give it a fixed width so wrap works properly
@@ -113,5 +128,6 @@ class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
 
     override fun dispose() {
         stage.dispose()
+        backgroundTexture?.dispose()
     }
 }

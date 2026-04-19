@@ -7,6 +7,7 @@ import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Touchable
@@ -265,10 +266,12 @@ class PlayScreen(
             else "q: ${pos.q}, r: ${pos.r}"
             tooltipLabel.setText(text)
             tooltipLabel.pack()
-            tooltipLabel.setPosition(
-                screenX.toFloat() + 12f,
-                stage.viewport.screenHeight - screenY.toFloat() + 12f
+
+            // Convert raw screen coords to stage virtual coords
+            val stageCoords = stage.screenToStageCoordinates(
+                Vector2(screenX.toFloat(), screenY.toFloat())
             )
+            tooltipLabel.setPosition(stageCoords.x + 12f, stageCoords.y + 12f)
             tooltipLabel.isVisible = true
         } else {
             tooltipLabel.isVisible = false

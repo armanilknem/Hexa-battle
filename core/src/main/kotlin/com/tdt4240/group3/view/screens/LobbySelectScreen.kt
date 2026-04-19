@@ -1,8 +1,12 @@
 package com.tdt4240.group3.screens
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
@@ -26,22 +30,26 @@ import ktx.app.clearScreen
 class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
     private val stage = Stage(ExtendViewport(ViewConfig.V_WIDTH, ViewConfig.V_HEIGHT))
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var backgroundTexture: Texture? = null
     private lateinit var statusLabel: VisLabel
 
     override fun show() {
+        backgroundTexture = Texture(Gdx.files.internal("backgrounds/MenuBackground.png"))
         if (!VisUI.isLoaded()) VisUI.load()
 
-        statusLabel = VisLabel("")
+        statusLabel = VisLabel("").apply { color = Color.BLACK }
 
         Gdx.input.inputProcessor = stage
         stage.clear()
-        val root = Table().apply { setFillParent(true); center() }
+        val root = Table().apply { setFillParent(true); center(); background =
+            TextureRegionDrawable(TextureRegion(backgroundTexture))
+        }
 
-        val title = VisLabel("MULTIPLAYER")
-        val createBtn = VisTextButton("CREATE LOBBY")
-        val codeField = VisTextField("").apply { messageText = "ENTER CODE..." }
-        val joinBtn = VisTextButton("JOIN")
-        val backBtn = VisTextButton("BACK")
+        val title = VisLabel("MULTIPLAYER").apply { color = Color.BLACK }
+        val createBtn = VisTextButton("CREATE LOBBY").apply { color = Color.BLACK }
+        val codeField = VisTextField("").apply { messageText = "ENTER CODE..."; color = Color.BLACK }
+        val joinBtn = VisTextButton("JOIN").apply { color = Color.BLACK }
+        val backBtn = VisTextButton("BACK").apply { color = Color.BLACK }
 
         createBtn.onClick {
             statusLabel.setText("Creating...")
@@ -106,6 +114,7 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
 
     override fun dispose() {
         stage.dispose()
+        backgroundTexture?.dispose()
         if (VisUI.isLoaded()) VisUI.dispose()
         scope.cancel()
     }

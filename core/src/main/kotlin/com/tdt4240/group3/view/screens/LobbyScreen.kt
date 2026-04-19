@@ -1,6 +1,7 @@
 package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -62,11 +63,11 @@ class LobbyScreen(
     override fun show() {
         if (!VisUI.isLoaded()) VisUI.load()
 
-        backBtn = VisTextButton("BACK")
-        codeLabel = VisLabel("CODE: ${lobby.lobbyCode}")
-        countLabel = VisLabel("PLAYERS: 0/${lobby.maxPlayerCount}")
-        playerTable = Table()
-        startBtn = VisTextButton("START GAME")
+        backBtn = VisTextButton("BACK").apply { color = Color.BLACK }
+        codeLabel = VisLabel("CODE: ${lobby.lobbyCode}").apply { color = Color.BLACK }
+        countLabel = VisLabel("PLAYERS: 0/${lobby.maxPlayerCount}").apply { color = Color.BLACK }
+        playerTable = Table().apply { color = Color.BLACK }
+        startBtn = VisTextButton("START GAME").apply { color = Color.BLACK }
 
         Gdx.input.inputProcessor = stage
         setupLayout()
@@ -86,7 +87,7 @@ class LobbyScreen(
 
         root.add(codeLabel).padBottom(10f).row()
         root.add(countLabel).padBottom(20f).row()
-        root.add(VisLabel("CONNECTED PLAYERS:")).padBottom(10f).row()
+        root.add(VisLabel("CONNECTED PLAYERS:").apply { color = Color.BLACK }).padBottom(10f).row()
         root.add(playerTable).padBottom(30f).row()
 
         if (lobby.hostId == game.myPlayerId) {
@@ -105,7 +106,7 @@ class LobbyScreen(
                 }
             }
         } else {
-            root.add(VisLabel("Waiting for host...")).row()
+            root.add(VisLabel("Waiting for host...").apply { color = Color.BLACK }).row()
         }
 
         stage.addActor(root)
@@ -185,7 +186,7 @@ class LobbyScreen(
 
             connectedPlayers.forEach { (playerId, displayName) ->
                 val isHost = playerId == lobby.hostId
-                val label = VisLabel(if (isHost) "$displayName (HOST)" else displayName)
+                val label = VisLabel(if (isHost) "$displayName (HOST)" else displayName).apply { color = Color.BLACK }
                 playerTable.add(label).padBottom(5f).row()
             }
         }

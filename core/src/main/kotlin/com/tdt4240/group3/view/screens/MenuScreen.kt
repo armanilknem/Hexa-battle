@@ -1,6 +1,7 @@
 package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -35,10 +36,10 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
             background = TextureRegionDrawable(TextureRegion(backgroundTexture))
         }
 
-        val titleLabel  = VisLabel("HEXA·BATTLE")
-        val playBtn     = VisTextButton("PLAY")
-        val howToBtn    = VisTextButton("HOW TO PLAY")
-        val optionsBtn  = VisTextButton("OPTIONS")
+        val titleLabel  = VisLabel("HEXA BATTLE").apply { color = Color.BLACK }
+        val playBtn     = VisTextButton("PLAY").apply { color = Color.BLACK }
+        val howToBtn    = VisTextButton("HOW TO PLAY").apply { color = Color.BLACK }
+        val optionsBtn  = VisTextButton("OPTIONS").apply { color = Color.BLACK }
 
         playBtn.onClick {
             game.myTeam = Team.RED
