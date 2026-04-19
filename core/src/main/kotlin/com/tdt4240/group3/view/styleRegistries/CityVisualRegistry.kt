@@ -4,9 +4,9 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.utils.Disposable
+import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.components.CapitalComponent
-import com.tdt4240.group3.model.ecs.components.TeamComponent
-import com.tdt4240.group3.model.team.TeamName
+import com.tdt4240.group3.model.components.TeamComponent
 import ktx.ashley.get
 
 data class CityVisuals(
@@ -25,62 +25,58 @@ private data class CitySize(
 )
 
 private val CAPITAL_SIZE = CitySize(width = 40f, height = 44f, xOffset = 1f, yOffset = 5.5f)
-private val NORMAL_SIZE  = CitySize(width = 39f, height = 40f, xOffset = 0f, yOffset = 2f)
-
-// Legg til nytt team: én linje her og én i NORMAL_PATHS
-private val CAPITAL_PATHS: Map<TeamName, String> = mapOf(
-    TeamName.NONE   to "normalCities/NormalCity.png", // midlertidig fallback
-    TeamName.RED    to "capitals/RedCapital.png",
-    TeamName.BLUE   to "capitals/BlueCapital.png",
-    TeamName.GREEN  to "capitals/GreenCapital.png",
-    TeamName.PURPLE to "capitals/PurpleCapital.png",
-)
-
-private val NORMAL_PATHS: Map<TeamName, String> = mapOf(
-    TeamName.NONE   to "normalCities/NormalCity.png",
-    TeamName.RED    to "normalCities/RedCity.png",
-    TeamName.BLUE   to "normalCities/BlueCity.png",
-    TeamName.GREEN  to "normalCities/GreenCity.png",
-    TeamName.PURPLE to "normalCities/PurpleCity.png",
-)
+private val NORMAL_SIZE = CitySize(width = 39f, height = 40f, xOffset = 0f, yOffset = 2f)
 
 object CityStyleRegistry : Disposable {
-    private val capitalVisuals = mutableMapOf<TeamName, CityVisuals>()
-    private val normalVisuals  = mutableMapOf<TeamName, CityVisuals>()
-    private var initialized = false
+    private val neutralCapitalTexture = Texture(Gdx.files.internal("normalCities/NormalCity.png"))
+    private val neutralCityTexture = Texture(Gdx.files.internal("normalCities/NormalCity.png"))
 
-    fun init() {
-        if (initialized) return
+    private val neutralCapitalVisual = CityVisuals(
+        texture = neutralCapitalTexture,
+        width = CAPITAL_SIZE.width,
+        height = CAPITAL_SIZE.height,
+        xOffset = CAPITAL_SIZE.xOffset,
+        yOffset = CAPITAL_SIZE.yOffset,
+    )
 
-        fun loadAll(paths: Map<TeamName, String>, size: CitySize): Map<TeamName, CityVisuals> =
-            paths.mapValues { (_, path) ->
-                CityVisuals(
-                    texture = Texture(Gdx.files.internal(path)),
-                    width   = size.width,
-                    height  = size.height,
-                    xOffset = size.xOffset,
-                    yOffset = size.yOffset,
-                )
-            }
-
-        capitalVisuals.putAll(loadAll(CAPITAL_PATHS, CAPITAL_SIZE))
-        normalVisuals.putAll(loadAll(NORMAL_PATHS, NORMAL_SIZE))
-        initialized = true
-    }
+    private val neutralCityVisual = CityVisuals(
+        texture = neutralCityTexture,
+        width = NORMAL_SIZE.width,
+        height = NORMAL_SIZE.height,
+        xOffset = NORMAL_SIZE.xOffset,
+        yOffset = NORMAL_SIZE.yOffset,
+    )
 
     fun getFor(entity: Entity): CityVisuals {
-        if (!initialized) init()
-        val team = entity[TeamComponent.mapper]?.team ?: TeamName.NONE
-        val map  = if (entity.getComponent(CapitalComponent::class.java) != null)
-            capitalVisuals else normalVisuals
-        return map[team] ?: error("Ingen CityVisuals registrert for team: $team")
+        val team = entity[TeamComponent.mapper]?.team ?: Team.NONE
+        val teamVisuals = TeamVisualRegistry.visuals[team]
+        val isCapital = entity.getComponent(CapitalComponent::class.java) != null
+
+        return if (isCapital) {
+            teamVisuals?.let {
+                CityVisuals(
+                    texture = it.capitalTexture,
+                    width = CAPITAL_SIZE.width,
+                    height = CAPITAL_SIZE.height,
+                    xOffset = CAPITAL_SIZE.xOffset,
+                    yOffset = CAPITAL_SIZE.yOffset,
+                )
+            } ?: neutralCapitalVisual
+        } else {
+            teamVisuals?.let {
+                CityVisuals(
+                    texture = it.cityTexture,
+                    width = NORMAL_SIZE.width,
+                    height = NORMAL_SIZE.height,
+                    xOffset = NORMAL_SIZE.xOffset,
+                    yOffset = NORMAL_SIZE.yOffset,
+                )
+            } ?: neutralCityVisual
+        }
     }
 
     override fun dispose() {
-        if (!initialized) return
-        (capitalVisuals.values + normalVisuals.values).forEach { it.texture.dispose() }
-        capitalVisuals.clear()
-        normalVisuals.clear()
-        initialized = false
+        neutralCapitalTexture.dispose()
+        neutralCityTexture.dispose()
     }
 }
