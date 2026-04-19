@@ -29,6 +29,7 @@ import com.tdt4240.group3.view.states.PlayerTurnState
 import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.network.MultiplayerManager
 import com.tdt4240.group3.view.states.*
+import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.ashley.allOf
@@ -52,7 +53,10 @@ class PlayScreen(
     val camera = OrthographicCamera()
 
     private lateinit var stage: Stage
-    private lateinit var turnLabel: VisLabel
+    private lateinit var teamLabel: VisLabel
+    private lateinit var turnCountLabel: VisLabel
+    private lateinit var movesLeftLabel: VisLabel
+    private lateinit var topBar: Table
     private lateinit var tooltipLabel: VisLabel
     private lateinit var pauseBtn: VisTextButton
     private lateinit var endTurnBtn: VisTextButton
@@ -100,6 +104,7 @@ class PlayScreen(
         }
 
         updateTurnLabel()
+        updateTopBarColor()
         updateUiForState()
 
         // Stage draws on top of the game world — must be outside batch.use
@@ -117,23 +122,58 @@ class PlayScreen(
     }
 
     private fun setUpUI() {
-        val root = Table().apply { setFillParent(true) }
+        val root = Table().apply {
+            setFillParent(true)
+            top()
+            pad(8f)
+        }
         val gs = getGameState()
 
-        turnLabel  = VisLabel("Team: ${gs.currentTeam}   Turn: ${gs.turnCount} Moves Left: ${gs.movesLeft}")  // now a field
-        turnLabel.setFontScale(2f)
+        topBar = Table().apply {
+            pad(8f)
+        }
 
-        pauseBtn   = VisTextButton("PAUSE")
-        endTurnBtn = VisTextButton("END TURN")
+        teamLabel = VisLabel("Team: ${gs.currentTeam}").apply {
+            setFontScale(2.8f)
+            color = Color.BLACK
+        }
 
-        pauseBtn.onClick   { togglePause() }
-        endTurnBtn.onClick { turnController.endTurn() }
+        turnCountLabel = VisLabel("Turn: ${gs.turnCount}").apply {
+            setFontScale(2.8f)
+            color = Color.BLACK
+        }
 
-        root.top()
-        root.add(turnLabel).expandX().left().pad(8f)
-        root.add(pauseBtn).right().pad(8f)
-        root.add(endTurnBtn).right().pad(8f).row()
+        movesLeftLabel = VisLabel("Moves: ${gs.movesLeft}").apply {
+            setFontScale(2.8f)
+            color = Color.BLACK
+        }
 
+        val infoContainer = Table()
+        infoContainer.add(teamLabel).width(320f).left().padRight(12f)
+        infoContainer.add(turnCountLabel).width(230f).left().padRight(12f)
+        infoContainer.add(movesLeftLabel).width(260f).left()
+
+        pauseBtn = VisTextButton("PAUSE").apply {
+            label.setFontScale(1.6f)
+            pad(6f, 14f, 6f, 14f)
+            onClick { togglePause() }
+        }
+
+        endTurnBtn = VisTextButton("END TURN").apply {
+            label.setFontScale(1.6f)
+            pad(6f, 14f, 6f, 14f)
+            onClick { turnController.endTurn() }
+        }
+
+        val buttonGroup = Table().apply {
+            add(pauseBtn).height(70f).padRight(10f)
+            add(endTurnBtn).height(70f)
+        }
+
+        topBar.add(infoContainer).expandX().left()
+        topBar.add(buttonGroup).right()
+
+        root.add(topBar).growX().row()
         stage.addActor(root)
 
         pauseOverlay = buildPauseOverlay().apply { isVisible = false }
@@ -165,7 +205,32 @@ class PlayScreen(
     private fun updateTurnLabel() {
         val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
         val gs = gameState?.get(GameStateComponent.mapper)!!
-        turnLabel.setText("Team: ${gs.currentTeam}   Turn: ${gs.turnCount} Moves Left: ${gs.movesLeft}")
+
+        teamLabel.setText("Team: ${gs.currentTeam}")
+        turnCountLabel.setText("Turn: ${gs.turnCount}")
+        movesLeftLabel.setText("Moves: ${gs.movesLeft}")
+    }
+
+    private fun updateTopBarColor() {
+        val gs = getGameState()
+
+        // Get base color from the catalog
+        val base = TeamVisualRegistry.getColor(gs.currentTeam)
+
+        val bgColor = Color(base.r, base.g, base.b, 0.55f)
+        topBar.background = VisUI.getSkin().newDrawable("white", bgColor)
+
+        val textColor = chooseContrastingTextColor(base)
+        teamLabel.color = textColor
+        turnCountLabel.color = textColor
+        movesLeftLabel.color = textColor
+    }
+
+    private fun chooseContrastingTextColor(bg: Color): Color {
+        // Perceived brightness (WCAG standard)
+        val luminance = 0.299f * bg.r + 0.587f * bg.g + 0.114f * bg.b
+
+        return if (luminance > 0.55f) Color.BLACK else Color.WHITE
     }
 
     private fun setupTooltip() {
@@ -203,6 +268,12 @@ class PlayScreen(
         val isMyTurn = currentState is PlayerTurnState
         endTurnBtn.isVisible = !isPaused && isMyTurn
         endTurnBtn.touchable = if (!isPaused && isMyTurn) Touchable.enabled else Touchable.disabled
+
+        // Hide the top UI bar when paused
+        topBar.isVisible = !isPaused
+        topBar.touchable = if (isPaused) Touchable.disabled else Touchable.enabled
+
+        // Pause overlay
         pauseOverlay.isVisible = isPaused
         pauseOverlay.touchable = if (isPaused) Touchable.enabled else Touchable.disabled
         if (isPaused) {
@@ -293,10 +364,7 @@ class PlayScreen(
         game.setScreen<WinScreen>()
     }
     fun getBatch() = game.batch
-//    fun getFont()  = game.font
+    fun getFont()  = game.font
 
-    override fun dispose() {
-        multiplayerManager?.dispose()
-        super.dispose()
-    }
+    override fun dispose() { super.dispose() }
 }
