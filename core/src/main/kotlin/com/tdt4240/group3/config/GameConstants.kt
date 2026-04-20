@@ -18,4 +18,6 @@ object GameConstants {
     const val INACTIVITY_STRIKE_LIMIT = 3
 
     const val LOBBY_CODE_LENGTH = 6
+
+    const val NETWORK_TIMEOUT_MS = 10_000L
 }
