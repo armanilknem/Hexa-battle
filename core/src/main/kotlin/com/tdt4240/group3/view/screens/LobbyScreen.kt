@@ -170,10 +170,10 @@ class LobbyScreen(
                             playerOrder = shuffledOrder
                         )
 
-                        val cols = 12f
-                        val rows = 11f
+                        val cols = ViewConfig.CAMERA_START_COLS
+                        val rows = ViewConfig.CAMERA_START_ROWS
                         val centerX = GameConstants.HEX_SIZE * (sqrt(3.0).toFloat() * (cols / 2f) + sqrt(3.0).toFloat() / 2f * (rows / 2f))
-                        val centerY = GameConstants.HEX_SIZE * (3f / 2f * (rows / 2f)) + 36f
+                        val centerY = GameConstants.HEX_SIZE * (3f / 2f * (rows / 2f)) + ViewConfig.CAMERA_Y_OFFSET
 
                         playScreen.camera.position.set(centerX, centerY, 0f)
                         playScreen.camera.update()
@@ -210,7 +210,7 @@ class LobbyScreen(
     }
 
     override fun render(delta: Float) {
-        clearScreen(0.055f, 0.067f, 0.094f, 1f)
+        with(ViewConfig.BG_DARK_BLUE) { clearScreen(r, g, b, a) }
         stage.act(delta)
         stage.draw()
     }

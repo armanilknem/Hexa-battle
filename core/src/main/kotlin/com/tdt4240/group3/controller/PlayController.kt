@@ -19,6 +19,7 @@ import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
@@ -32,7 +33,7 @@ class PlayController(
     private val mapGenerator = MapGenerator(engine)
     private val troopFactory = TroopFactory(engine)
     private val gameStateFactory = GameStateFactory(engine)
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     fun createScreen(lobbyId: Int, myPlayerId: String, playerOrder: List<String>): PlayScreen {
         val turnSystem = TurnSystem(lobbyId, myPlayerId)

@@ -50,7 +50,7 @@ object CityStyleRegistry : Disposable {
     fun getFor(entity: Entity): CityVisuals {
         val team = entity[TeamComponent.mapper]?.team ?: Team.NONE
         val teamVisuals = TeamVisualRegistry.visuals[team]
-        val isCapital = entity.getComponent(CapitalComponent::class.java) != null
+        val isCapital = entity[CapitalComponent.mapper] != null
 
         return if (isCapital) {
             teamVisuals?.let {

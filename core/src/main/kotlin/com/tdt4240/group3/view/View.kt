@@ -72,7 +72,7 @@ class View(
                 .filter { cityFamily.matches(it) }
                 .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
                 .forEach { entity ->
-                    if (entity.getComponent(CapitalComponent::class.java) != null) {
+                    if (entity[CapitalComponent.mapper] != null) {
                         drawCapitalCity(entity)
                     } else drawNormalCity(entity)
                 }
@@ -106,16 +106,16 @@ class View(
     }
 
     private fun drawTileHighlight(entity: Entity) {
-        if (entity.getComponent(HighlightedComponent::class.java) == null) return
+        if (entity[HighlightedComponent.mapper] == null) return
         val pos = entity[PositionComponent.mapper] ?: return
         shapeRenderer.color = Color(1f, 1f, 1f, 0.5f)
         drawFullHexTile(pos.x, pos.y, GameConstants.HEX_SIZE)
     }
 
     private fun drawUnmovedTroopHighlight(entity: Entity) {
-        if (entity.getComponent(HighlightedComponent::class.java) == null) return
+        if (entity[HighlightedComponent.mapper] == null) return
         val pos = entity[PositionComponent.mapper] ?: return
-        val alpha = if (entity.getComponent(SelectedComponent::class.java) != null)
+        val alpha = if (entity[SelectedComponent.mapper] != null)
             0.55f + 0.25f * sin(stateTime * 4.0).toFloat()
         else
             0.6f

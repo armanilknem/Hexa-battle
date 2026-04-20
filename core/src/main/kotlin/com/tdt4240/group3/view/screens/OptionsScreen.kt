@@ -110,7 +110,7 @@ class OptionsScreen(private val game: Hexa_Battle) : KtxScreen {
     }
 
     override fun render(delta: Float) {
-        clearScreen(0.2f, 0.2f, 0.15f, 1f)
+        with(ViewConfig.BG_DARK_OLIVE) { clearScreen(r, g, b, a) }
         stage.act(delta)
         stage.draw()
     }

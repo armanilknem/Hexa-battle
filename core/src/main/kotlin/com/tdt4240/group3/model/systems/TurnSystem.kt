@@ -7,6 +7,7 @@ import com.tdt4240.group3.model.components.marker.*
 import com.tdt4240.group3.network.LobbyGameStateService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.model.Team
@@ -19,7 +20,7 @@ class TurnSystem(
 ) : EntitySystem() {
     private val gameStateFamily = allOf(GameStateComponent::class).get()
     private val selectableTroopFamily = allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     var onTurnEnded: (() -> Unit)? = null
 
     private var inactivityTimer: Float = 0f
@@ -38,7 +39,7 @@ class TurnSystem(
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
         val gs = gameStateEntity[GameStateComponent.mapper] ?: return
 
-        if (gameStateEntity.getComponent(NeedsTroopSpawnComponent::class.java) != null) {
+        if (gameStateEntity[NeedsTroopSpawnComponent.mapper] != null) {
             return
         }
 
@@ -58,7 +59,7 @@ class TurnSystem(
         inactivityTimer += deltaTime
 
 
-        if (gs.movesLeft < 1) {
+        if (isMyTurn && gs.movesLeft < 1) {
             endTurn()
         } else if (!isMyTurn && inactivityTimer >= GameConstants.INACTIVITY_TIMEOUT_SECONDS) {
             val idx = gs.currentPlayerIndex
@@ -125,7 +126,7 @@ class TurnSystem(
     }
 
     private fun requestTroopSpawn(gameStateEntity: Entity) {
-        if (gameStateEntity.getComponent(NeedsTroopSpawnComponent::class.java) == null) {
+        if (gameStateEntity[NeedsTroopSpawnComponent.mapper] == null) {
             gameStateEntity.add(engine.createComponent(NeedsTroopSpawnComponent::class.java))
         }
     }
