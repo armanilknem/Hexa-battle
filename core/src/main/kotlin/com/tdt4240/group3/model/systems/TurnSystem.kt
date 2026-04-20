@@ -26,6 +26,8 @@ class TurnSystem(
     private val inactivityStrikeLimit: Int = 3
     private val inactivityCounts = mutableMapOf<Int, Int>()
 
+    private var startOfTurn = true
+
     fun resetActivityTimer() {
         inactivityTimer = 0f
         val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
@@ -36,6 +38,14 @@ class TurnSystem(
     override fun update(deltaTime: Float) {
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
         val gs = gameStateEntity[GameStateComponent.mapper] ?: return
+
+
+        if (startOfTurn) {
+            val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
+                .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
+            gs.movesLeft = minOf(selectableTroops.size, 5)
+            startOfTurn = false
+        }
 
         if (gameStateEntity.getComponent(NeedsTroopSpawnComponent::class.java) != null) {
             return
@@ -49,11 +59,8 @@ class TurnSystem(
         val isMyTurn = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
         inactivityTimer += deltaTime
 
-        val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
-            .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
-        gs.movesLeft = minOf(selectableTroops.size, 5)
 
-        if (selectableTroops.isEmpty() || gs.movesLeft < 1) {
+        if (gs.movesLeft < 1) {
             endTurn()
         } else if (!isMyTurn && inactivityTimer >= inactivityTimeoutSeconds) {
             val idx = gs.currentPlayerIndex
@@ -107,6 +114,7 @@ class TurnSystem(
                 turnNumber = gs.turnCount
             )
         }
+        startOfTurn = true
     }
 
     fun isCurrentTeam(team: Team): Boolean {

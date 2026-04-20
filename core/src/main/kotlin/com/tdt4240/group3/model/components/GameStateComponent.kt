@@ -21,7 +21,7 @@ class GameStateComponent : Component, Pool.Poolable {
         activeTeams.clear()
         activeTeams.addAll(teams.filter { it != Team.NONE })
         eliminatedTeams.clear()
-        turnCount = 1
+        turnCount = 0
         movesLeft = 0
 
         playerOrder = emptyList()
@@ -31,7 +31,7 @@ class GameStateComponent : Component, Pool.Poolable {
     override fun reset() {
         activeTeams.clear()
         eliminatedTeams.clear()
-        turnCount = 1
+        turnCount = 0
         movesLeft = 0
 
         playerOrder = emptyList()
