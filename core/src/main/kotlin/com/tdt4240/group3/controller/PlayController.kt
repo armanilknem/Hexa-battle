@@ -100,7 +100,13 @@ class PlayController(
             troopFactory
         )
 
-        winSystem.onWin = { winner -> playScreen.goToWin(winner) }
+        winSystem.onWin = { winner -> playScreen.goToWin(winner)
+            val winnerId = gs.playerOrder[gs.activeTeams.indexOf(winner)]
+            scope.launch {
+                LobbyService.endGame(lobbyId, winnerId)
+            }
+            playScreen.goToWin(winner)
+        }
         winSystem.onPlayerEliminated = { eliminatedTeam ->
             engine.getEntitiesFor(allOf(TroopComponent::class, TeamComponent::class).get())
                 .toList()
@@ -122,11 +128,6 @@ class PlayController(
             if (eliminatedTeam == game.myTeam) {
                 playScreen.goToEliminated()
             }
-            val winnerId = gs.playerOrder[gs.activeTeams.indexOf(winner)]
-            scope.launch {
-                LobbyService.endGame(lobbyId, winnerId)
-            }
-            playScreen.goToWin(winner)
         }
         turnSystem.onTurnEnded = { playScreen.onTurnChanged(false) }
         return playScreen
