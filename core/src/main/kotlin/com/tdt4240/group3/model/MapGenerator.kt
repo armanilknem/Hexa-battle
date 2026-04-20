@@ -2,6 +2,7 @@ package com.tdt4240.group3.model
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.config.MapData
 import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
@@ -35,7 +36,6 @@ class MapGenerator(private val engine: Engine) {
         }
     }
 
-    // TODO("This function should probably be in a different file, maybe TurnSystem")
     fun createTroopFromCity(cityEntity: Entity, unitType: UnitType): Entity {
         val city = CityComponent.mapper.get(cityEntity)
         val position = PositionComponent.mapper.get(cityEntity)
@@ -78,7 +78,7 @@ class MapGenerator(private val engine: Engine) {
                 val name = cityNames.getOrElse(placedCities.size - 1) { "City ${placedCities.size}" }
                 cityFactory.createEntity(CityConfig(
                     name = name,
-                    baseProduction = 10,
+                    baseProduction = GameConstants.CITY_PRODUCTION,
                     q = tile.first,
                     r = tile.second,
                     team = Team.NONE
@@ -87,7 +87,6 @@ class MapGenerator(private val engine: Engine) {
         }
     }
 
-    //TODO("Should be refactored for better clarity")
     fun generateCapitals(teams: List<Team>, randomSeed: Int): List<Pair<Int, Int>> {
         val capitalNames = MapData.CAPITAL_NAMES.toMutableList()
             .also { it.shuffle(Random(randomSeed)) }
@@ -112,8 +111,8 @@ class MapGenerator(private val engine: Engine) {
         val maxY = validTiles.maxOf { it.y }
 
         val centerX = (minX + maxX) / 2f
-        val padX = (maxX - minX) * 0.12f //TODO("Use of magic numbers should be minimized")
-        val padY = (maxY - minY) * 0.12f
+        val padX = (maxX - minX) * GameConstants.CAPITAL_PADDING_FACTOR
+        val padY = (maxY - minY) * GameConstants.CAPITAL_PADDING_FACTOR
 
         val anchors = listOf(
             (minX + padX) to (minY + padY), // bottom-left
@@ -124,7 +123,7 @@ class MapGenerator(private val engine: Engine) {
             (minX + padX) to (maxY - padY)  // top-left
         )
 
-        val anchorIndices = when (teams.size) { //TODO("This should be more dynamic and not hardcoded for better modifiability")
+        val anchorIndices = when (teams.size) {
             1 -> listOf(0)
             2 -> listOf(0, 3)
             3 -> listOf(0, 2, 4)
@@ -153,7 +152,7 @@ class MapGenerator(private val engine: Engine) {
 
             capitalFactory.createEntity(CapitalConfig(
                 name = capitalNames.getOrElse(index) { "Capital ${index + 1}" },
-                baseProduction = 20,
+                baseProduction = GameConstants.CAPITAL_PRODUCTION,
                 q = bestTile.q,
                 r = bestTile.r,
                 team = team

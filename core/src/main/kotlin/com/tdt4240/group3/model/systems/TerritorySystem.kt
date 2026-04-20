@@ -59,11 +59,6 @@ class TerritorySystem(private val lobbyId: Int) : IteratingSystem(
         ).firstOrNull() ?: return
         val gs = gameStateEntity[GameStateComponent.mapper]!!
 
-        println("Territory system running")
-        println("Player order: " + gs.playerOrder)
-        println("Current player: " + gs.playerOrder[gs.activeTeams.indexOf(team.team)])
-
-
         for (position in updatedPositions) {
             val entity = findEntityAt(position.first, position.second) ?: continue
             val troopComp = entity[TroopComponent.mapper]

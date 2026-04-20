@@ -3,6 +3,7 @@ package com.tdt4240.group3.controller
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.model.MapGenerator
 import com.tdt4240.group3.model.components.CapitalComponent
 import com.tdt4240.group3.model.components.GameStateComponent
@@ -70,7 +71,7 @@ class PlayController(
             val team = capitalEntity[TeamComponent.mapper]?.team ?: com.tdt4240.group3.model.Team.NONE
             capitalEntity[CapitalComponent.mapper]?.originalTeam = team
         }
-        mapGenerator.generateCities(count = 20, capitalPositions = capitalPositions, randomSeed = lobbyId.hashCode())
+        mapGenerator.generateCities(count = GameConstants.CITY_COUNT, capitalPositions = capitalPositions, randomSeed = lobbyId.hashCode())
 
         if (isHost) {
             val lobbyMapStates = capitalPositions.mapIndexed { index, capitalPosition ->
@@ -100,7 +101,7 @@ class PlayController(
             troopFactory
         )
 
-        winSystem.onWin = { winner -> playScreen.goToWin(winner)
+        winSystem.onWin = { winner ->
             val winnerId = gs.playerOrder[gs.activeTeams.indexOf(winner)]
             scope.launch {
                 LobbyService.endGame(lobbyId, winnerId)
@@ -154,7 +155,7 @@ class PlayController(
     }
 
     private fun setUpWorld() {
-        MapGenerator(engine).generateRectangularGrid(18, 15)
+        MapGenerator(engine).generateRectangularGrid(GameConstants.MAP_WIDTH, GameConstants.MAP_HEIGHT)
     }
 
     private fun setUpInitialGameState(playerCount: Int): Entity {

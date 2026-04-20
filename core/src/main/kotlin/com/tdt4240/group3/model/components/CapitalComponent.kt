@@ -1,11 +1,11 @@
 package com.tdt4240.group3.model.components
 
 import com.badlogic.ashley.core.Component
-import com.badlogic.ashley.core.ComponentMapper
 import com.badlogic.gdx.utils.Pool
 import com.tdt4240.group3.model.Team
+import ktx.ashley.mapperFor
 
-class CapitalComponent: Component, Pool.Poolable {
+class CapitalComponent : Component, Pool.Poolable {
     var originalTeam: Team = Team.NONE
 
     override fun reset() {
@@ -13,6 +13,6 @@ class CapitalComponent: Component, Pool.Poolable {
     }
 
     companion object {
-        val mapper: ComponentMapper<CapitalComponent> = ComponentMapper.getFor(CapitalComponent::class.java)
+        val mapper = mapperFor<CapitalComponent>()
     }
 }

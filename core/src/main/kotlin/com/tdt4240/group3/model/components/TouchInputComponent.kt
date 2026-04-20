@@ -7,12 +7,12 @@ import ktx.ashley.mapperFor
 class TouchInputComponent : Component, Pool.Poolable {
     var x: Float = 0f
     var y: Float = 0f
-    // var inputType: InputType = InputType.TAP
 
     override fun reset() {
         x = 0f
         y = 0f
     }
+
     companion object {
         val mapper = mapperFor<TouchInputComponent>()
     }

@@ -35,7 +35,7 @@ data class CapitalConfig(
 data class TileConfig(
     val q: Int,
     val r: Int,
-    val type: TileComponent.TileType //TODO("should look into if we can find a better way to find out Tile type")
+    val type: TileComponent.TileType
 )
 
 data class GameStateConfig(

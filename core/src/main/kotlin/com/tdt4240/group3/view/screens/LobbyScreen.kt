@@ -12,8 +12,8 @@ import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.controller.PlayController
-import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.network.LobbyGameStateService
 import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.SupabaseClient
@@ -172,8 +172,8 @@ class LobbyScreen(
 
                         val cols = 12f
                         val rows = 11f
-                        val centerX = 16f * (sqrt(3.0).toFloat() * (cols / 2f) + sqrt(3.0).toFloat() / 2f * (rows / 2f))
-                        val centerY = 16f * (3f / 2f * (rows / 2f)) + 36f
+                        val centerX = GameConstants.HEX_SIZE * (sqrt(3.0).toFloat() * (cols / 2f) + sqrt(3.0).toFloat() / 2f * (rows / 2f))
+                        val centerY = GameConstants.HEX_SIZE * (3f / 2f * (rows / 2f)) + 36f
 
                         playScreen.camera.position.set(centerX, centerY, 0f)
                         playScreen.camera.update()
@@ -236,16 +236,4 @@ class LobbyScreen(
         scope.cancel()
     }
 
-    private fun assignTeamForPlayer(playerId: String, playerIds: Collection<String>): Team {
-        val orderedTeams = listOf(Team.RED, Team.BLUE, Team.PURPLE, Team.GREEN)
-        val orderedPlayerIds = playerIds.sorted()
-        val shuffledPlayerIds = orderedPlayerIds.shuffled(Random(lobby.lobbyCode.hashCode()))
-        val playerIndex = shuffledPlayerIds.indexOf(playerId)
-
-        return if (playerIndex in orderedTeams.indices) {
-            orderedTeams[playerIndex]
-        } else {
-            Team.RED
-        }
-    }
 }

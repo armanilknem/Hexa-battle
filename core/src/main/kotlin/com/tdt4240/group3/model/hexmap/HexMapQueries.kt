@@ -2,6 +2,7 @@ package com.tdt4240.group3.model.hexmap
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TileComponent
@@ -19,18 +20,18 @@ object HexMapQueries {
         if (entities.size() == 0) return null
 
         return entities.minByOrNull { distSq(it, worldX, worldY) }
-            ?.takeIf { distSq(it, worldX, worldY) < 256f }
+            ?.takeIf { distSq(it, worldX, worldY) < GameConstants.HEX_PICK_RADIUS_SQ }
     }
 
     fun findTroopAt(engine: Engine, worldX: Float, worldY: Float, exclude: Entity? = null): Entity? {
         return engine.getEntitiesFor(troopFamily).firstOrNull {
-            it != exclude && distSq(it, worldX, worldY) < 256f
+            it != exclude && distSq(it, worldX, worldY) < GameConstants.HEX_PICK_RADIUS_SQ
         }
     }
 
     fun findCityAtByXY(engine: Engine, worldX: Float, worldY: Float): Entity? {
         return engine.getEntitiesFor(cityFamily).firstOrNull {
-            distSq(it, worldX, worldY) < 256f
+            distSq(it, worldX, worldY) < GameConstants.HEX_PICK_RADIUS_SQ
         }
     }
 
@@ -61,4 +62,3 @@ object HexMapQueries {
         return dx * dx + dy * dy
     }
 }
-

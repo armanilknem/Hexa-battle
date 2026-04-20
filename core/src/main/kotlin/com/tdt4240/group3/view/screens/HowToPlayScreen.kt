@@ -40,7 +40,6 @@ class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
         "Victory:\nCapture all enemy capitals"
     )
 
-    // Will add the rest of the images tomorrow:))
     private val cardSprites = listOf(
         "tutorials/goal.png",
         "tutorials/turn.png",

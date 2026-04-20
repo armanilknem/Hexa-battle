@@ -8,6 +8,7 @@ import com.tdt4240.group3.network.LobbyGameStateService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.model.Team
 import ktx.ashley.allOf
 import ktx.ashley.get
@@ -22,8 +23,6 @@ class TurnSystem(
     var onTurnEnded: (() -> Unit)? = null
 
     private var inactivityTimer: Float = 0f
-    private val inactivityTimeoutSeconds: Float = 30f
-    private val inactivityStrikeLimit: Int = 3
     private val inactivityCounts = mutableMapOf<Int, Int>()
 
     private var startOfTurn = true
@@ -46,7 +45,7 @@ class TurnSystem(
         if (startOfTurn) {
             val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
                 .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
-            gs.movesLeft = minOf(selectableTroops.size, 5)
+            gs.movesLeft = minOf(selectableTroops.size, GameConstants.MAX_MOVES_PER_TURN)
             startOfTurn = false
         }
 
@@ -61,11 +60,11 @@ class TurnSystem(
 
         if (gs.movesLeft < 1) {
             endTurn()
-        } else if (!isMyTurn && inactivityTimer >= inactivityTimeoutSeconds) {
+        } else if (!isMyTurn && inactivityTimer >= GameConstants.INACTIVITY_TIMEOUT_SECONDS) {
             val idx = gs.currentPlayerIndex
             val strikes = (inactivityCounts[idx] ?: 0) + 1
             inactivityCounts[idx] = strikes
-            if (strikes >= inactivityStrikeLimit) {
+            if (strikes >= GameConstants.INACTIVITY_STRIKE_LIMIT) {
                 gs.eliminatedTeams.add(gs.currentTeam)
                 inactivityCounts.remove(idx)
             }
@@ -80,14 +79,12 @@ class TurnSystem(
         if (gs.playerOrder.isEmpty()) return
         startOfTurn = true
 
-        // Advance index, incrementing turnCount when we wrap past the last slot
         var nextIndex = gs.currentPlayerIndex + 1
         if (nextIndex >= gs.playerOrder.size) {
             nextIndex = 0
             gs.turnCount++
         }
 
-        // Skip over eliminated players
         var steps = 0
         while (steps < gs.playerOrder.size) {
             val team = gs.activeTeams.getOrElse(nextIndex) { Team.NONE }

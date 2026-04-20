@@ -4,11 +4,11 @@ import com.badlogic.ashley.core.Component
 import com.badlogic.gdx.utils.Pool
 import ktx.ashley.mapperFor
 
-
 class TroopComponent : Component, Pool.Poolable {
     var strength: Int = 0
 
     override fun reset() {
+        strength = 0
     }
 
     companion object {

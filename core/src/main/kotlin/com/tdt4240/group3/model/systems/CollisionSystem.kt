@@ -15,20 +15,22 @@ import ktx.ashley.get
 import kotlin.math.ceil
 import kotlin.math.max
 
-class CollisionSystem : IteratingSystem(allOf(
-    TroopComponent::class,
-    CombatComponent::class,
-    PositionComponent::class,
-    TeamComponent::class,
-    CollidingComponent::class).get()){
+class CollisionSystem : IteratingSystem(
+    allOf(
+        TroopComponent::class,
+        CombatComponent::class,
+        PositionComponent::class,
+        TeamComponent::class,
+        CollidingComponent::class
+    ).get()
+) {
 
     override fun processEntity(movingEntity: Entity, deltaTime: Float) {
         val troop = movingEntity[TroopComponent.mapper]!!
-        val combat = movingEntity.getComponent(CombatComponent::class.java) ?: return
+        val combat = movingEntity[CombatComponent.mapper] ?: return
         val pos = movingEntity[PositionComponent.mapper]!!
         val team = movingEntity[TeamComponent.mapper]!!
 
-        // Find what is on the target tile (excluding the moving entity itself)
         val otherEntities = engine.getEntitiesFor(allOf(PositionComponent::class).get())
             .filter { it != movingEntity }
             .filter {
@@ -36,42 +38,35 @@ class CollisionSystem : IteratingSystem(allOf(
                 otherPos?.q == pos.q && otherPos?.r == pos.r
             }
 
-        // --- STEP 1: RESOLVE TROOP COLLISIONS FIRST ---
         val targetTroopEntity = otherEntities.find {
-            it[TroopComponent.mapper] != null && it.getComponent(CombatComponent::class.java) != null
+            it[TroopComponent.mapper] != null && it[CombatComponent.mapper] != null
         }
         var movingTroopSurvived = true
 
         if (targetTroopEntity != null) {
             val otherTroop = targetTroopEntity[TroopComponent.mapper]!!
             val otherPosition = targetTroopEntity[PositionComponent.mapper]!!
-            val otherCombat = targetTroopEntity.getComponent(CombatComponent::class.java) ?: return
+            val otherCombat = targetTroopEntity[CombatComponent.mapper] ?: return
             val otherTeam = targetTroopEntity[TeamComponent.mapper]?.team ?: Team.NONE
 
             if (otherTeam == team.team) {
-                // Friendly: Merge. returns true if fully merged (moving entity deleted)
                 val fullyMerged = handleMerge(movingEntity, troop, combat, targetTroopEntity, otherTroop, otherCombat)
                 if (fullyMerged) movingTroopSurvived = false
             } else {
-                // Enemy: Combat. returns true if moving troop won and stayed on tile
                 movingTroopSurvived = handleCombat(movingEntity, pos, troop, combat, targetTroopEntity, otherPosition, otherTroop, otherCombat)
             }
         }
 
-        // --- STEP 2: RESOLVE CITY CAPTURE ONLY IF TROOP SURVIVED ---
         if (movingTroopSurvived) {
             val cityEntity = otherEntities.find { it[CityComponent.mapper] != null }
             if (cityEntity != null) {
                 val cityTeam = cityEntity[TeamComponent.mapper]
-                // Capture if city is neutral or enemy
                 if (cityTeam?.team != team.team) {
                     cityTeam?.team = team.team
-                    println("City captured by ${team.team}")
                 }
             }
         }
 
-        // Remove collidingComponent
         movingEntity.remove(CollidingComponent::class.java)
     }
 
@@ -97,7 +92,6 @@ class CollisionSystem : IteratingSystem(allOf(
         return if (total <= maxStack) {
             stationaryPos.prevQ = movingPos.prevQ
             stationaryPos.prevR = movingPos.prevR
-
             stationaryTroop.strength = total
             stationaryEntity.add(TerritoryComponent())
             engine.removeEntity(movingEntity)
@@ -108,16 +102,12 @@ class CollisionSystem : IteratingSystem(allOf(
 
             val oldQ = movingPos.q
             val oldR = movingPos.r
-
             bounceBack(movingEntity)
-
             movingPos.prevQ = oldQ
             movingPos.prevR = oldR
-
             false
         }
     }
-
 
     private fun handleCombat(
         movingEntity: Entity,
@@ -134,12 +124,12 @@ class CollisionSystem : IteratingSystem(allOf(
         val diff = attackerPower - defenderPower
 
         return when {
-            diff > 0 -> { // Moving troop wins
+            diff > 0 -> {
                 movingTroop.strength = max(1, ceil(diff / movingCombat.attackMultiplier).toInt())
                 engine.removeEntity(enemyEntity)
                 true
             }
-            diff < 0 -> { // Enemy troop wins (stationary wins)
+            diff < 0 -> {
                 enemyTroop.strength = max(1, ceil((-diff) / enemyCombat.defenseMultiplier).toInt())
                 engine.removeEntity(movingEntity)
                 enemyPosition.prevQ = movingPosition.prevQ
@@ -147,26 +137,22 @@ class CollisionSystem : IteratingSystem(allOf(
                 enemyEntity.add(TerritoryComponent())
                 false
             }
-            else -> { // Mutual destruction
-                for (entity in engine.entities) {
-                    val p = entity[PositionComponent.mapper] ?: continue
-                    if (p.q == movingPosition.prevQ && p.r == movingPosition.prevR) {
-                        entity.add(TerritoryComponent())
-                        break
-                    }
-                }
-
-                for (entity in engine.entities) {
-                    val p = entity[PositionComponent.mapper] ?: continue
-                    if (p.q == enemyPosition.q && p.r == enemyPosition.r) {
-                        entity.add(TerritoryComponent())
-                        break
-                    }
-                }
-
+            else -> {
+                claimTileAt(movingPosition.prevQ, movingPosition.prevR)
+                claimTileAt(enemyPosition.q, enemyPosition.r)
                 engine.removeEntity(movingEntity)
                 engine.removeEntity(enemyEntity)
                 false
+            }
+        }
+    }
+
+    private fun claimTileAt(q: Int, r: Int) {
+        for (entity in engine.entities) {
+            val p = entity[PositionComponent.mapper] ?: continue
+            if (p.q == q && p.r == r) {
+                entity.add(TerritoryComponent())
+                break
             }
         }
     }

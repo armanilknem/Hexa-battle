@@ -29,23 +29,19 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
 
     private fun processSelectionLogic(clickedTroop: Entity?, clickedTile: Entity?, selectedTroop: Entity?) {
         when {
-            // Case 1: Deselect already selected troop (must be before move, since troop's own tile is highlighted)
             clickedTroop != null && clickedTroop == selectedTroop -> {
                 clearSelectedTroops()
             }
 
-            // Case 2: Move Troop
             clickedTile != null && clickedTile.has(HighlightedComponent.mapper) && selectedTroop != null -> {
                 handleMoveIntent(selectedTroop, clickedTile)
             }
 
-            // Case 3: Select Troop
             clickedTroop != null && clickedTroop.has(SelectableComponent.mapper) -> {
                 clearSelectedTroops()
                 clickedTroop.add(engine.createComponent(SelectedComponent::class.java))
             }
 
-            // Case 4: Deselect (clicked empty area)
             else -> {
                 clearSelectedTroops()
             }
@@ -56,45 +52,38 @@ class SelectionSystem : IteratingSystem(allOf(TouchInputComponent::class).get())
         val tilePos = tile[PositionComponent.mapper] ?: return
         val currentPos = troop[PositionComponent.mapper] ?: return
 
-        // Reselect troop to cancel move
         if (currentPos.q == tilePos.q && currentPos.r == tilePos.r) {
             clearSelectedTroops()
-            return // Move is not counted
+            return
         }
 
-        // Find if there is a troop at the destination
         val targetTroopEntity = engine.getEntitiesFor(allOf(TroopComponent::class, PositionComponent::class).get())
             .find {
                 val p = it[PositionComponent.mapper]
                 p?.q == tilePos.q && p?.r == tilePos.r
             }
 
-        // Check for overflow before moving
         if (targetTroopEntity != null) {
             val targetTroopData = targetTroopEntity[TroopComponent.mapper]!!
+            val targetCombat = targetTroopEntity[CombatComponent.mapper]
             val targetTeam = targetTroopEntity[TeamComponent.mapper]?.team
             val movingTeam = troop[TeamComponent.mapper]?.team
 
-            // If it's a friendly merge and the target is already at 99
-            if (targetTeam == movingTeam && targetTroopData.strength >= 99) {
-                println("Move rejected: Target tile already full")
+            if (targetTeam == movingTeam && targetCombat != null && targetTroopData.strength >= targetCombat.maxStackSize) {
                 clearSelectedTroops()
-                return // Move is not counted
+                return
             }
         }
 
-        // Add Move Intent
         troop.add(engine.createComponent(MoveIntentComponent::class.java).apply {
             targetQ = tilePos.q
             targetR = tilePos.r
         })
 
-        // Decrement move counter in the GameState
         engine.getEntitiesFor(gameStateFamily).firstOrNull()
             ?.get(GameStateComponent.mapper)
             ?.let { it.movesLeft-- }
 
-        // Add CollidingComponent if there is a target troop
         if (targetTroopEntity != null) {
             troop.add(engine.createComponent(CollidingComponent::class.java))
         }

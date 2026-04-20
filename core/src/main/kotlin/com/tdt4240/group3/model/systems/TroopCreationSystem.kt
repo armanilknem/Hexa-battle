@@ -22,8 +22,6 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
         TeamComponent::class
     ).get()
 
-    // Prevents double-reinforcement when NeedsTroopSpawnComponent fires more than once
-    // for the same (turnCount, playerIndex) state (e.g. from both endTurn and MultiplayerManager).
     private var lastSpawnedTurn: Int = -1
     private var lastSpawnedPlayerIndex: Int = -1
 
@@ -34,14 +32,11 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
         val alreadySpawnedThisState = gs.turnCount == lastSpawnedTurn && gs.currentPlayerIndex == lastSpawnedPlayerIndex
         if (!alreadySpawnedThisState) {
             if (gs.turnCount == 0) {
-                // Game start: give every team one troop, no production bonus yet
                 gs.activeTeams.forEach { team -> createTroopsForTeam(team) }
                 gs.turnCount = 1
             } else if (gs.turnCount > 1) {
-                // Normal turns: reinforce only the current team
                 createTroopsForTeam(gs.currentTeam)
             }
-            // turn 1, non-initial: skip — troops already created at game start
             lastSpawnedTurn = gs.turnCount
             lastSpawnedPlayerIndex = gs.currentPlayerIndex
         }
@@ -63,16 +58,9 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
             val combatComp = existingTroop[CombatComponent.mapper] ?: return
             val troopTeam = existingTroop[TeamComponent.mapper]?.team ?: return
             if (troopTeam == cityTeam) {
-                val total = troopComp.strength + cityComp.baseProduction
-                if (total <= combatComp.maxStackSize) {
-                    troopComp.strength = total
-                }
-                else {
-                    troopComp.strength = combatComp.maxStackSize
-                }
+                troopComp.strength = minOf(troopComp.strength + cityComp.baseProduction, combatComp.maxStackSize)
             }
         } else {
-            // generate baseTroops from cities
             val newTroop = mapGenerator.createTroopFromCity(cityEntity, UnitType.SOLDIER)
             newTroop.add(engine.createComponent(SelectableComponent::class.java))
         }

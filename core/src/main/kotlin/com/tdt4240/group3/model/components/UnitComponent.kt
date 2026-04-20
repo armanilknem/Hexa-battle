@@ -5,10 +5,6 @@ import com.badlogic.gdx.utils.Pool
 import com.tdt4240.group3.model.UnitType
 import ktx.ashley.mapperFor
 
-/**
- * name
- */
-
 class UnitComponent : Component, Pool.Poolable {
     var unitType: UnitType = UnitType.SOLDIER
 

@@ -4,13 +4,13 @@ import com.badlogic.ashley.core.Component
 import com.badlogic.gdx.utils.Pool.Poolable
 import ktx.ashley.mapperFor
 
-class TileComponent : Component, Poolable{
+class TileComponent : Component, Poolable {
     enum class TileType { GRASS, WATER }
 
     var type: TileType = TileType.GRASS
 
     override fun reset() {
-        type = TileType.GRASS // Reset to a safe default
+        type = TileType.GRASS
     }
 
     companion object {

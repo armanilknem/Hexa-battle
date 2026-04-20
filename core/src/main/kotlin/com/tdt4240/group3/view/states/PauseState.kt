@@ -10,10 +10,7 @@ class PauseState : PlaySubState {
 
     override fun handleInput(screen: PlayScreen) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            screen.changeState(PlayerTurnState())
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE)) {
-            screen.changeState(EnemyTurnState())
+            screen.resumeGame()
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             screen.goToMenu()

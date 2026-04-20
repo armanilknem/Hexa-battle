@@ -3,6 +3,7 @@ package com.tdt4240.group3.model.components
 import com.badlogic.ashley.core.Component
 import com.badlogic.gdx.utils.Pool
 import ktx.ashley.mapperFor
+
 class CityComponent : Component, Pool.Poolable {
     var name: String = ""
     var baseProduction = 10
@@ -16,4 +17,3 @@ class CityComponent : Component, Pool.Poolable {
         val mapper = mapperFor<CityComponent>()
     }
 }
-
