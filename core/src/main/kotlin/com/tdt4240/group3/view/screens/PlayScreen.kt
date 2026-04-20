@@ -7,13 +7,14 @@ import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.scenes.scene2d.Touchable
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Stack
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
@@ -23,12 +24,14 @@ import com.tdt4240.group3.controller.SelectionController
 import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.components.*
+import com.tdt4240.group3.view.ViewConfig
 import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PauseState
 import com.tdt4240.group3.view.states.PlayerTurnState
 import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.network.MultiplayerManager
 import com.tdt4240.group3.view.states.*
+import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.ashley.allOf
@@ -51,12 +54,27 @@ class PlayScreen(
 
     val camera = OrthographicCamera()
 
+    // Separate viewport for the game world (hex map)
+    private lateinit var worldViewport: ExtendViewport
+
     private lateinit var stage: Stage
-    private lateinit var turnLabel: VisLabel
+    private lateinit var teamLabel: VisLabel
+    private lateinit var turnCountLabel: VisLabel
+    private lateinit var movesLeftLabel: VisLabel
+    private lateinit var topBar: Table
     private lateinit var tooltipLabel: VisLabel
     private lateinit var pauseBtn: VisTextButton
     private lateinit var endTurnBtn: VisTextButton
     private lateinit var pauseOverlay: Table
+
+    // All sizing derived from V_HEIGHT so it scales consistently on any device
+    private val barH      = ViewConfig.V_HEIGHT * 0.08f
+    private val fontScale = ViewConfig.V_HEIGHT * 0.0028f
+    private val btnFontSc = ViewConfig.V_HEIGHT * 0.0020f
+    private val btnH      = ViewConfig.V_HEIGHT * 0.075f
+    private val btnW      = ViewConfig.V_WIDTH  * 0.15f
+    private val padSm     = ViewConfig.V_HEIGHT * 0.010f
+    private val padMed    = ViewConfig.V_HEIGHT * 0.015f
 
     private var multiplayerManager: MultiplayerManager? = null
 
@@ -89,7 +107,10 @@ class PlayScreen(
         Gdx.gl.glClearColor(r, g, b, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
 
+        // Apply world viewport so camera projects the hex map correctly
+        worldViewport.apply()
         camera.update()
+
         currentState.handleInput(this)
         currentState.update(this, delta)
         engine.update(delta)
@@ -100,6 +121,7 @@ class PlayScreen(
         }
 
         updateTurnLabel()
+        updateTopBarColor()
         updateUiForState()
 
         // Stage draws on top of the game world — must be outside batch.use
@@ -108,32 +130,65 @@ class PlayScreen(
     }
 
     private fun setUpCamera() {
-        camera.setToOrtho(false, Hexa_Battle.WIDTH.toFloat(), Hexa_Battle.HEIGHT.toFloat())
-        camera.position.set(Hexa_Battle.WIDTH / 2f, Hexa_Battle.HEIGHT / 2f, 0f)
+        // ExtendViewport manages camera dimensions — do not call setToOrtho here.
+        // The camera position is set externally (LobbyScreen) after construction.
+        worldViewport = ExtendViewport(ViewConfig.V_WIDTH, ViewConfig.V_HEIGHT, camera)
     }
 
     private fun setUpStage() {
-        stage = Stage(ScreenViewport())
+        // UI stage uses its own ExtendViewport with the same virtual resolution.
+        // Buttons/labels positioned in virtual coords look identical on every device.
+        stage = Stage(ExtendViewport(ViewConfig.V_WIDTH, ViewConfig.V_HEIGHT))
     }
 
     private fun setUpUI() {
-        val root = Table().apply { setFillParent(true) }
+        val root = Table().apply {
+            setFillParent(true)
+            top()
+        }
+
+        topBar = Table().apply {
+            pad(padSm)
+        }
+
         val gs = getGameState()
 
-        turnLabel  = VisLabel("Team: ${gs.currentTeam}   Turn: ${gs.turnCount} Moves Left: ${gs.movesLeft}")  // now a field
-        turnLabel.setFontScale(2f)
+        teamLabel = VisLabel("Team: ${gs.currentTeam}").apply {
+            setFontScale(fontScale)
+        }
+        turnCountLabel = VisLabel("Turn: ${gs.turnCount}").apply {
+            setFontScale(fontScale)
+        }
+        movesLeftLabel = VisLabel("Moves: ${gs.movesLeft}").apply {
+            setFontScale(fontScale)
+        }
 
-        pauseBtn   = VisTextButton("PAUSE")
-        endTurnBtn = VisTextButton("END TURN")
+        val infoContainer = Table()
+        infoContainer.add(teamLabel).expandX().left().padRight(padMed)
+        infoContainer.add(turnCountLabel).expandX().left().padRight(padMed)
+        infoContainer.add(movesLeftLabel).expandX().left()
 
-        pauseBtn.onClick   { togglePause() }
-        endTurnBtn.onClick { turnController.endTurn() }
+        pauseBtn = VisTextButton("PAUSE").apply {
+            label.setFontScale(btnFontSc)
+            pad(padSm)
+            onClick { togglePause() }
+        }
 
-        root.top()
-        root.add(turnLabel).expandX().left().pad(8f)
-        root.add(pauseBtn).right().pad(8f)
-        root.add(endTurnBtn).right().pad(8f).row()
+        endTurnBtn = VisTextButton("END TURN").apply {
+            label.setFontScale(btnFontSc)
+            pad(padSm)
+            onClick { turnController.endTurn() }
+        }
 
+        val buttonGroup = Table().apply {
+            add(pauseBtn).width(btnW).height(btnH).padRight(padSm)
+            add(endTurnBtn).width(btnW).height(btnH)
+        }
+
+        topBar.add(infoContainer).expandX().fillX().height(barH).padRight(padMed)
+        topBar.add(buttonGroup).right().height(barH)
+
+        root.add(topBar).growX().row()
         stage.addActor(root)
 
         pauseOverlay = buildPauseOverlay().apply { isVisible = false }
@@ -162,10 +217,33 @@ class PlayScreen(
         })
         Gdx.input.inputProcessor = inputMultiplexer
     }
+
     private fun updateTurnLabel() {
         val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
         val gs = gameState?.get(GameStateComponent.mapper)!!
-        turnLabel.setText("Team: ${gs.currentTeam}   Turn: ${gs.turnCount} Moves Left: ${gs.movesLeft}")
+
+        teamLabel.setText("Team: ${gs.currentTeam}")
+        turnCountLabel.setText("Turn: ${gs.turnCount}")
+        movesLeftLabel.setText("Moves: ${gs.movesLeft}")
+    }
+
+    private fun updateTopBarColor() {
+        val gs = getGameState()
+
+        val base = TeamVisualRegistry.getColor(gs.currentTeam)
+
+        val bgColor = Color(base.r, base.g, base.b, 0.55f)
+        topBar.background = VisUI.getSkin().newDrawable("white", bgColor)
+
+        val textColor = chooseContrastingTextColor(base)
+        teamLabel.color = textColor
+        turnCountLabel.color = textColor
+        movesLeftLabel.color = textColor
+    }
+
+    private fun chooseContrastingTextColor(bg: Color): Color {
+        val luminance = 0.299f * bg.r + 0.587f * bg.g + 0.114f * bg.b
+        return if (luminance > 0.55f) Color.BLACK else Color.WHITE
     }
 
     private fun setupTooltip() {
@@ -188,10 +266,12 @@ class PlayScreen(
             else "q: ${pos.q}, r: ${pos.r}"
             tooltipLabel.setText(text)
             tooltipLabel.pack()
-            tooltipLabel.setPosition(
-                screenX.toFloat() + 12f,
-                stage.viewport.screenHeight - screenY.toFloat() + 12f
+
+            // Convert raw screen coords to stage virtual coords
+            val stageCoords = stage.screenToStageCoordinates(
+                Vector2(screenX.toFloat(), screenY.toFloat())
             )
+            tooltipLabel.setPosition(stageCoords.x + 12f, stageCoords.y + 12f)
             tooltipLabel.isVisible = true
         } else {
             tooltipLabel.isVisible = false
@@ -203,6 +283,10 @@ class PlayScreen(
         val isMyTurn = currentState is PlayerTurnState
         endTurnBtn.isVisible = !isPaused && isMyTurn
         endTurnBtn.touchable = if (!isPaused && isMyTurn) Touchable.enabled else Touchable.disabled
+
+        topBar.isVisible = !isPaused
+        topBar.touchable = if (isPaused) Touchable.disabled else Touchable.enabled
+
         pauseOverlay.isVisible = isPaused
         pauseOverlay.touchable = if (isPaused) Touchable.enabled else Touchable.disabled
         if (isPaused) {
@@ -216,13 +300,16 @@ class PlayScreen(
             center()
         }
 
-        val pauseTitle = VisLabel("PAUSED").apply { setFontScale(3f) }
+        val btnW = ViewConfig.V_WIDTH * 0.45f
+        val btnH = ViewConfig.V_HEIGHT * 0.14f
+
+        val pauseTitle = VisLabel("PAUSED").apply { setFontScale(ViewConfig.V_HEIGHT * 0.008f) }
         val resumeButton = createShadowButton("RESUME") { resumeGame() }
         val menuButton = createShadowButton("MAIN MENU") { goToMenu() }
 
-        overlay.add(pauseTitle).padBottom(28f).row()
-        overlay.add(resumeButton).width(300f).height(64f).padBottom(18f).row()
-        overlay.add(menuButton).width(300f).height(64f)
+        overlay.add(pauseTitle).padBottom(ViewConfig.V_HEIGHT * 0.06f).row()
+        overlay.add(resumeButton).width(btnW).height(btnH).padBottom(ViewConfig.V_HEIGHT * 0.04f).row()
+        overlay.add(menuButton).width(btnW).height(btnH)
 
         return overlay
     }
@@ -250,6 +337,8 @@ class PlayScreen(
     }
 
     override fun resize(width: Int, height: Int) {
+        // false = don't reset camera position (it was set externally to map center)
+        worldViewport.update(width, height, false)
         stage.viewport.update(width, height, true)
     }
 
@@ -293,10 +382,7 @@ class PlayScreen(
         game.setScreen<WinScreen>()
     }
     fun getBatch() = game.batch
-//    fun getFont()  = game.font
+    fun getFont()  = game.font
 
-    override fun dispose() {
-        multiplayerManager?.dispose()
-        super.dispose()
-    }
+    override fun dispose() { super.dispose() }
 }
