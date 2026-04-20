@@ -37,7 +37,7 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
         backgroundTexture = Texture(Gdx.files.internal("backgrounds/MenuBackground.png"))
         if (!VisUI.isLoaded()) VisUI.load()
 
-        statusLabel = VisLabel("").apply { color = Color.WHITE }
+        statusLabel = VisLabel("")
 
         Gdx.input.inputProcessor = stage
         stage.clear()
@@ -53,6 +53,7 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
 
         createBtn.onClick {
             statusLabel.setText("Creating...")
+            statusLabel.color = Color.BLACK
             scope.launch { handleResult(LobbyService.getOrCreateLobby(game.myPlayerId)) }
         }
 
@@ -60,9 +61,11 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
             val code = codeField.text
             if (code.length == 6) {
                 statusLabel.setText("Joining...")
+                statusLabel.color = Color.BLACK
                 scope.launch { handleResult(LobbyService.joinLobbyByCode(code, game.myPlayerId)) }
             } else {
                 statusLabel.setText("Invalid Code Format")
+                statusLabel.color = Color.RED
             }
         }
 
@@ -94,7 +97,10 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
                     game.setScreen<LobbyScreen>()
                 }
             }
-            is LobbyResult.Error -> Gdx.app.postRunnable { statusLabel.setText(result.message) }
+            is LobbyResult.Error -> Gdx.app.postRunnable {
+                statusLabel.setText(result.message)
+                statusLabel.color = Color.RED
+            }
         }
     }
 
