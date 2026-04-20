@@ -1,18 +1,20 @@
 package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
-import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.screens.LobbySelectScreen
+import com.tdt4240.group3.view.ViewConfig
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
@@ -25,7 +27,7 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
     override fun show() {
         if (!VisUI.isLoaded()) VisUI.load()
 
-        stage = Stage(ScreenViewport())
+        stage = Stage(ExtendViewport(ViewConfig.V_WIDTH, ViewConfig.V_HEIGHT))
         Gdx.input.inputProcessor = stage
 
         val root = Table().apply {
@@ -34,22 +36,24 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
             background = TextureRegionDrawable(TextureRegion(backgroundTexture))
         }
 
-        val titleLabel  = VisLabel("HEXA·BATTLE")
-        val playBtn     = VisTextButton("PLAY")
-        val howToBtn    = VisTextButton("HOW TO PLAY")
-        val optionsBtn  = VisTextButton("OPTIONS")
+        val titleLabel     = VisLabel("HEXA BATTLE").apply { color = Color.BLACK }
+        val playBtn        = VisTextButton("PLAY").apply { color = Color.BLACK }
+        val howToBtn       = VisTextButton("HOW TO PLAY").apply { color = Color.BLACK }
+        val leaderboardBtn = VisTextButton("LEADERBOARD").apply { color = Color.BLACK }
+        val optionsBtn     = VisTextButton("OPTIONS").apply { color = Color.BLACK }
 
-        playBtn.onClick    {
+        playBtn.onClick {
             game.myTeam = Team.RED
-            // game.setScreen<PlayScreen>()
             game.setScreen<LobbySelectScreen>()
         }
-        howToBtn.onClick   { game.setScreen<HowToPlayScreen>() }
-        optionsBtn.onClick { game.setScreen<OptionsScreen>() }
+        howToBtn.onClick       { game.setScreen<HowToPlayScreen>() }
+        leaderboardBtn.onClick { game.setScreen<LeaderboardScreen>() }
+        optionsBtn.onClick     { game.setScreen<OptionsScreen>() }
 
         root.add(titleLabel).padBottom(48f).row()
         root.add(playBtn).width(280f).height(52f).padBottom(12f).row()
         root.add(howToBtn).width(280f).height(52f).padBottom(12f).row()
+        root.add(leaderboardBtn).width(280f).height(52f).padBottom(12f).row()
         root.add(optionsBtn).width(280f).height(52f).row()
 
         stage.addActor(root)

@@ -12,6 +12,7 @@ import com.tdt4240.group3.model.entities.GameStateFactory
 import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.model.systems.*
 import com.tdt4240.group3.network.LobbyGameStateService
+import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
@@ -64,12 +65,12 @@ class PlayController(
         setUpWorld()
 
         val isHost = myPlayerId == playerOrder.first()
-        val capitalPositions = mapGenerator.generateCapitals(gs.activeTeams)
+        val capitalPositions = mapGenerator.generateCapitals(gs.activeTeams, randomSeed = lobbyId.hashCode())
         engine.getEntitiesFor(allOf(CapitalComponent::class).get()).forEach { capitalEntity ->
             val team = capitalEntity[TeamComponent.mapper]?.team ?: com.tdt4240.group3.model.Team.NONE
             capitalEntity[CapitalComponent.mapper]?.originalTeam = team
         }
-        mapGenerator.generateCities(count = 20, capitalPositions = capitalPositions)
+        mapGenerator.generateCities(count = 20, capitalPositions = capitalPositions, randomSeed = lobbyId.hashCode())
 
         if (isHost) {
             val lobbyMapStates = capitalPositions.mapIndexed { index, capitalPosition ->
@@ -121,6 +122,11 @@ class PlayController(
             if (eliminatedTeam == game.myTeam) {
                 playScreen.goToEliminated()
             }
+            val winnerId = gs.playerOrder[gs.activeTeams.indexOf(winner)]
+            scope.launch {
+                LobbyService.endGame(lobbyId, winnerId)
+            }
+            playScreen.goToWin(winner)
         }
         turnSystem.onTurnEnded = { playScreen.onTurnChanged(false) }
         return playScreen

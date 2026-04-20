@@ -35,7 +35,7 @@ class MapGenerator(private val engine: Engine) {
         }
     }
 
-    //TODO("This function should probably be in a different file, maybe TurnSystem")
+    // TODO("This function should probably be in a different file, maybe TurnSystem")
     fun createTroopFromCity(cityEntity: Entity, unitType: UnitType): Entity {
         val city = CityComponent.Companion.mapper.get(cityEntity)
         val position = PositionComponent.Companion.mapper.get(cityEntity)
@@ -51,9 +51,9 @@ class MapGenerator(private val engine: Engine) {
         )
     }
 
-    fun generateCities(count: Int, capitalPositions: List<Pair<Int, Int>>) {
+    fun generateCities(count: Int, capitalPositions: List<Pair<Int, Int>>, randomSeed: Int) {
         val cityNames = MapData.CITY_NAMES.toMutableList()
-            .also { it.shuffle(Random(42)) }
+            .also { it.shuffle(Random(randomSeed)) }
 
         val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
         val allTiles = engine.getEntitiesFor(tileFamily).map { entity ->
@@ -65,7 +65,7 @@ class MapGenerator(private val engine: Engine) {
 
         val placedCities = mutableListOf<Pair<Int, Int>>()
 
-        val shuffled = candidateTiles.shuffled(Random(42))
+        val shuffled = candidateTiles.shuffled(Random(randomSeed))
         for (tile in shuffled) {
             if (placedCities.size >= count) break
             val tooClose = placedCities.any { placed ->
@@ -88,9 +88,9 @@ class MapGenerator(private val engine: Engine) {
     }
 
     //TODO("Should be refactored for better clarity")
-    fun generateCapitals(teams: List<Team>): List<Pair<Int, Int>> {
+    fun generateCapitals(teams: List<Team>, randomSeed: Int): List<Pair<Int, Int>> {
         val capitalNames = MapData.CAPITAL_NAMES.toMutableList()
-            .also { it.shuffle(Random(42)) }
+            .also { it.shuffle(Random(randomSeed)) }
 
         val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
 
