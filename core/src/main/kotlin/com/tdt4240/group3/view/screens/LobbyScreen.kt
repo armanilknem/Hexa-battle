@@ -1,12 +1,13 @@
 package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
-import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
@@ -21,6 +22,7 @@ import com.tdt4240.group3.network.model.LobbyStatus
 import com.tdt4240.group3.network.model.PresenceState
 import com.tdt4240.group3.screens.LobbySelectScreen
 import com.tdt4240.group3.view.View
+import com.tdt4240.group3.view.ViewConfig
 import io.github.jan.supabase.realtime.RealtimeChannel
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresSingleDataFlow
@@ -41,7 +43,7 @@ class LobbyScreen(
     initialLobby: Lobby
 ) : KtxScreen {
 
-    private val stage = Stage(ScreenViewport())
+    private val stage = Stage(ExtendViewport(ViewConfig.V_WIDTH, ViewConfig.V_HEIGHT))
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val backgroundTexture = Texture(Gdx.files.internal("backgrounds/MenuBackground.png"))
 
@@ -61,11 +63,11 @@ class LobbyScreen(
     override fun show() {
         if (!VisUI.isLoaded()) VisUI.load()
 
-        backBtn = VisTextButton("BACK")
-        codeLabel = VisLabel("CODE: ${lobby.lobbyCode}")
-        countLabel = VisLabel("PLAYERS: 0/${lobby.maxPlayerCount}")
-        playerTable = Table()
-        startBtn = VisTextButton("START GAME")
+        backBtn = VisTextButton("BACK").apply { color = Color.BLACK }
+        codeLabel = VisLabel("CODE: ${lobby.lobbyCode}").apply { color = Color.BLACK }
+        countLabel = VisLabel("PLAYERS: 0/${lobby.maxPlayerCount}").apply { color = Color.BLACK }
+        playerTable = Table().apply { color = Color.BLACK }
+        startBtn = VisTextButton("START GAME").apply { color = Color.BLACK }
 
         Gdx.input.inputProcessor = stage
         setupLayout()
@@ -80,16 +82,21 @@ class LobbyScreen(
             background = TextureRegionDrawable(TextureRegion(backgroundTexture))
         }
 
-        root.add(backBtn).left().pad(10f).row()
+        val card = Table().apply {
+            pad(24f)
+            background = VisUI.getSkin().newDrawable("white", Color(1f, 1f, 1f, 0.6f))
+        }
+
+        card.add(backBtn).left().pad(10f).row()
         backBtn.onClick { game.setScreen<LobbySelectScreen>() }
 
-        root.add(codeLabel).padBottom(10f).row()
-        root.add(countLabel).padBottom(20f).row()
-        root.add(VisLabel("CONNECTED PLAYERS:")).padBottom(10f).row()
-        root.add(playerTable).padBottom(30f).row()
+        card.add(codeLabel).padBottom(10f).row()
+        card.add(countLabel).padBottom(20f).row()
+        card.add(VisLabel("CONNECTED PLAYERS:").apply { color = Color.BLACK }).padBottom(10f).row()
+        card.add(playerTable).padBottom(30f).row()
 
         if (lobby.hostId == game.myPlayerId) {
-            root.add(startBtn).width(280f).height(60f).row()
+            card.add(startBtn).width(280f).height(60f).row()
             startBtn.onClick {
                 startBtn.isDisabled = true
                 scope.launch {
@@ -104,9 +111,10 @@ class LobbyScreen(
                 }
             }
         } else {
-            root.add(VisLabel("Waiting for host...")).row()
+            card.add(VisLabel("Waiting for host...").apply { color = Color.BLACK }).row()
         }
 
+        root.add(card)
         stage.addActor(root)
     }
 
@@ -144,7 +152,6 @@ class LobbyScreen(
                     Gdx.app.postRunnable {
                         game.resetForNewMatch()
 
-                        //game.myTeam = assignTeamForPlayer(game.myPlayerId, connectedPlayers.keys)
                         val playController = PlayController(game, game.engine)
                         val playScreen = playController.createScreen(
                             lobbyId = lobby.id!!,
@@ -185,7 +192,7 @@ class LobbyScreen(
 
             connectedPlayers.forEach { (playerId, displayName) ->
                 val isHost = playerId == lobby.hostId
-                val label = VisLabel(if (isHost) "$displayName (HOST)" else displayName)
+                val label = VisLabel(if (isHost) "$displayName (HOST)" else displayName).apply { color = Color.BLACK }
                 playerTable.add(label).padBottom(5f).row()
             }
         }
@@ -195,6 +202,10 @@ class LobbyScreen(
         clearScreen(0.055f, 0.067f, 0.094f, 1f)
         stage.act(delta)
         stage.draw()
+    }
+
+    override fun resize(width: Int, height: Int) {
+        stage.viewport.update(width, height, true)
     }
 
     override fun hide() {
