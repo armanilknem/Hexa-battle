@@ -15,6 +15,7 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
     private val mapGenerator = MapGenerator(engine)
     private val cityFamily = allOf(CityComponent::class, PositionComponent::class, TeamComponent::class).get()
     private val gameStateFamily = allOf(GameStateComponent::class, NeedsTroopSpawnComponent::class).get()
+    private val selectableTroopFamily = allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
     private val troopFamily = allOf(
         TroopComponent::class,
         CombatComponent::class,
@@ -35,6 +36,9 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
             // Normal turns: spawn/reinforce for the current team only
             createTroopsForTeam(gs.currentTeam)
         }
+        val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
+            .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
+        gs.movesLeft = minOf(selectableTroops.size, 5)
         // Round 1 non-initial turns: skip — starting troops already created above
         markSelectable(gs)
 
