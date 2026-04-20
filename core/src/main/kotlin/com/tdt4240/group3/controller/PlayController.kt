@@ -94,10 +94,8 @@ class PlayController(
 
         winSystem.onWin = { winner ->
             val winnerId = gs.playerOrder[gs.activeTeams.indexOf(winner)]
-            if (myPlayerId === winnerId) {
-                scope.launch {
-                    LobbyService.endGame(lobbyId, winnerId)
-                }
+            scope.launch {
+                LobbyService.endGame(lobbyId, winnerId)
             }
             playScreen.goToWin(winner)
         }
