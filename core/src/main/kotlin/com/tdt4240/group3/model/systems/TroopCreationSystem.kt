@@ -29,7 +29,7 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
 
         if (gs.turnCount == 1) { // && gs.currentPlayerIndex == 0
             // Game start: give every team one starting troop, no production bonus yet
-            gs.activeTeams.forEach { team -> createTroopsForTeam(team) }
+//            gs.activeTeams.forEach { team -> createTroopsForTeam(team) }
         } else if (gs.turnCount > 1) {
             // Normal turns: spawn/reinforce for the current team only
             createTroopsForTeam(gs.currentTeam)
