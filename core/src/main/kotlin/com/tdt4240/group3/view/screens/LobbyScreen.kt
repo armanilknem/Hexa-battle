@@ -37,6 +37,7 @@ import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 class LobbyScreen(
     private val game: Hexa_Battle,
@@ -57,6 +58,7 @@ class LobbyScreen(
     private lateinit var playerTable: Table
     private lateinit var startBtn: VisTextButton
     private lateinit var backBtn: VisTextButton
+    private lateinit var statusLabel: VisLabel
 
     private var transitioningToPlay = false
 
@@ -68,6 +70,7 @@ class LobbyScreen(
         countLabel = VisLabel("PLAYERS: 0/${lobby.maxPlayerCount}").apply { color = Color.BLACK }
         playerTable = Table().apply { color = Color.BLACK }
         startBtn = VisTextButton("START GAME").apply { color = Color.BLACK }
+        statusLabel = VisLabel("").apply { color = Color.RED }
 
         Gdx.input.inputProcessor = stage
         setupLayout()
@@ -91,23 +94,31 @@ class LobbyScreen(
         backBtn.onClick { game.setScreen<LobbySelectScreen>() }
 
         card.add(codeLabel).padBottom(10f).row()
-        card.add(countLabel).padBottom(20f).row()
+        card.add(countLabel).padBottom(10f).row()
+        root.add(statusLabel).padBottom(20f).row()
         card.add(VisLabel("CONNECTED PLAYERS:").apply { color = Color.BLACK }).padBottom(10f).row()
         card.add(playerTable).padBottom(30f).row()
 
         if (lobby.hostId == game.myPlayerId) {
             card.add(startBtn).width(280f).height(60f).row()
             startBtn.onClick {
-                startBtn.isDisabled = true
-                scope.launch {
-                    val sortedOrder = connectedPlayers.keys.sorted()
+                if (connectedPlayers.size > 1 && connectedPlayers.size <= lobby.maxPlayerCount!!) {
+                    startBtn.isDisabled = true
+                    scope.launch {
+                        val sortedOrder = connectedPlayers.keys.sorted()
+                        val shuffledOrder = sortedOrder.shuffled(Random(lobby.lobbyCode.hashCode()))
 
-                    LobbyGameStateService.createInitialGameState(
-                        lobbyId = lobby.id!!,
-                        currentPlayerId = sortedOrder.first()
-                    )
+                        LobbyGameStateService.createInitialGameState(
+                            lobbyId = lobby.id!!,
+                            currentPlayerId = shuffledOrder.first()
+                        )
 
-                    LobbyService.startGame(lobby.id!!, sortedOrder)
+                        LobbyService.startGame(lobby.id!!, shuffledOrder)
+                    }
+                } else if (connectedPlayers.size <= 1) {
+                    statusLabel.setText("Waiting for more players...")
+                } else {
+                    statusLabel.setText("Too many players!")
                 }
             }
         } else {
@@ -148,6 +159,7 @@ class LobbyScreen(
 
                     val players = LobbyService.getLobbyPlayers(lobby.id!!)
                     val sortedOrder = players.sortedBy { it.playerId }.map { it.playerId }
+                    val shuffledOrder = sortedOrder.shuffled(Random(lobby.lobbyCode.hashCode()))
 
                     Gdx.app.postRunnable {
                         game.resetForNewMatch()
@@ -156,7 +168,7 @@ class LobbyScreen(
                         val playScreen = playController.createScreen(
                             lobbyId = lobby.id!!,
                             myPlayerId = game.myPlayerId,
-                            playerOrder = sortedOrder
+                            playerOrder = shuffledOrder
                         )
 
                         val cols = 12f
@@ -228,7 +240,8 @@ class LobbyScreen(
     private fun assignTeamForPlayer(playerId: String, playerIds: Collection<String>): Team {
         val orderedTeams = listOf(Team.RED, Team.BLUE, Team.PURPLE, Team.GREEN)
         val orderedPlayerIds = playerIds.sorted()
-        val playerIndex = orderedPlayerIds.indexOf(playerId)
+        val shuffledPlayerIds = orderedPlayerIds.shuffled(Random(lobby.lobbyCode.hashCode()))
+        val playerIndex = shuffledPlayerIds.indexOf(playerId)
 
         return if (playerIndex in orderedTeams.indices) {
             orderedTeams[playerIndex]

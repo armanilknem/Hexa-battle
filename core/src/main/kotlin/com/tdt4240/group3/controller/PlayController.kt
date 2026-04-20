@@ -60,8 +60,8 @@ class PlayController(
         setUpWorld()
 
         val isHost = myPlayerId == playerOrder.first()
-        val capitalPositions = mapGenerator.generateCapitals(gs.activeTeams)
-        mapGenerator.generateCities(count = 20, capitalPositions = capitalPositions)
+        val capitalPositions = mapGenerator.generateCapitals(gs.activeTeams, randomSeed = lobbyId.hashCode())
+        mapGenerator.generateCities(count = 20, capitalPositions = capitalPositions, randomSeed = lobbyId.hashCode())
 
         if (isHost) {
             val lobbyMapStates = capitalPositions.mapIndexed { index, capitalPosition ->
