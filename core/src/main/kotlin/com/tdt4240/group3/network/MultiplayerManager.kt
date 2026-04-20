@@ -11,8 +11,8 @@ import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
-import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
 import com.tdt4240.group3.model.components.marker.SelectableComponent
+import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TurnSystem
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
@@ -67,19 +67,19 @@ class MultiplayerManager(
                 // Apply the new turn state on the main thread, then trigger troop spawning
                 // so TroopCreationSystem sets movesLeft and marks selectable troops correctly.
                 Gdx.app.postRunnable {
-                    val gameStateEntity = engine.getEntitiesFor(
+                    val gs = engine.getEntitiesFor(
                         allOf(GameStateComponent::class).get()
-                    ).firstOrNull()
-                    val gs = gameStateEntity?.get(GameStateComponent.mapper)
+                    ).firstOrNull()?.get(GameStateComponent.mapper)
                     if (gs != null) {
                         gs.turnCount = newTurn
                         if (newPlayerId != null) {
                             val idx = gs.playerOrder.indexOf(newPlayerId)
                             if (idx >= 0) gs.currentPlayerIndex = idx
                         }
-                        if (gameStateEntity.getComponent(NeedsTroopSpawnComponent::class.java) == null) {
-                            gameStateEntity.add(engine.createComponent(NeedsTroopSpawnComponent::class.java))
-                        }
+                        // Mark selectable directly — do NOT add NeedsTroopSpawnComponent here.
+                        // createTroopsForTeam runs only via endTurn() on the machine whose
+                        // turn just ended; running it here too would double-reinforce every city.
+                        engine.getSystem(TroopCreationSystem::class.java)?.markSelectable(gs)
                         engine.getSystem(TurnSystem::class.java)?.onRemoteTurnStarted()
                     }
                     screen.onTurnChanged(newPlayerId == myPlayerId)

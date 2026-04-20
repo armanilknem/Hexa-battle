@@ -81,7 +81,10 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
     fun createTroopsForTeam(team: Team) {
         engine.getEntitiesFor(cityFamily)
             .filter { it[TeamComponent.mapper]?.team == team }
-            .forEach { createTroopFromCity(it) }
+            .forEach {
+                createTroopFromCity(it)
+                it.add(engine.createComponent(TerritoryComponent::class.java))
+            }
     }
 
     fun markSelectable(gs: GameStateComponent) {
