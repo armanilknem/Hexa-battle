@@ -62,7 +62,7 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
             if (code.length == 6) {
                 statusLabel.setText("Joining...")
                 statusLabel.color = Color.BLACK
-                scope.launch { handleResult(LobbyService.joinLobbyByCode(code, game.myPlayerId)) }
+                scope.launch { handleResult(LobbyService.joinLobbyByCode(code.uppercase(), game.myPlayerId)) }
             } else {
                 statusLabel.setText("Invalid Code Format")
                 statusLabel.color = Color.RED

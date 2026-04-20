@@ -374,10 +374,20 @@ class PlayScreen(
         }
     }
 
-    fun goToMenu() { game.setScreen<MenuScreen>() }
+    fun goToMenu() {
+        if (currentState is PlayerTurnState) turnController.endTurn()
+        game.setScreen<MenuScreen>()
+    }
     fun goToWin(winner: Team) {
         val winScreen = game.getScreen<WinScreen>()
         winScreen.winner = winner
+        winScreen.viewerTeam = game.myTeam
+        game.setScreen<WinScreen>()
+    }
+
+    fun goToEliminated() {
+        val winScreen = game.getScreen<WinScreen>()
+        winScreen.winner = Team.NONE
         winScreen.viewerTeam = game.myTeam
         game.setScreen<WinScreen>()
     }

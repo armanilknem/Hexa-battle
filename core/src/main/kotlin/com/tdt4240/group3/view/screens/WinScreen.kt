@@ -48,7 +48,7 @@ class WinScreen(private val game: Hexa_Battle) : KtxScreen {
         menuBtn.onClick { game.setScreen<MenuScreen>() }
 
         root.add(resultLabel).padBottom(16f).row()
-        root.add(teamLabel).padBottom(48f).row()
+        if (winner != Team.NONE) root.add(teamLabel).padBottom(48f).row()
         root.add(menuBtn).width(280f).height(52f).row()
 
         stage.addActor(root)

@@ -12,10 +12,28 @@ import com.tdt4240.group3.model.Team
 import ktx.ashley.allOf
 import ktx.ashley.get
 
-class TurnSystem(private val lobbyId: Int) : EntitySystem() {
+class TurnSystem(
+    private val lobbyId: Int,
+    private val myPlayerId: String
+) : EntitySystem() {
     private val gameStateFamily = allOf(GameStateComponent::class).get()
+    private val selectableTroopFamily = allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
     private val scope = CoroutineScope(Dispatchers.Default)
     var onTurnEnded: (() -> Unit)? = null
+
+    private var inactivityTimer: Float = 0f
+    private val inactivityTimeoutSeconds: Float = 30f
+    private val inactivityStrikeLimit: Int = 3
+    private val inactivityCounts = mutableMapOf<Int, Int>()
+
+    private var startOfTurn = true
+
+    fun resetActivityTimer() {
+        inactivityTimer = 0f
+        val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
+            ?.get(GameStateComponent.mapper) ?: return
+        inactivityCounts[gs.currentPlayerIndex] = 0
+    }
 
     override fun update(deltaTime: Float) {
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
@@ -25,9 +43,32 @@ class TurnSystem(private val lobbyId: Int) : EntitySystem() {
             return
         }
 
-        val selectableTroops = engine.getEntitiesFor(allOf(SelectableComponent::class).get()).toList()
+        if (startOfTurn) {
+            val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
+                .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
+            gs.movesLeft = minOf(selectableTroops.size, 5)
+            startOfTurn = false
+        }
 
-        if (selectableTroops.isEmpty() || gs.movesLeft < 1) {
+        if (gs.eliminatedTeams.contains(gs.currentTeam)) {
+            endTurn()
+            return
+        }
+
+        val isMyTurn = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
+        inactivityTimer += deltaTime
+
+
+        if (gs.movesLeft < 1) {
+            endTurn()
+        } else if (!isMyTurn && inactivityTimer >= inactivityTimeoutSeconds) {
+            val idx = gs.currentPlayerIndex
+            val strikes = (inactivityCounts[idx] ?: 0) + 1
+            inactivityCounts[idx] = strikes
+            if (strikes >= inactivityStrikeLimit) {
+                gs.eliminatedTeams.add(gs.currentTeam)
+                inactivityCounts.remove(idx)
+            }
             endTurn()
         }
     }
@@ -37,14 +78,32 @@ class TurnSystem(private val lobbyId: Int) : EntitySystem() {
         val gs = gameState[GameStateComponent.mapper] ?: return
 
         if (gs.playerOrder.isEmpty()) return
+        startOfTurn = true
 
-        gs.currentPlayerIndex = (gs.currentPlayerIndex + 1) % gs.playerOrder.size
-
-        if (gs.currentPlayerIndex == 0) {
+        // Advance index, incrementing turnCount when we wrap past the last slot
+        var nextIndex = gs.currentPlayerIndex + 1
+        if (nextIndex >= gs.playerOrder.size) {
+            nextIndex = 0
             gs.turnCount++
         }
 
-        gs.movesLeft = 5
+        // Skip over eliminated players
+        var steps = 0
+        while (steps < gs.playerOrder.size) {
+            val team = gs.activeTeams.getOrElse(nextIndex) { Team.NONE }
+            if (team != Team.NONE && !gs.eliminatedTeams.contains(team)) break
+            nextIndex++
+            if (nextIndex >= gs.playerOrder.size) {
+                nextIndex = 0
+                gs.turnCount++
+            }
+            steps++
+        }
+        if (steps >= gs.playerOrder.size) return // all players eliminated — WinSystem handles this
+
+        gs.currentPlayerIndex = nextIndex
+        inactivityTimer = 0f
+
         requestTroopSpawn(gameState)
         onTurnEnded?.invoke()
 
@@ -55,6 +114,11 @@ class TurnSystem(private val lobbyId: Int) : EntitySystem() {
                 turnNumber = gs.turnCount
             )
         }
+    }
+
+    fun onRemoteTurnStarted() {
+        startOfTurn = true
+        inactivityTimer = 0f
     }
 
     fun isCurrentTeam(team: Team): Boolean {

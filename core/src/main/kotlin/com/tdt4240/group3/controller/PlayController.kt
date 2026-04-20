@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.model.MapGenerator
+import com.tdt4240.group3.model.components.CapitalComponent
 import com.tdt4240.group3.model.components.GameStateComponent
 import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
 import com.tdt4240.group3.model.entities.GameStateConfig
@@ -18,6 +19,9 @@ import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.model.components.TroopComponent
+import ktx.ashley.allOf
 import ktx.ashley.get
 
 class PlayController(
@@ -30,7 +34,7 @@ class PlayController(
     private val scope = CoroutineScope(Dispatchers.Default)
 
     fun createScreen(lobbyId: Int, myPlayerId: String, playerOrder: List<String>): PlayScreen {
-        val turnSystem = TurnSystem(lobbyId)
+        val turnSystem = TurnSystem(lobbyId, myPlayerId)
         val selectionSystem = SelectionSystem()
         val movementSystem = MovementSystem()
         val collisionSystem = CollisionSystem()
@@ -62,6 +66,10 @@ class PlayController(
 
         val isHost = myPlayerId == playerOrder.first()
         val capitalPositions = mapGenerator.generateCapitals(gs.activeTeams, randomSeed = lobbyId.hashCode())
+        engine.getEntitiesFor(allOf(CapitalComponent::class).get()).forEach { capitalEntity ->
+            val team = capitalEntity[TeamComponent.mapper]?.team ?: com.tdt4240.group3.model.Team.NONE
+            capitalEntity[CapitalComponent.mapper]?.originalTeam = team
+        }
         mapGenerator.generateCities(count = 20, capitalPositions = capitalPositions, randomSeed = lobbyId.hashCode())
 
         if (isHost) {
@@ -92,12 +100,34 @@ class PlayController(
             troopFactory
         )
 
-        winSystem.onWin = { winner ->
+        winSystem.onWin = { winner -> playScreen.goToWin(winner)
             val winnerId = gs.playerOrder[gs.activeTeams.indexOf(winner)]
             scope.launch {
                 LobbyService.endGame(lobbyId, winnerId)
             }
             playScreen.goToWin(winner)
+        }
+        winSystem.onPlayerEliminated = { eliminatedTeam ->
+            engine.getEntitiesFor(allOf(TroopComponent::class, TeamComponent::class).get())
+                .toList()
+                .filter { it[TeamComponent.mapper]?.team == eliminatedTeam }
+                .forEach { engine.removeEntity(it) }
+
+            val conquerorTeam = engine.getEntitiesFor(allOf(CapitalComponent::class, TeamComponent::class).get())
+                .toList()
+                .firstOrNull { it[CapitalComponent.mapper]?.originalTeam == eliminatedTeam }
+                ?.get(TeamComponent.mapper)?.team ?: com.tdt4240.group3.model.Team.NONE
+
+            if (conquerorTeam != com.tdt4240.group3.model.Team.NONE) {
+                engine.entities.toList().forEach { entity ->
+                    val teamComp = entity[TeamComponent.mapper] ?: return@forEach
+                    if (teamComp.team == eliminatedTeam) teamComp.team = conquerorTeam
+                }
+            }
+
+            if (eliminatedTeam == game.myTeam) {
+                playScreen.goToEliminated()
+            }
         }
         turnSystem.onTurnEnded = { playScreen.onTurnChanged(false) }
         return playScreen
