@@ -3,7 +3,10 @@ package com.tdt4240.group3.network
 import com.tdt4240.group3.network.model.Lobby
 import com.tdt4240.group3.network.model.LobbyPlayer
 import com.tdt4240.group3.network.model.LobbyResult
+import com.tdt4240.group3.network.model.Player
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Order
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 
 object LobbyService {
     private val client = SupabaseClient.client
@@ -80,6 +83,58 @@ object LobbyService {
         } catch (e: Exception) {
             e.printStackTrace()
             false
+        }
+    }
+
+    suspend fun endGame(lobbyId: Int, winnerId: String) {
+        try {
+            client.from("lobbies").update({
+                set("status", "finished")
+                set("winner", winnerId)
+            }) {
+                filter {
+                    eq("id", lobbyId)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun getTopWinners(limit: Int = 5): List<Pair<String, Int>> {
+        return try {
+            val winnerLobbies = client.from("lobbies").select {
+                filter {
+                    filterNot("winner", FilterOperator.IS, null)
+                }
+            }.decodeList<Lobby>()
+
+            val winCounts = winnerLobbies
+                .mapNotNull { it.winner }
+                .groupingBy { it }
+                .eachCount()
+
+            if (winCounts.isEmpty()) return emptyList()
+
+            val topIds = winCounts.entries
+                .sortedByDescending { it.value }
+                .take(limit)
+                .map { it.key }
+
+            val players = client.from("players").select {
+                filter { isIn("id", topIds) }
+            }.decodeList<Player>()
+
+            val nameById = players.associate { it.id to it.displayName }
+
+            topIds.map { id ->
+                val name = nameById[id] ?: "Unknown"
+                val wins = winCounts[id] ?: 0
+                name to wins
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
         }
     }
 }
