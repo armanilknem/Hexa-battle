@@ -11,5 +11,6 @@ data class Lobby(
     @SerialName("max_player_count") val maxPlayerCount: Int? = null,
     val status: LobbyStatus? = null,
     @SerialName("created_at") val createdAt: String? = null,
-    @SerialName("updated_at") val updatedAt: String? = null
+    @SerialName("updated_at") val updatedAt: String? = null,
+    val winner: String? = null
 )

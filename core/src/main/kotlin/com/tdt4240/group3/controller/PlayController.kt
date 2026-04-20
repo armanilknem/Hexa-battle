@@ -11,6 +11,7 @@ import com.tdt4240.group3.model.entities.GameStateFactory
 import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.model.systems.*
 import com.tdt4240.group3.network.LobbyGameStateService
+import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
@@ -91,7 +92,13 @@ class PlayController(
             troopFactory
         )
 
-        winSystem.onWin = { winner -> playScreen.goToWin(winner) }
+        winSystem.onWin = { winner ->
+            val winnerId = gs.playerOrder[gs.activeTeams.indexOf(winner)]
+            scope.launch {
+                LobbyService.endGame(lobbyId, winnerId)
+            }
+            playScreen.goToWin(winner)
+        }
         turnSystem.onTurnEnded = { playScreen.onTurnChanged(false) }
         return playScreen
     }

@@ -36,21 +36,24 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
             background = TextureRegionDrawable(TextureRegion(backgroundTexture))
         }
 
-        val titleLabel  = VisLabel("HEXA BATTLE").apply { color = Color.BLACK }
-        val playBtn     = VisTextButton("PLAY").apply { color = Color.BLACK }
-        val howToBtn    = VisTextButton("HOW TO PLAY").apply { color = Color.BLACK }
-        val optionsBtn  = VisTextButton("OPTIONS").apply { color = Color.BLACK }
+        val titleLabel     = VisLabel("HEXA BATTLE").apply { color = Color.BLACK }
+        val playBtn        = VisTextButton("PLAY").apply { color = Color.BLACK }
+        val howToBtn       = VisTextButton("HOW TO PLAY").apply { color = Color.BLACK }
+        val leaderboardBtn = VisTextButton("LEADERBOARD").apply { color = Color.BLACK }
+        val optionsBtn     = VisTextButton("OPTIONS").apply { color = Color.BLACK }
 
         playBtn.onClick {
             game.myTeam = Team.RED
             game.setScreen<LobbySelectScreen>()
         }
-        howToBtn.onClick   { game.setScreen<HowToPlayScreen>() }
-        optionsBtn.onClick { game.setScreen<OptionsScreen>() }
+        howToBtn.onClick       { game.setScreen<HowToPlayScreen>() }
+        leaderboardBtn.onClick { game.setScreen<LeaderboardScreen>() }
+        optionsBtn.onClick     { game.setScreen<OptionsScreen>() }
 
         root.add(titleLabel).padBottom(48f).row()
         root.add(playBtn).width(280f).height(52f).padBottom(12f).row()
         root.add(howToBtn).width(280f).height(52f).padBottom(12f).row()
+        root.add(leaderboardBtn).width(280f).height(52f).padBottom(12f).row()
         root.add(optionsBtn).width(280f).height(52f).row()
 
         stage.addActor(root)
