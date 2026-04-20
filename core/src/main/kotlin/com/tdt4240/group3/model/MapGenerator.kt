@@ -90,7 +90,7 @@ class MapGenerator(private val engine: Engine) {
     //TODO("Should be refactored for better clarity")
     fun generateCapitals(teams: List<Team>, randomSeed: Int): List<Pair<Int, Int>> {
         val capitalNames = MapData.CAPITAL_NAMES.toMutableList()
-            .also { it.shuffle(Random(42)) }
+            .also { it.shuffle(Random(randomSeed)) }
 
         val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
 
