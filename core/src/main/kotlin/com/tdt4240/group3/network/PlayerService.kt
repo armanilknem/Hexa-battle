@@ -25,4 +25,20 @@ object PlayerService {
             null
         }
     }
+
+    suspend fun updateDisplayName(localId: String, newName: String): Boolean {
+        return try {
+            client.from("players").update({
+                set("display_name", newName)
+            }) {
+                filter {
+                    eq("id", localId)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 }

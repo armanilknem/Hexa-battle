@@ -107,4 +107,8 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         shapeRenderer.disposeSafely()
         super.dispose()
     }
+
+    fun setPlayerName(name: String) {
+        myPlayerName = name
+    }
 }
