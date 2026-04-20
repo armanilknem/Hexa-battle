@@ -35,6 +35,7 @@ import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 class LobbyScreen(
     private val game: Hexa_Battle,
@@ -94,13 +95,14 @@ class LobbyScreen(
                 startBtn.isDisabled = true
                 scope.launch {
                     val sortedOrder = connectedPlayers.keys.sorted()
+                    val shuffledOrder = sortedOrder.shuffled(Random(lobby.lobbyCode.hashCode()))
 
                     LobbyGameStateService.createInitialGameState(
                         lobbyId = lobby.id!!,
-                        currentPlayerId = sortedOrder.first()
+                        currentPlayerId = shuffledOrder.first()
                     )
 
-                    LobbyService.startGame(lobby.id!!, sortedOrder)
+                    LobbyService.startGame(lobby.id!!, shuffledOrder)
                 }
             }
         } else {
@@ -140,6 +142,7 @@ class LobbyScreen(
 
                     val players = LobbyService.getLobbyPlayers(lobby.id!!)
                     val sortedOrder = players.sortedBy { it.playerId }.map { it.playerId }
+                    val shuffledOrder = sortedOrder.shuffled(Random(lobby.lobbyCode.hashCode()))
 
                     Gdx.app.postRunnable {
                         game.resetForNewMatch()
@@ -149,7 +152,7 @@ class LobbyScreen(
                         val playScreen = playController.createScreen(
                             lobbyId = lobby.id!!,
                             myPlayerId = game.myPlayerId,
-                            playerOrder = sortedOrder
+                            playerOrder = shuffledOrder
                         )
 
                         val cols = 12f
