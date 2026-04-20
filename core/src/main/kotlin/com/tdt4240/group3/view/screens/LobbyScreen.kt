@@ -95,7 +95,7 @@ class LobbyScreen(
         if (lobby.hostId == game.myPlayerId) {
             root.add(startBtn).width(280f).height(60f).row()
             startBtn.onClick {
-                if (connectedPlayers.size > 1 && connectedPlayers.size < lobby.maxPlayerCount!!) {
+                if (connectedPlayers.size > 1 && connectedPlayers.size <= lobby.maxPlayerCount!!) {
                     startBtn.isDisabled = true
                     scope.launch {
                         val sortedOrder = connectedPlayers.keys.sorted()
