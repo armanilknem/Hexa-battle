@@ -220,7 +220,8 @@ class LobbyScreen(
     private fun assignTeamForPlayer(playerId: String, playerIds: Collection<String>): Team {
         val orderedTeams = listOf(Team.RED, Team.BLUE, Team.PURPLE, Team.GREEN)
         val orderedPlayerIds = playerIds.sorted()
-        val playerIndex = orderedPlayerIds.indexOf(playerId)
+        val shuffledPlayerIds = orderedPlayerIds.shuffled(Random(lobby.lobbyCode.hashCode()))
+        val playerIndex = shuffledPlayerIds.indexOf(playerId)
 
         return if (playerIndex in orderedTeams.indices) {
             orderedTeams[playerIndex]
