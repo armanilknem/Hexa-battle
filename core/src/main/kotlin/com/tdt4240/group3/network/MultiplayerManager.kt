@@ -11,9 +11,9 @@ import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.network.model.LobbyMapState
 import com.tdt4240.group3.view.screens.PlayScreen
-import com.tdt4240.group3.model.systems.TroopCreationSystem
-import com.tdt4240.group3.model.systems.TurnSystem
+import com.tdt4240.group3.model.components.marker.NeedsTroopSpawnComponent
 import com.tdt4240.group3.model.components.marker.SelectableComponent
+import com.tdt4240.group3.model.systems.TurnSystem
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
@@ -37,6 +37,7 @@ class MultiplayerManager(
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     private var lastSeenTurn: Int = 0
+    private var lastSeenPlayerId: String? = null
 
     private var mapStateReady: Boolean = false
 
@@ -54,36 +55,34 @@ class MultiplayerManager(
 
             gamestateFlow.onEach { updated ->
                 val newTurn = updated.turnNumber
+                val newPlayerId = updated.currentPlayerId
 
-                // First snapshot (turn 1): enable syncing, but DO NOT touch
-                // the locally initialized GameStateComponent.
-                if (lastSeenTurn == 0 && newTurn == 1) {
-                    lastSeenTurn = 1
-                    mapStateReady = true
-                    val isMyTurn = updated.currentPlayerId == myPlayerId
-                    Gdx.app.postRunnable { screen.onTurnChanged(isMyTurn) }
-                    return@onEach
-                }
+                // Deduplicate: skip if we already processed this exact turn+player state.
+                if (newTurn == lastSeenTurn && newPlayerId == lastSeenPlayerId) return@onEach
+                lastSeenTurn = newTurn
+                lastSeenPlayerId = newPlayerId
 
+                if (!mapStateReady) mapStateReady = true
+
+                // Apply the new turn state on the main thread, then trigger troop spawning
+                // so TroopCreationSystem sets movesLeft and marks selectable troops correctly.
                 Gdx.app.postRunnable {
                     val gameStateEntity = engine.getEntitiesFor(
                         allOf(GameStateComponent::class).get()
                     ).firstOrNull()
-
                     val gs = gameStateEntity?.get(GameStateComponent.mapper)
                     if (gs != null) {
                         gs.turnCount = newTurn
-
-                        val currentId = updated.currentPlayerId
-                        if (currentId != null) {
-                            val idx = gs.playerOrder.indexOf(currentId)
-                            if (idx >= 0) {
-                                gs.currentPlayerIndex = idx
-                            }
+                        if (newPlayerId != null) {
+                            val idx = gs.playerOrder.indexOf(newPlayerId)
+                            if (idx >= 0) gs.currentPlayerIndex = idx
                         }
-                        engine.getSystem(TroopCreationSystem::class.java)?.markSelectable(gs)
-                        screen.onTurnChanged(updated.currentPlayerId == myPlayerId)
+                        if (gameStateEntity.getComponent(NeedsTroopSpawnComponent::class.java) == null) {
+                            gameStateEntity.add(engine.createComponent(NeedsTroopSpawnComponent::class.java))
+                        }
+                        engine.getSystem(TurnSystem::class.java)?.onRemoteTurnStarted()
                     }
+                    screen.onTurnChanged(newPlayerId == myPlayerId)
                 }
             }.launchIn(scope)
 

@@ -15,7 +15,6 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
     private val mapGenerator = MapGenerator(engine)
     private val cityFamily = allOf(CityComponent::class, PositionComponent::class, TeamComponent::class).get()
     private val gameStateFamily = allOf(GameStateComponent::class, NeedsTroopSpawnComponent::class).get()
-    private val selectableTroopFamily = allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
     private val troopFamily = allOf(
         TroopComponent::class,
         CombatComponent::class,
@@ -23,25 +22,31 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
         TeamComponent::class
     ).get()
 
+    // Prevents double-reinforcement when NeedsTroopSpawnComponent fires more than once
+    // for the same (turnCount, playerIndex) state (e.g. from both endTurn and MultiplayerManager).
+    private var lastSpawnedTurn: Int = -1
+    private var lastSpawnedPlayerIndex: Int = -1
 
     override fun update(deltaTime: Float) {
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
         val gs = gameStateEntity[GameStateComponent.mapper] ?: return
 
-        if (gs.turnCount == 0) {
-            // Game start: give every team one starting troop, no production bonus yet
-            gs.activeTeams.forEach { team -> createTroopsForTeam(team) }
-            gs.turnCount++
-        } else if (gs.turnCount > 1) {
-            // Normal turns: spawn/reinforce for the current team only
-            createTroopsForTeam(gs.currentTeam)
+        val alreadySpawnedThisState = gs.turnCount == lastSpawnedTurn && gs.currentPlayerIndex == lastSpawnedPlayerIndex
+        if (!alreadySpawnedThisState) {
+            if (gs.turnCount == 0) {
+                // Game start: give every team one troop, no production bonus yet
+                gs.activeTeams.forEach { team -> createTroopsForTeam(team) }
+                gs.turnCount = 1
+            } else if (gs.turnCount > 1) {
+                // Normal turns: reinforce only the current team
+                createTroopsForTeam(gs.currentTeam)
+            }
+            // turn 1, non-initial: skip — troops already created at game start
+            lastSpawnedTurn = gs.turnCount
+            lastSpawnedPlayerIndex = gs.currentPlayerIndex
         }
-        val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
-            .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
-        gs.movesLeft = minOf(selectableTroops.size, 5)
-        // Round 1 non-initial turns: skip — starting troops already created above
-        markSelectable(gs)
 
+        markSelectable(gs)
         gameStateEntity.remove(NeedsTroopSpawnComponent::class.java)
     }
 
@@ -93,4 +98,5 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
                 troop.add(engine.createComponent(SelectableComponent::class.java))
             }
     }
+
 }

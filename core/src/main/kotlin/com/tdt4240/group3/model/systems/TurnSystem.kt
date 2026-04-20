@@ -17,7 +17,7 @@ class TurnSystem(
     private val myPlayerId: String
 ) : EntitySystem() {
     private val gameStateFamily = allOf(GameStateComponent::class).get()
-//    private val selectableTroopFamily = allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
+    private val selectableTroopFamily = allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
     private val scope = CoroutineScope(Dispatchers.Default)
     var onTurnEnded: (() -> Unit)? = null
 
@@ -26,7 +26,7 @@ class TurnSystem(
     private val inactivityStrikeLimit: Int = 3
     private val inactivityCounts = mutableMapOf<Int, Int>()
 
-//    private var startOfTurn = true
+    private var startOfTurn = true
 
     fun resetActivityTimer() {
         inactivityTimer = 0f
@@ -39,16 +39,15 @@ class TurnSystem(
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
         val gs = gameStateEntity[GameStateComponent.mapper] ?: return
 
-
-//        if (startOfTurn) {
-//            val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
-//                .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
-//            gs.movesLeft = minOf(selectableTroops.size, 5)
-//            startOfTurn = false
-//        }
-
         if (gameStateEntity.getComponent(NeedsTroopSpawnComponent::class.java) != null) {
             return
+        }
+
+        if (startOfTurn) {
+            val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
+                .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
+            gs.movesLeft = minOf(selectableTroops.size, 5)
+            startOfTurn = false
         }
 
         if (gs.eliminatedTeams.contains(gs.currentTeam)) {
@@ -79,7 +78,7 @@ class TurnSystem(
         val gs = gameState[GameStateComponent.mapper] ?: return
 
         if (gs.playerOrder.isEmpty()) return
-//        startOfTurn = true
+        startOfTurn = true
 
         // Advance index, incrementing turnCount when we wrap past the last slot
         var nextIndex = gs.currentPlayerIndex + 1
@@ -115,6 +114,11 @@ class TurnSystem(
                 turnNumber = gs.turnCount
             )
         }
+    }
+
+    fun onRemoteTurnStarted() {
+        startOfTurn = true
+        inactivityTimer = 0f
     }
 
     fun isCurrentTeam(team: Team): Boolean {
