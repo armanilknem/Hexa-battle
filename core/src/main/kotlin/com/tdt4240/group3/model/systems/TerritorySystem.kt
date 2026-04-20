@@ -22,7 +22,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import ktx.ashley.allOf
 import ktx.ashley.get
-import javax.swing.text.Position
 
 class TerritorySystem(private val lobbyId: Int) : IteratingSystem(
         allOf(PositionComponent::class,

@@ -1,4 +1,4 @@
-package com.tdt4240.group3.screens
+package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
@@ -16,8 +16,6 @@ import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.model.LobbyResult
 import com.tdt4240.group3.view.ViewConfig
-import com.tdt4240.group3.view.screens.LobbyScreen
-import com.tdt4240.group3.view.screens.MenuScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

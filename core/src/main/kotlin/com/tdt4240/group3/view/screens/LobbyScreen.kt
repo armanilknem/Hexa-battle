@@ -20,7 +20,6 @@ import com.tdt4240.group3.network.SupabaseClient
 import com.tdt4240.group3.network.model.Lobby
 import com.tdt4240.group3.network.model.LobbyStatus
 import com.tdt4240.group3.network.model.PresenceState
-import com.tdt4240.group3.screens.LobbySelectScreen
 import com.tdt4240.group3.view.View
 import com.tdt4240.group3.view.ViewConfig
 import io.github.jan.supabase.realtime.RealtimeChannel

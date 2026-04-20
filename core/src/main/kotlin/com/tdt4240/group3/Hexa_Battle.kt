@@ -9,7 +9,6 @@ import com.tdt4240.group3.model.systems.PlayerSystem
 import com.tdt4240.group3.view.screens.HowToPlayScreen
 import com.tdt4240.group3.view.View
 import com.tdt4240.group3.network.PlayerService
-import com.tdt4240.group3.screens.*
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
@@ -19,6 +18,7 @@ import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.view.screens.WinScreen
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.view.screens.LeaderboardScreen
+import com.tdt4240.group3.view.screens.LobbySelectScreen
 import ktx.assets.disposeSafely
 import java.util.UUID
 import kotlinx.coroutines.launch

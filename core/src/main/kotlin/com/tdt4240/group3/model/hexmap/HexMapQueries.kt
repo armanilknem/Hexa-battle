@@ -55,7 +55,7 @@ object HexMapQueries {
     }
 
     private fun distSq(entity: Entity, x: Float, y: Float): Float {
-        val pos = entity[PositionComponent.Companion.mapper] ?: return Float.MAX_VALUE
+        val pos = entity[PositionComponent.mapper] ?: return Float.MAX_VALUE
         val dx = pos.x - x
         val dy = pos.y - y
         return dx * dx + dy * dy

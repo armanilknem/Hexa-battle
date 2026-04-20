@@ -13,7 +13,6 @@ import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
 import com.tdt4240.group3.model.Team
-import com.tdt4240.group3.screens.LobbySelectScreen
 import com.tdt4240.group3.view.ViewConfig
 import ktx.actors.onClick
 import ktx.app.KtxScreen

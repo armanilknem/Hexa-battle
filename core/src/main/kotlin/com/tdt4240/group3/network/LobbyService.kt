@@ -5,7 +5,6 @@ import com.tdt4240.group3.network.model.LobbyPlayer
 import com.tdt4240.group3.network.model.LobbyResult
 import com.tdt4240.group3.network.model.Player
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 
 object LobbyService {
