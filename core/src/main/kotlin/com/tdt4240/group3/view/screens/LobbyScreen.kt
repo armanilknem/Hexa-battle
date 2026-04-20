@@ -56,6 +56,7 @@ class LobbyScreen(
     private lateinit var playerTable: Table
     private lateinit var startBtn: VisTextButton
     private lateinit var backBtn: VisTextButton
+    private lateinit var statusLabel: VisLabel
 
     private var transitioningToPlay = false
 
@@ -67,6 +68,7 @@ class LobbyScreen(
         countLabel = VisLabel("PLAYERS: 0/${lobby.maxPlayerCount}")
         playerTable = Table()
         startBtn = VisTextButton("START GAME")
+        statusLabel = VisLabel("")
 
         Gdx.input.inputProcessor = stage
         setupLayout()
@@ -85,24 +87,31 @@ class LobbyScreen(
         backBtn.onClick { game.setScreen<LobbySelectScreen>() }
 
         root.add(codeLabel).padBottom(10f).row()
-        root.add(countLabel).padBottom(20f).row()
+        root.add(countLabel).padBottom(10f).row()
+        root.add(statusLabel).padBottom(20f).row()
         root.add(VisLabel("CONNECTED PLAYERS:")).padBottom(10f).row()
         root.add(playerTable).padBottom(30f).row()
 
         if (lobby.hostId == game.myPlayerId) {
             root.add(startBtn).width(280f).height(60f).row()
             startBtn.onClick {
-                startBtn.isDisabled = true
-                scope.launch {
-                    val sortedOrder = connectedPlayers.keys.sorted()
-                    val shuffledOrder = sortedOrder.shuffled(Random(lobby.lobbyCode.hashCode()))
+                if (connectedPlayers.size > 1 && connectedPlayers.size < lobby.maxPlayerCount!!) {
+                    startBtn.isDisabled = true
+                    scope.launch {
+                        val sortedOrder = connectedPlayers.keys.sorted()
+                        val shuffledOrder = sortedOrder.shuffled(Random(lobby.lobbyCode.hashCode()))
 
-                    LobbyGameStateService.createInitialGameState(
-                        lobbyId = lobby.id!!,
-                        currentPlayerId = shuffledOrder.first()
-                    )
+                        LobbyGameStateService.createInitialGameState(
+                            lobbyId = lobby.id!!,
+                            currentPlayerId = shuffledOrder.first()
+                        )
 
-                    LobbyService.startGame(lobby.id!!, shuffledOrder)
+                        LobbyService.startGame(lobby.id!!, shuffledOrder)
+                    }
+                } else if (connectedPlayers.size <= 1) {
+                    statusLabel.setText("Waiting for more players...")
+                } else {
+                    statusLabel.setText("Too many players!")
                 }
             }
         } else {
