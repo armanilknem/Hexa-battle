@@ -2,6 +2,7 @@ package com.tdt4240.group3.network
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.model.components.marker.SelectableComponent
@@ -54,6 +55,14 @@ class MultiplayerManager(
     private var lastSeenPlayerId: String? = null
     private var mapStateReady:    Boolean = false
 
+    /**
+     * Counts how many times the local player's own turn was ended remotely (AFK strike).
+     * When this reaches [GameConstants.INACTIVITY_STRIKE_LIMIT] the local player is
+     * added to [GameStateComponent.eliminatedTeams], mirroring what [TurnSystem] already
+     * does on the watching player's machine and ensuring [com.tdt4240.group3.model.systems.WinSystem] fires on both clients.
+     */
+    private var selfStrikeCount:  Int     = 0
+
     // Pre-built entity families for efficient filtered queries.
     private val gsFamily    = allOf(GameStateComponent::class).get()
     private val troopFamily = allOf(PositionComponent::class, TroopComponent::class).get()
@@ -101,6 +110,12 @@ class MultiplayerManager(
                         .firstOrNull()
                         ?.get(GameStateComponent.mapper)
                     if (gs != null) {
+                        // Sample BEFORE updating gs: detect whether it was the local player's
+                        // turn that just ended. When endTurn() fires locally, gs.currentPlayerIndex
+                        // is already advanced before this postRunnable executes, so wasMyTurn
+                        // will be false in that case — no false positive.
+                        val wasMyTurn = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
+
                         gs.turnCount = newTurn
                         if (newPlayerId != null) {
                             val idx = gs.playerOrder.indexOf(newPlayerId)
@@ -111,6 +126,21 @@ class MultiplayerManager(
                         // turn just ended; running it here too would double-reinforce every city.
                         engine.getSystem(TroopCreationSystem::class.java)?.markSelectable(gs)
                         engine.getSystem(TurnSystem::class.java)?.onRemoteTurnStarted()
+
+                        // AFK self-detection: if it was my turn and the turn changed to someone
+                        // else remotely, the other player's TurnSystem fired an AFK strike against
+                        // me. Accumulate strikes locally so WinSystem fires on this machine too.
+                        if (wasMyTurn && newPlayerId != myPlayerId) {
+                            val myIndex = gs.playerOrder.indexOf(myPlayerId)
+                            val myTeam  = gs.activeTeams.getOrNull(myIndex)
+                            if (myTeam != null && myTeam !in gs.eliminatedTeams) {
+                                selfStrikeCount++
+                                if (selfStrikeCount >= GameConstants.INACTIVITY_STRIKE_LIMIT) {
+                                    gs.eliminatedTeams.add(myTeam)
+                                    selfStrikeCount = 0
+                                }
+                            }
+                        }
                     }
                     onTurnChanged(newPlayerId == myPlayerId)
                 }
@@ -150,6 +180,9 @@ class MultiplayerManager(
                             // events that arrive after the turn has already advanced.
                             if (ownerId != null) {
                                 engine.getSystem(TurnSystem::class.java)?.resetActivityTimer(ownerId)
+                                // Mirror the watcher-side strike reset: if I made a move,
+                                // clear my own accumulated AFK-strike counter too.
+                                if (ownerId == myPlayerId) selfStrikeCount = 0
                             }
 
                             val gs = engine.getEntitiesFor(gsFamily)
