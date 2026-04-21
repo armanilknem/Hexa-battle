@@ -3,11 +3,7 @@ package com.tdt4240.group3.controller
 import com.tdt4240.group3.view.states.PauseState
 import com.tdt4240.group3.view.states.PlaySubState
 
-class PauseController(
-) {
-    fun togglePause(currentState: PlaySubState, previousState: PlaySubState): PlaySubState {
-        if (currentState is PauseState)
-            return previousState
-        return PauseState()
-    }
+object PauseController {
+    fun togglePause(currentState: PlaySubState, previousState: PlaySubState): PlaySubState =
+        if (currentState is PauseState) previousState else PauseState()
 }
