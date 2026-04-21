@@ -13,6 +13,7 @@ import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.kotcrab.vis.ui.widget.VisTextField
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.model.LobbyResult
 import com.tdt4240.group3.view.ViewConfig
@@ -57,7 +58,7 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
 
         joinBtn.onClick {
             val code = codeField.text
-            if (code.length == 6) {
+            if (code.length == GameConstants.LOBBY_CODE_LENGTH) {
                 statusLabel.setText("Joining...")
                 statusLabel.color = Color.BLACK
                 scope.launch { handleResult(LobbyService.joinLobbyByCode(code.uppercase(), game.myPlayerId)) }

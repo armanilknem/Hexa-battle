@@ -2,15 +2,9 @@ package com.tdt4240.group3.model.entities
 
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.Team
-import com.tdt4240.group3.model.UnitType
-
-data class PlayerConfig(
-    val name: String
-)
 
 data class TroopConfig(
     val team: Team,
-    val unitType: UnitType,
     val strength: Int,
     val q: Int,
     val r: Int

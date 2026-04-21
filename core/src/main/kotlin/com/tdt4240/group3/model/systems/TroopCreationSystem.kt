@@ -7,7 +7,6 @@ import com.tdt4240.group3.model.MapGenerator
 import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.model.components.marker.*
 import com.tdt4240.group3.model.Team
-import com.tdt4240.group3.model.UnitType
 import ktx.ashley.allOf
 import ktx.ashley.get
 
@@ -61,7 +60,7 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
                 troopComp.strength = minOf(troopComp.strength + cityComp.baseProduction, combatComp.maxStackSize)
             }
         } else {
-            val newTroop = mapGenerator.createTroopFromCity(cityEntity, UnitType.SOLDIER)
+            val newTroop = mapGenerator.createTroopFromCity(cityEntity)
             newTroop.add(engine.createComponent(SelectableComponent::class.java))
         }
     }

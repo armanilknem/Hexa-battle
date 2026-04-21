@@ -4,7 +4,6 @@ import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.gdx.Gdx
 import com.tdt4240.group3.model.Team
-import com.tdt4240.group3.model.UnitType
 import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.model.entities.TroopConfig
 import com.tdt4240.group3.model.entities.TroopFactory
@@ -153,7 +152,6 @@ class MultiplayerManager(
                             } else if (strength > 0) {
                                 val newTroop = troopFactory.createEntity(TroopConfig(
                                     team = teamName,
-                                    unitType = UnitType.SOLDIER,
                                     strength = strength,
                                     q = q,
                                     r = r

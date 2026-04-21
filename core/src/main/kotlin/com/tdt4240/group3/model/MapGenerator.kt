@@ -36,17 +36,16 @@ class MapGenerator(private val engine: Engine) {
         }
     }
 
-    fun createTroopFromCity(cityEntity: Entity, unitType: UnitType): Entity {
+    fun createTroopFromCity(cityEntity: Entity): Entity {
         val city = CityComponent.mapper.get(cityEntity)
         val position = PositionComponent.mapper.get(cityEntity)
         val team = TeamComponent.mapper.get(cityEntity)
         return troopFactory.createEntity(
             TroopConfig(
-                team.team,
-                unitType,
-                city.baseProduction,
-                position.q,
-                position.r
+                team = team.team,
+                strength = city.baseProduction,
+                q = position.q,
+                r = position.r
             )
         )
     }

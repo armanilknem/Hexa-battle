@@ -14,6 +14,9 @@ object GameConstants {
     const val MAX_MOVES_PER_TURN = 5
     const val MAX_TROOP_STRENGTH = 99
 
+    const val TANK_PROMOTION_THRESHOLD = 40
+    const val PLANE_PROMOTION_THRESHOLD = 80
+
     const val INACTIVITY_TIMEOUT_SECONDS = 30f
     const val INACTIVITY_STRIKE_LIMIT = 3
 

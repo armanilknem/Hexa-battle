@@ -224,7 +224,5 @@ class View(
 
     override fun dispose() {
         backgroundTexture.disposeSafely()
-        TeamVisualRegistry.dispose()
-        CityStyleRegistry.dispose()
     }
 }

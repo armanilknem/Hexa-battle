@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.tdt4240.group3.model.systems.PlayerSystem
+import com.tdt4240.group3.view.styleRegistries.CityStyleRegistry
+import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
 import com.tdt4240.group3.view.screens.HowToPlayScreen
 import com.tdt4240.group3.view.View
 import com.tdt4240.group3.network.PlayerService
@@ -102,6 +104,8 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         if (::view.isInitialized) {
             view.disposeSafely()
         }
+        TeamVisualRegistry.dispose()
+        CityStyleRegistry.dispose()
         font.disposeSafely()
         batch.disposeSafely()
         shapeRenderer.disposeSafely()

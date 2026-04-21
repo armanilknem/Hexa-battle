@@ -8,15 +8,16 @@ import com.tdt4240.group3.model.components.MovementComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TroopComponent
+import com.tdt4240.group3.model.UnitType
 import com.tdt4240.group3.model.components.UnitComponent
 import ktx.ashley.entity
 import ktx.ashley.with
 
 class TroopFactory(private val engine: Engine) : EntityFactory<TroopConfig> {
     override fun createEntity(config: TroopConfig) = engine.entity {
-        val unitDef = UnitCatalog.units.getValue(config.unitType)
+        val unitDef = UnitCatalog.units.getValue(UnitType.SOLDIER)
         with<UnitComponent> {
-            this.unitType = config.unitType
+            this.unitType = UnitType.SOLDIER
         }
         with<MovementComponent> {
             this.moveRange = unitDef.movement.moveRange

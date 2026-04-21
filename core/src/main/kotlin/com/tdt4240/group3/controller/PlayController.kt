@@ -40,6 +40,7 @@ class PlayController(
         val selectionSystem = SelectionSystem()
         val movementSystem = MovementSystem()
         val collisionSystem = CollisionSystem()
+        val unitPromotionSystem = UnitPromotionSystem()
         val troopCreationSystem = TroopCreationSystem(engine)
         val territorySystem = TerritorySystem(lobbyId)
         val winSystem = WinSystem()
@@ -58,7 +59,7 @@ class PlayController(
 
         setUpSystems(
             turnSystem, selectionSystem, movementSystem, collisionSystem,
-            troopCreationSystem, territorySystem, troopHighlightSystem, winSystem
+            unitPromotionSystem, troopCreationSystem, territorySystem, troopHighlightSystem, winSystem
         )
 
         gs.playerOrder = playerOrder
@@ -140,6 +141,7 @@ class PlayController(
         selectionSystem: SelectionSystem,
         movementSystem: MovementSystem,
         collisionSystem: CollisionSystem,
+        unitPromotionSystem: UnitPromotionSystem,
         troopCreationSystem: TroopCreationSystem,
         territorySystem: TerritorySystem,
         troopHighlightSystem: TroopHighlightSystem,
@@ -149,6 +151,7 @@ class PlayController(
         engine.addSystem(selectionSystem)
         engine.addSystem(movementSystem)
         engine.addSystem(collisionSystem)
+        engine.addSystem(unitPromotionSystem)
         engine.addSystem(troopCreationSystem)
         engine.addSystem(territorySystem)
         engine.addSystem(troopHighlightSystem)
