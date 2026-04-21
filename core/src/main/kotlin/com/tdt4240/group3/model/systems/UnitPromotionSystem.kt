@@ -11,6 +11,11 @@ import com.tdt4240.group3.model.components.UnitComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 
+/**
+ * Promotes troops to a higher [UnitType] tier when their strength crosses a threshold.
+ * Runs every frame but only mutates components when a tier change is actually needed.
+ * Thresholds: [GameConstants.TANK_PROMOTION_THRESHOLD] and [GameConstants.PLANE_PROMOTION_THRESHOLD].
+ */
 class UnitPromotionSystem : EntitySystem() {
 
     private val troopFamily = allOf(
@@ -42,6 +47,7 @@ class UnitPromotionSystem : EntitySystem() {
     }
 
     companion object {
+        /** Maps a troop's current strength to the appropriate [UnitType] tier. */
         fun unitTypeForStrength(strength: Int): UnitType = when {
             strength >= GameConstants.PLANE_PROMOTION_THRESHOLD -> UnitType.PLANE
             strength >= GameConstants.TANK_PROMOTION_THRESHOLD  -> UnitType.TANK

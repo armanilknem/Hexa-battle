@@ -2,19 +2,27 @@ package com.tdt4240.group3.model.systems
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.systems.IteratingSystem
+import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.CombatComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
+import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.components.TroopComponent
 import com.tdt4240.group3.model.components.marker.CollidingComponent
-import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.marker.TerritoryComponent
-import com.tdt4240.group3.model.Team
 import ktx.ashley.allOf
 import ktx.ashley.get
 import kotlin.math.ceil
 import kotlin.math.max
 
+/**
+ * Resolves collisions for troops that share a hex after a move.
+ * Friendly collision → merge (capped at [CombatComponent.maxStackSize], excess bounces back).
+ * Enemy collision → combat (attacker/defender power compared; loser is removed).
+ * Draw → both removed, tiles claimed.
+ * City capture is checked after any surviving-attacker scenario.
+ */
 class CollisionSystem : IteratingSystem(
     allOf(
         TroopComponent::class,
@@ -24,19 +32,19 @@ class CollisionSystem : IteratingSystem(
         CollidingComponent::class
     ).get()
 ) {
+    private val positionedFamily = allOf(PositionComponent::class).get()
+    private val tileFamily       = allOf(PositionComponent::class, TileComponent::class).get()
 
     override fun processEntity(movingEntity: Entity, deltaTime: Float) {
-        val troop = movingEntity[TroopComponent.mapper]!!
+        val troop  = movingEntity[TroopComponent.mapper]!!
         val combat = movingEntity[CombatComponent.mapper] ?: return
-        val pos = movingEntity[PositionComponent.mapper]!!
-        val team = movingEntity[TeamComponent.mapper]!!
+        val pos    = movingEntity[PositionComponent.mapper]!!
+        val team   = movingEntity[TeamComponent.mapper]!!
 
-        val otherEntities = engine.getEntitiesFor(allOf(PositionComponent::class).get())
-            .filter { it != movingEntity }
-            .filter {
-                val otherPos = it[PositionComponent.mapper]
-                otherPos?.q == pos.q && otherPos?.r == pos.r
-            }
+        val otherEntities = engine.getEntitiesFor(positionedFamily).filter { it != movingEntity }.filter {
+            val otherPos = it[PositionComponent.mapper]
+            otherPos?.q == pos.q && otherPos.r == pos.r
+        }
 
         val targetTroopEntity = otherEntities.find {
             it[TroopComponent.mapper] != null && it[CombatComponent.mapper] != null
@@ -44,10 +52,10 @@ class CollisionSystem : IteratingSystem(
         var movingTroopSurvived = true
 
         if (targetTroopEntity != null) {
-            val otherTroop = targetTroopEntity[TroopComponent.mapper]!!
+            val otherTroop    = targetTroopEntity[TroopComponent.mapper]!!
             val otherPosition = targetTroopEntity[PositionComponent.mapper]!!
-            val otherCombat = targetTroopEntity[CombatComponent.mapper] ?: return
-            val otherTeam = targetTroopEntity[TeamComponent.mapper]?.team ?: Team.NONE
+            val otherCombat   = targetTroopEntity[CombatComponent.mapper] ?: return
+            val otherTeam     = targetTroopEntity[TeamComponent.mapper]?.team ?: Team.NONE
 
             if (otherTeam == team.team) {
                 val fullyMerged = handleMerge(movingEntity, troop, combat, targetTroopEntity, otherTroop, otherCombat)
@@ -61,9 +69,7 @@ class CollisionSystem : IteratingSystem(
             val cityEntity = otherEntities.find { it[CityComponent.mapper] != null }
             if (cityEntity != null) {
                 val cityTeam = cityEntity[TeamComponent.mapper]
-                if (cityTeam?.team != team.team) {
-                    cityTeam?.team = team.team
-                }
+                if (cityTeam?.team != team.team) cityTeam?.team = team.team
             }
         }
 
@@ -83,10 +89,9 @@ class CollisionSystem : IteratingSystem(
             return false
         }
 
-        val movingPos = movingEntity[PositionComponent.mapper]!!
-        val stationaryPos = stationaryEntity[PositionComponent.mapper]!!
-
-        val total = movingTroop.strength + stationaryTroop.strength
+        val movingPos      = movingEntity[PositionComponent.mapper]!!
+        val stationaryPos  = stationaryEntity[PositionComponent.mapper]!!
+        val total    = movingTroop.strength + stationaryTroop.strength
         val maxStack = stationaryCombat.maxStackSize
 
         return if (total <= maxStack) {
@@ -99,7 +104,6 @@ class CollisionSystem : IteratingSystem(
         } else {
             stationaryTroop.strength = maxStack
             movingTroop.strength = total - maxStack
-
             val oldQ = movingPos.q
             val oldR = movingPos.r
             bounceBack(movingEntity)
@@ -147,14 +151,12 @@ class CollisionSystem : IteratingSystem(
         }
     }
 
+    /** Adds a [TerritoryComponent] to the tile entity at ([q], [r]) to trigger territory claiming. */
     private fun claimTileAt(q: Int, r: Int) {
-        for (entity in engine.entities) {
-            val p = entity[PositionComponent.mapper] ?: continue
-            if (p.q == q && p.r == r) {
-                entity.add(TerritoryComponent())
-                break
-            }
-        }
+        engine.getEntitiesFor(tileFamily).firstOrNull { entity ->
+            val p = entity[PositionComponent.mapper]
+            p?.q == q && p.r == r
+        }?.add(TerritoryComponent())
     }
 
     private fun bounceBack(entity: Entity) {

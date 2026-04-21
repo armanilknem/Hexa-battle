@@ -8,14 +8,20 @@ import com.tdt4240.group3.model.wincondition.WinCondition
 import ktx.ashley.allOf
 import ktx.ashley.get
 
+/**
+ * Evaluates win/elimination conditions every frame via a [WinCondition] strategy.
+ * Fires [onPlayerEliminated] once per eliminated team and [onWin] exactly once when a winner
+ * is found, then stops evaluating for the remainder of the session.
+ */
 class WinSystem(
     private val winCondition: WinCondition = CapitalCaptureWinCondition()
 ) : EntitySystem() {
+
     var onWin: ((Team) -> Unit)? = null
     var onPlayerEliminated: ((Team) -> Unit)? = null
+
     private var winTriggered = false
     private val notifiedEliminations = mutableSetOf<Team>()
-
     private val gameStateFamily = allOf(GameStateComponent::class).get()
 
     override fun update(deltaTime: Float) {
@@ -38,10 +44,5 @@ class WinSystem(
             winTriggered = true
             onWin?.invoke(winner)
         }
-    }
-
-    fun reset() {
-        winTriggered = false
-        notifiedEliminations.clear()
     }
 }

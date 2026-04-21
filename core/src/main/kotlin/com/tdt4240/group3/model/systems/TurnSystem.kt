@@ -2,6 +2,8 @@ package com.tdt4240.group3.model.systems
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
+import com.tdt4240.group3.config.GameConstants
+import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.model.components.marker.*
 import com.tdt4240.group3.network.LobbyGameStateService
@@ -9,23 +11,30 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import com.tdt4240.group3.config.GameConstants
-import com.tdt4240.group3.model.Team
 import ktx.ashley.allOf
 import ktx.ashley.get
 
+/**
+ * Drives turn progression and the inactivity/anti-AFK timeout.
+ *
+ * Each frame it checks whether the local player has exhausted their moves (auto-ends turn)
+ * or whether a remote player has been inactive too long (strikes; eliminates after
+ * [GameConstants.INACTIVITY_STRIKE_LIMIT] strikes). Calls [onTurnEnded] and pushes the
+ * new turn to Supabase at the end of each turn.
+ */
 class TurnSystem(
     private val lobbyId: Int,
     private val myPlayerId: String
 ) : EntitySystem() {
-    private val gameStateFamily = allOf(GameStateComponent::class).get()
+
+    private val gameStateFamily      = allOf(GameStateComponent::class).get()
     private val selectableTroopFamily = allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
     var onTurnEnded: (() -> Unit)? = null
 
-    private var inactivityTimer: Float = 0f
+    private var inactivityTimer = 0f
     private val inactivityCounts = mutableMapOf<Int, Int>()
-
     private var startOfTurn = true
 
     fun resetActivityTimer() {
@@ -39,9 +48,7 @@ class TurnSystem(
         val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
         val gs = gameStateEntity[GameStateComponent.mapper] ?: return
 
-        if (gameStateEntity[NeedsTroopSpawnComponent.mapper] != null) {
-            return
-        }
+        if (gameStateEntity[NeedsTroopSpawnComponent.mapper] != null) return
 
         if (startOfTurn) {
             val selectableTroops = engine.getEntitiesFor(selectableTroopFamily)
@@ -57,7 +64,6 @@ class TurnSystem(
 
         val isMyTurn = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
         inactivityTimer += deltaTime
-
 
         if (isMyTurn && gs.movesLeft < 1) {
             endTurn()
@@ -107,9 +113,9 @@ class TurnSystem(
 
         scope.launch {
             LobbyGameStateService.updateTurn(
-                lobbyId = lobbyId,
+                lobbyId      = lobbyId,
                 nextPlayerId = gs.playerOrder[gs.currentPlayerIndex],
-                turnNumber = gs.turnCount
+                turnNumber   = gs.turnCount
             )
         }
     }
@@ -120,14 +126,14 @@ class TurnSystem(
     }
 
     fun isCurrentTeam(team: Team): Boolean {
-        val gameState = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return false
-        val gs = gameState[GameStateComponent.mapper] ?: return false
+        val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
+            ?.get(GameStateComponent.mapper) ?: return false
         return gs.currentTeam == team
     }
 
     private fun requestTroopSpawn(gameStateEntity: Entity) {
         if (gameStateEntity[NeedsTroopSpawnComponent.mapper] == null) {
-            gameStateEntity.add(engine.createComponent(NeedsTroopSpawnComponent::class.java))
+            gameStateEntity.add(NeedsTroopSpawnComponent())
         }
     }
 }
