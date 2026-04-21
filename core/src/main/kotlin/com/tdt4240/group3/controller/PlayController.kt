@@ -58,7 +58,7 @@ class PlayController(
         val myTeam  = gs.activeTeams.getOrElse(myIndex) { Team.NONE }
         game.myTeam = myTeam
 
-        val troopHighlightSystem = TroopHighlightSystem(turnSystem, myTeam)
+        val troopHighlightSystem = TroopHighlightSystem(myTeam)
 
         listOf(
             turnSystem, selectionSystem, movementSystem, collisionSystem,

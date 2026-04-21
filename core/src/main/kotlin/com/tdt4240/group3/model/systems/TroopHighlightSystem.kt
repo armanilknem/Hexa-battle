@@ -19,10 +19,10 @@ import ktx.ashley.remove
  * [MovementComponent.canCrossWater]; this will need updating if water traversal is added.
  */
 class TroopHighlightSystem(
-    private val turnSystem: TurnSystem,
     private val myTeam: Team
 ) : EntitySystem() {
 
+    private val gameStateFamily  = allOf(GameStateComponent::class).get()
     private val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
     private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
     private val selectedTroopFamily = allOf(
@@ -38,10 +38,13 @@ class TroopHighlightSystem(
     }
 
     private fun updateUnmovedTroopHighlights() {
+        val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
+            ?.get(GameStateComponent.mapper) ?: return
+
         engine.getEntitiesFor(troopFamily).forEach { entity ->
             val team = entity[TeamComponent.mapper] ?: return@forEach
-            val isMyTurn = turnSystem.isCurrentTeam(team.team)
-            val canMove  = entity.has(SelectableComponent.mapper)
+            val isMyTurn  = gs.currentTeam == team.team
+            val canMove   = entity.has(SelectableComponent.mapper)
             val isMyTroop = team.team == myTeam
 
             if (isMyTurn && canMove && isMyTroop) {
