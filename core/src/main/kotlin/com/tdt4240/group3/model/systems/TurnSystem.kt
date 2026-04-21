@@ -39,19 +39,18 @@ class TurnSystem(
     private val inactivityCounts = mutableMapOf<Int, Int>()
     private var startOfTurn = true
 
-    /**
-     * Resets the inactivity timer and clears the AFK strike count for [actingPlayerId].
-     * The reset is a no-op when [actingPlayerId] is not the current player — this guards
-     * against stale [com.tdt4240.group3.network.MultiplayerManager] map-state events that
-     * arrive after the turn has already advanced to the next player and would otherwise
-     * zero-out the new player's accumulated strike count.
-     */
+    var lastTurnEndedLocally: Boolean = false
+        private set
+
     fun resetActivityTimer(actingPlayerId: String) {
         val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
             ?.get(GameStateComponent.mapper) ?: return
         if (actingPlayerId != gs.playerOrder.getOrNull(gs.currentPlayerIndex)) return
         inactivityTimer = 0f
-        inactivityCounts[gs.currentPlayerIndex] = 0
+    }
+
+    fun clearStrikeCount(playerIndex: Int) {
+        inactivityCounts.remove(playerIndex)
     }
 
     override fun update(deltaTime: Float) {
@@ -96,6 +95,8 @@ class TurnSystem(
         if (gs.playerOrder.isEmpty()) return
         startOfTurn = true
 
+        lastTurnEndedLocally = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
+
         var nextIndex = gs.currentPlayerIndex + 1
         if (nextIndex >= gs.playerOrder.size) {
             nextIndex = 0
@@ -133,12 +134,7 @@ class TurnSystem(
     fun onRemoteTurnStarted() {
         startOfTurn = true
         inactivityTimer = 0f
-    }
-
-    fun isCurrentTeam(team: Team): Boolean {
-        val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
-            ?.get(GameStateComponent.mapper) ?: return false
-        return gs.currentTeam == team
+        lastTurnEndedLocally = false
     }
 
     private fun requestTroopSpawn(gameStateEntity: Entity) {

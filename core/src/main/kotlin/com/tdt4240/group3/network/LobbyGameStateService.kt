@@ -56,7 +56,6 @@ object LobbyGameStateService {
      * (error code 40P01). A single automatic retry with a short back-off handles any remaining races.
      */
     suspend fun setLobbyMapStates(lobbyMapStates: List<LobbyMapState>) {
-        // Consistent lock-acquisition order across all clients eliminates circular wait.
         val sorted = lobbyMapStates.sortedWith(compareBy({ it.q }, { it.r }))
 
         repeat(2) { attempt ->
@@ -64,7 +63,7 @@ object LobbyGameStateService {
                 withTimeout(GameConstants.NETWORK_TIMEOUT_MS) {
                     client.from("lobby_map_state").upsert(sorted)
                 }
-                return  // success — exit early
+                return
             } catch (e: Exception) {
                 val isDeadlock = e.message?.contains("40P01") == true ||
                                  e.message?.contains("deadlock") == true

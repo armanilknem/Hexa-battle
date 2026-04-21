@@ -103,34 +103,29 @@ class MultiplayerManager(
 
                 if (!mapStateReady) mapStateReady = true
 
-                // Apply the new turn state on the main thread, then trigger troop spawning
-                // so TroopCreationSystem sets movesLeft and marks selectable troops correctly.
                 Gdx.app.postRunnable {
                     val gs = engine.getEntitiesFor(gsFamily)
                         .firstOrNull()
                         ?.get(GameStateComponent.mapper)
+                    val ts = engine.getSystem(TurnSystem::class.java)
+
                     if (gs != null) {
-                        // Sample BEFORE updating gs: detect whether it was the local player's
-                        // turn that just ended. When endTurn() fires locally, gs.currentPlayerIndex
-                        // is already advanced before this postRunnable executes, so wasMyTurn
-                        // will be false in that case — no false positive.
-                        val wasMyTurn = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
+                        val wasMyTurn         = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
+                        val previousIdx       = gs.currentPlayerIndex
+
+                        val localEndedOwnTurn = ts?.lastTurnEndedLocally ?: false
 
                         gs.turnCount = newTurn
                         if (newPlayerId != null) {
                             val idx = gs.playerOrder.indexOf(newPlayerId)
                             if (idx >= 0) gs.currentPlayerIndex = idx
                         }
-                        // Mark selectable directly — do NOT add NeedsTroopSpawnComponent here.
-                        // createTroopsForTeam runs only via endTurn() on the machine whose
-                        // turn just ended; running it here too would double-reinforce every city.
                         engine.getSystem(TroopCreationSystem::class.java)?.markSelectable(gs)
-                        engine.getSystem(TurnSystem::class.java)?.onRemoteTurnStarted()
+                        ts?.onRemoteTurnStarted()   // clears lastTurnEndedLocally
 
-                        // AFK self-detection: if it was my turn and the turn changed to someone
-                        // else remotely, the other player's TurnSystem fired an AFK strike against
-                        // me. Accumulate strikes locally so WinSystem fires on this machine too.
-                        if (wasMyTurn && newPlayerId != myPlayerId) {
+                        // ── AFK self-detection (this machine's player was AFK'd) ─────────────
+                        // My turn ended AND I did not end it myself → opponent fired AFK endTurn.
+                        if (wasMyTurn && newPlayerId != myPlayerId && !localEndedOwnTurn) {
                             val myIndex = gs.playerOrder.indexOf(myPlayerId)
                             val myTeam  = gs.activeTeams.getOrNull(myIndex)
                             if (myTeam != null && myTeam !in gs.eliminatedTeams) {
@@ -140,6 +135,23 @@ class MultiplayerManager(
                                     selfStrikeCount = 0
                                 }
                             }
+                        }
+
+                        // ── Legitimate-turn-end bookkeeping ──────────────────────────────────
+                        // Case A: echo of MY OWN endTurn arriving on my machine.
+                        //   gs was already advanced (wasMyTurn=false) + I called endTurn locally.
+                        //   Reset my self-strike counter — I played this turn.
+                        if (!wasMyTurn && localEndedOwnTurn) {
+                            selfStrikeCount = 0
+                        }
+
+                        // Case B: the PREVIOUS player legitimately ended their own turn and it
+                        //   is now MY turn. On the WATCHING machine this means previousIdx was
+                        //   the opponent (wasMyTurn=false) and the new player is me.
+                        //   Clear their accumulated AFK-strike count so only CONSECUTIVE AFK
+                        //   turns count; active play resets the clock.
+                        if (!wasMyTurn && newPlayerId == myPlayerId) {
+                            ts?.clearStrikeCount(previousIdx)
                         }
                     }
                     onTurnChanged(newPlayerId == myPlayerId)
@@ -175,14 +187,12 @@ class MultiplayerManager(
 
                         // All engine mutations must happen on the main thread.
                         Gdx.app.postRunnable {
-                            // Only reset the AFK timer when the map change belongs to the
-                            // current player. Passing ownerId lets TurnSystem discard stale
-                            // events that arrive after the turn has already advanced.
+                            // Reset the inactivity TIMER only — not the strike count.
+                            // Strike counts are managed exclusively via the gamestateFlow
+                            // handler so that automatic troop-spawn territory updates do
+                            // not accidentally wipe accumulated AFK strikes.
                             if (ownerId != null) {
                                 engine.getSystem(TurnSystem::class.java)?.resetActivityTimer(ownerId)
-                                // Mirror the watcher-side strike reset: if I made a move,
-                                // clear my own accumulated AFK-strike counter too.
-                                if (ownerId == myPlayerId) selfStrikeCount = 0
                             }
 
                             val gs = engine.getEntitiesFor(gsFamily)
