@@ -145,7 +145,12 @@ class MultiplayerManager(
 
                         // All engine mutations must happen on the main thread.
                         Gdx.app.postRunnable {
-                            engine.getSystem(TurnSystem::class.java)?.resetActivityTimer()
+                            // Only reset the AFK timer when the map change belongs to the
+                            // current player. Passing ownerId lets TurnSystem discard stale
+                            // events that arrive after the turn has already advanced.
+                            if (ownerId != null) {
+                                engine.getSystem(TurnSystem::class.java)?.resetActivityTimer(ownerId)
+                            }
 
                             val gs = engine.getEntitiesFor(gsFamily)
                                 .firstOrNull()

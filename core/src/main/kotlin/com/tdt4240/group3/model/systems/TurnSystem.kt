@@ -39,10 +39,18 @@ class TurnSystem(
     private val inactivityCounts = mutableMapOf<Int, Int>()
     private var startOfTurn = true
 
-    fun resetActivityTimer() {
-        inactivityTimer = 0f
+    /**
+     * Resets the inactivity timer and clears the AFK strike count for [actingPlayerId].
+     * The reset is a no-op when [actingPlayerId] is not the current player — this guards
+     * against stale [com.tdt4240.group3.network.MultiplayerManager] map-state events that
+     * arrive after the turn has already advanced to the next player and would otherwise
+     * zero-out the new player's accumulated strike count.
+     */
+    fun resetActivityTimer(actingPlayerId: String) {
         val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
             ?.get(GameStateComponent.mapper) ?: return
+        if (actingPlayerId != gs.playerOrder.getOrNull(gs.currentPlayerIndex)) return
+        inactivityTimer = 0f
         inactivityCounts[gs.currentPlayerIndex] = 0
     }
 
