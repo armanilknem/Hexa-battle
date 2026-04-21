@@ -28,11 +28,11 @@ private val CAPITAL_SIZE = CitySize(width = 40f, height = 44f, xOffset = 1f, yOf
 private val NORMAL_SIZE = CitySize(width = 39f, height = 40f, xOffset = 0f, yOffset = 2f)
 
 object CityStyleRegistry : Disposable {
-    private val neutralCapitalTexture = Texture(Gdx.files.internal("normalCities/NormalCity.png"))
-    private val neutralCityTexture = Texture(Gdx.files.internal("normalCities/NormalCity.png"))
+    // Both neutral variants share the same texture; only their draw sizes differ.
+    private val neutralTexture = Texture(Gdx.files.internal("normalCities/NormalCity.png"))
 
     private val neutralCapitalVisual = CityVisuals(
-        texture = neutralCapitalTexture,
+        texture = neutralTexture,
         width = CAPITAL_SIZE.width,
         height = CAPITAL_SIZE.height,
         xOffset = CAPITAL_SIZE.xOffset,
@@ -40,7 +40,7 @@ object CityStyleRegistry : Disposable {
     )
 
     private val neutralCityVisual = CityVisuals(
-        texture = neutralCityTexture,
+        texture = neutralTexture,
         width = NORMAL_SIZE.width,
         height = NORMAL_SIZE.height,
         xOffset = NORMAL_SIZE.xOffset,
@@ -76,7 +76,6 @@ object CityStyleRegistry : Disposable {
     }
 
     override fun dispose() {
-        neutralCapitalTexture.dispose()
-        neutralCityTexture.dispose()
+        neutralTexture.dispose()
     }
 }

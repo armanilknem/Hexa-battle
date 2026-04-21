@@ -35,7 +35,6 @@ import kotlinx.serialization.json.jsonObject
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 class LobbyScreen(
@@ -172,7 +171,7 @@ class LobbyScreen(
 
                         val cols = ViewConfig.CAMERA_START_COLS
                         val rows = ViewConfig.CAMERA_START_ROWS
-                        val centerX = GameConstants.HEX_SIZE * (sqrt(3.0).toFloat() * (cols / 2f) + sqrt(3.0).toFloat() / 2f * (rows / 2f))
+                        val centerX = GameConstants.HEX_SIZE * (GameConstants.HEX_SQRT3 * (cols / 2f) + GameConstants.HEX_SQRT3 / 2f * (rows / 2f))
                         val centerY = GameConstants.HEX_SIZE * (3f / 2f * (rows / 2f)) + ViewConfig.CAMERA_Y_OFFSET
 
                         playScreen.camera.position.set(centerX, centerY, 0f)

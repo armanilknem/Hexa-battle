@@ -34,7 +34,9 @@ class PlayController(
     private val mapGenerator     = MapGenerator(engine)
     private val troopFactory     = TroopFactory(engine)
     private val gameStateFactory = GameStateFactory(engine)
-    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private val scope            = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
+    private val teamFamily = allOf(TeamComponent::class).get()
 
     fun createScreen(lobbyId: Int, myPlayerId: String, playerOrder: List<String>): PlayScreen {
 
@@ -90,7 +92,7 @@ class PlayController(
             }
         }
 
-        gameStateEntity.add(engine.createComponent(NeedsTroopSpawnComponent::class.java))
+        gameStateEntity.add(NeedsTroopSpawnComponent())
 
         // Screen + callbacks
         val playScreen = PlayScreen(
@@ -124,8 +126,8 @@ class PlayController(
             ?.get(TeamComponent.mapper)?.team ?: Team.NONE
 
         if (conquerorTeam != Team.NONE) {
-            engine.entities.toList().forEach { entity ->
-                val teamComp = entity[TeamComponent.mapper] ?: return@forEach
+            engine.getEntitiesFor(teamFamily).toList().forEach { entity ->
+                val teamComp = entity[TeamComponent.mapper]!!
                 if (teamComp.team == eliminatedTeam) teamComp.team = conquerorTeam
             }
         }

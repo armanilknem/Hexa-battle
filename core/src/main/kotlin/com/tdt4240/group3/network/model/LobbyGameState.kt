@@ -3,6 +3,11 @@ package com.tdt4240.group3.network.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * DTO for a row in the `lobby_gamestate` table.
+ * Tracks whose turn it is and the current turn number for an active game.
+ * [mapReady] is set to `true` by the host once the initial map state has been uploaded.
+ */
 @Serializable
 data class LobbyGameState(
     @SerialName("lobby_id") val lobbyId: Int,

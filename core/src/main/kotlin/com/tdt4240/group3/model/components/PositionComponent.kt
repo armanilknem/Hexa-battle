@@ -3,7 +3,6 @@ package com.tdt4240.group3.model.components
 import com.badlogic.ashley.core.Component
 import com.tdt4240.group3.config.GameConstants
 import ktx.ashley.mapperFor
-import kotlin.math.sqrt
 
 /**
  * Hex-grid coordinates for any entity placed on the map.
@@ -21,12 +20,11 @@ class PositionComponent : Component {
     var prevR: Int = -1
     var zIndex: Int = 0
 
-    val x: Float get() = GameConstants.HEX_SIZE * (SQRT3 * q + SQRT3 / 2f * r)
+    val x: Float get() = GameConstants.HEX_SIZE * (GameConstants.HEX_SQRT3 * q + GameConstants.HEX_SQRT3 / 2f * r)
     val y: Float get() = GameConstants.HEX_SIZE * (3f / 2f * r)
     val s: Int  get() = -q - r
 
     companion object {
         val mapper = mapperFor<PositionComponent>()
-        private val SQRT3 = sqrt(3.0).toFloat()
     }
 }

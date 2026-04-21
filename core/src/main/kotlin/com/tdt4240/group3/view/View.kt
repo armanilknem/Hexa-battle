@@ -42,7 +42,6 @@ class View(
 
     override fun update(deltaTime: Float) {
         stateTime += deltaTime
-        val entities = engine.entities
 
         batch.projectionMatrix = batch.projectionMatrix.idt() // identity projection
         batch.use {
@@ -54,54 +53,43 @@ class View(
         Gdx.gl.glEnable(GL20.GL_BLEND)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
-            entities.forEach { entity ->
-                if (tileFamily.matches(entity)) drawTerritory(entity)
-            }
+            engine.getEntitiesFor(tileFamily).forEach { drawTerritory(it) }
         }
         Gdx.gl.glDisable(GL20.GL_BLEND)
 
         shapeRenderer.use(ShapeRenderer.ShapeType.Line) {
-            entities.forEach { entity ->
-                if (tileFamily.matches(entity)) drawTile(entity)
-            }
+            engine.getEntitiesFor(tileFamily).forEach { drawTile(it) }
         }
 
         batch.projectionMatrix = camera.combined
         batch.use {
-            entities
-                .filter { cityFamily.matches(it) }
+            engine.getEntitiesFor(cityFamily)
                 .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
                 .forEach { entity ->
-                    if (entity[CapitalComponent.mapper] != null) {
-                        drawCapitalCity(entity)
-                    } else drawNormalCity(entity)
+                    if (entity[CapitalComponent.mapper] != null) drawCapitalCity(entity)
+                    else drawNormalCity(entity)
                 }
         }
 
         Gdx.gl.glEnable(GL20.GL_BLEND)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
-            entities.forEach { entity ->
-                if (tileFamily.matches(entity)) drawTileHighlight(entity)
-            }
+            engine.getEntitiesFor(tileFamily).forEach { drawTileHighlight(it) }
         }
         Gdx.gl.glDisable(GL20.GL_BLEND)
 
         Gdx.gl.glEnable(GL20.GL_BLEND)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
         shapeRenderer.use(ShapeRenderer.ShapeType.Filled) {
-            entities.forEach { entity ->
-                if (troopFamily.matches(entity)) drawUnmovedTroopHighlight(entity)
-            }
+            engine.getEntitiesFor(troopFamily).forEach { drawUnmovedTroopHighlight(it) }
         }
         Gdx.gl.glDisable(GL20.GL_BLEND)
 
         batch.projectionMatrix = camera.combined
         batch.use {
-            entities
-                .filter { troopFamily.matches(it) }
+            engine.getEntitiesFor(troopFamily)
                 .sortedBy { it[PositionComponent.mapper]?.zIndex ?: 0 }
-                .forEach { entity -> drawTroop(entity) }
+                .forEach { drawTroop(it) }
         }
     }
 

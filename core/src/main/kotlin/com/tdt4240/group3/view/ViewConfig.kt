@@ -2,6 +2,10 @@ package com.tdt4240.group3.view
 
 import com.badlogic.gdx.graphics.Color
 
+/**
+ * Screen-level view constants shared across all screens.
+ * All UI is laid out in virtual ([V_WIDTH] × [V_HEIGHT]) coordinates and scaled by the viewport.
+ */
 object ViewConfig {
     const val V_WIDTH  = 640f
     const val V_HEIGHT = 480f

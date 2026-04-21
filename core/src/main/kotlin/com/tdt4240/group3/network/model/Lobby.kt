@@ -3,6 +3,11 @@ package com.tdt4240.group3.network.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * DTO for a row in the `lobbies` table.
+ * [hostId] is the only required field at creation time; all other fields are assigned by the
+ * database ([id], [lobbyCode]) or updated during the game lifecycle ([status], [winner]).
+ */
 @Serializable
 data class Lobby(
     val id: Int? = null,

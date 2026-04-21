@@ -1,10 +1,14 @@
 package com.tdt4240.group3.config
 
+import kotlin.math.sqrt
+
 object GameConstants {
 
     // Hex grid rendering
-    const val HEX_SIZE = 16f
+    const val HEX_SIZE          = 16f
     const val HEX_PICK_RADIUS_SQ = HEX_SIZE * HEX_SIZE
+    /** √3 pre-computed for pointy-top hex layout formulas. */
+    val HEX_SQRT3 = sqrt(3.0).toFloat()
 
     // Map layout
     const val MAP_WIDTH = 18

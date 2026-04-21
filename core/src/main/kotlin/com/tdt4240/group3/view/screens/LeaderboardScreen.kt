@@ -27,7 +27,6 @@ import ktx.app.clearScreen
 class LeaderboardScreen(private val game: Hexa_Battle) : KtxScreen {
 
     private var backgroundTexture: Texture? = null
-    private var spriteTexture: Texture? = null
     private lateinit var stage: Stage
     private lateinit var leaderboardTable: Table
 
@@ -144,7 +143,6 @@ class LeaderboardScreen(private val game: Hexa_Battle) : KtxScreen {
     override fun dispose() {
         stage.dispose()
         backgroundTexture?.dispose()
-        spriteTexture?.dispose()
         scope.cancel()
     }
 }
