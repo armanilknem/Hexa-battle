@@ -3,6 +3,7 @@ package com.tdt4240.group3.network.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** DTO for a row in the `players` table. [id] is the Supabase auth / device UUID. */
 @Serializable
 data class Player(
     val id: String? = null,

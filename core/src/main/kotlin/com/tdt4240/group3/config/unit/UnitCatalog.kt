@@ -2,26 +2,33 @@ package com.tdt4240.group3.config.unit
 
 import com.tdt4240.group3.model.UnitType
 
-
 /**
- * Registry for static unit definitions.
- * Used in entityFactory to create troops.
+ * Static registry mapping each [com.tdt4240.group3.model.UnitType] to its [UnitDefinition].
+ * Modify entries here to balance unit stats without touching game logic.
  */
 object UnitCatalog {
     val units = mapOf(
         UnitType.SOLDIER to UnitDefinition(
-            displayName = "Base Troop",
+            displayName = "Soldier",
             movement = MovementRules(),
-            combat = CombatRules()
+            combat   = CombatRules()
         ),
         UnitType.TANK to UnitDefinition(
             displayName = "Tank",
+            movement = MovementRules(),
+            combat = CombatRules(
+                attackMultiplier  = 1.5f,
+                defenseMultiplier = 1.5f
+            )
+        ),
+        UnitType.PLANE to UnitDefinition(
+            displayName = "Plane",
             movement = MovementRules(
-                moveRange = 3
+                canCrossWater = true
             ),
             combat = CombatRules(
-                attackMultiplier = 1.3f,
-                defenseMultiplier = 1.2f
+                attackMultiplier  = 1.8f,
+                defenseMultiplier = 1.8f
             )
         )
     )

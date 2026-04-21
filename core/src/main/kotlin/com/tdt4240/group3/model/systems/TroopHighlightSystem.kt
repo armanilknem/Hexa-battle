@@ -10,10 +10,21 @@ import ktx.ashley.get
 import ktx.ashley.has
 import ktx.ashley.remove
 
-class TroopHighlightSystem(private val turnSystem: TurnSystem, private val myTeam: Team) : EntitySystem() {
+/**
+ * Manages [HighlightedComponent] markers each frame:
+ * - Highlights troops that belong to [myTeam] and still have moves available.
+ * - When a troop is selected, highlights all tiles within its movement range.
+ *
+ * Note: reachable-tile highlights currently include water tiles regardless of
+ * [MovementComponent.canCrossWater]; this will need updating if water traversal is added.
+ */
+class TroopHighlightSystem(
+    private val myTeam: Team
+) : EntitySystem() {
 
+    private val gameStateFamily  = allOf(GameStateComponent::class).get()
     private val troopFamily = allOf(TroopComponent::class, TeamComponent::class).get()
-    private val tileFamily = allOf(PositionComponent::class, TileComponent::class).get()
+    private val tileFamily  = allOf(PositionComponent::class, TileComponent::class).get()
     private val selectedTroopFamily = allOf(
         SelectedComponent::class,
         TroopComponent::class,
@@ -27,15 +38,18 @@ class TroopHighlightSystem(private val turnSystem: TurnSystem, private val myTea
     }
 
     private fun updateUnmovedTroopHighlights() {
+        val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
+            ?.get(GameStateComponent.mapper) ?: return
+
         engine.getEntitiesFor(troopFamily).forEach { entity ->
             val team = entity[TeamComponent.mapper] ?: return@forEach
-            val isMyTurn = turnSystem.isCurrentTeam(team.team)
-            val canMove = entity.has(SelectableComponent.mapper)
+            val isMyTurn  = gs.currentTeam == team.team
+            val canMove   = entity.has(SelectableComponent.mapper)
             val isMyTroop = team.team == myTeam
 
             if (isMyTurn && canMove && isMyTroop) {
                 if (!entity.has(HighlightedComponent.mapper)) {
-                    entity.add(engine.createComponent(HighlightedComponent::class.java))
+                    entity.add(HighlightedComponent())
                 }
             } else {
                 entity.remove<HighlightedComponent>()
@@ -54,7 +68,7 @@ class TroopHighlightSystem(private val turnSystem: TurnSystem, private val myTea
                 val tilePos = tile[PositionComponent.mapper]!!
                 if (hexDistance(troopPos.q, troopPos.r, tilePos.q, tilePos.r) <= movement.moveRange) {
                     if (!tile.has(HighlightedComponent.mapper)) {
-                        tile.add(engine.createComponent(HighlightedComponent::class.java))
+                        tile.add(HighlightedComponent())
                     }
                 } else {
                     tile.remove<HighlightedComponent>()

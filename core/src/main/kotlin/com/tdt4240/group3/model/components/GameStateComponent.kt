@@ -1,14 +1,18 @@
 package com.tdt4240.group3.model.components
 
 import com.badlogic.ashley.core.Component
-import com.badlogic.gdx.utils.Pool
 import com.tdt4240.group3.model.Team
 import ktx.ashley.mapperFor
 
-class GameStateComponent : Component, Pool.Poolable {
+/**
+ * Singleton component attached to the global game-state entity.
+ * Holds turn order, active teams, and per-turn move budget.
+ * Call [initialize] once after creation (via [com.tdt4240.group3.model.entities.GameStateFactory]).
+ */
+class GameStateComponent : Component {
     val activeTeams = mutableListOf<Team>()
     val eliminatedTeams = mutableSetOf<Team>()
-    var turnCount: Int = 1
+    var turnCount: Int = 0
     var movesLeft: Int = 0
 
     var playerOrder: List<String> = emptyList()
@@ -23,22 +27,9 @@ class GameStateComponent : Component, Pool.Poolable {
         eliminatedTeams.clear()
         turnCount = 0
         movesLeft = 0
-
         playerOrder = emptyList()
         currentPlayerIndex = 0
     }
 
-    override fun reset() {
-        activeTeams.clear()
-        eliminatedTeams.clear()
-        turnCount = 0
-        movesLeft = 0
-
-        playerOrder = emptyList()
-        currentPlayerIndex = 0
-    }
-
-    companion object {
-        val mapper = mapperFor<GameStateComponent>()
-    }
+    companion object { val mapper = mapperFor<GameStateComponent>() }
 }

@@ -5,11 +5,11 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.tdt4240.group3.model.systems.PlayerSystem
+import com.tdt4240.group3.view.styleRegistries.CityStyleRegistry
+import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
 import com.tdt4240.group3.view.screens.HowToPlayScreen
 import com.tdt4240.group3.view.View
 import com.tdt4240.group3.network.PlayerService
-import com.tdt4240.group3.screens.*
 import ktx.app.KtxGame
 import ktx.app.KtxScreen
 import ktx.async.KtxAsync
@@ -19,6 +19,7 @@ import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.view.screens.WinScreen
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.view.screens.LeaderboardScreen
+import com.tdt4240.group3.view.screens.LobbySelectScreen
 import ktx.assets.disposeSafely
 import java.util.UUID
 import kotlinx.coroutines.launch
@@ -52,7 +53,6 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         shapeRenderer = ShapeRenderer()
 
         engine = Engine()
-        engine.addSystem(PlayerSystem())
 
         addScreen(MenuScreen(this))
         addScreen(LobbySelectScreen(this))
@@ -95,13 +95,14 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         }
 
         engine = Engine()
-        engine.addSystem(PlayerSystem())
     }
 
     override fun dispose() {
         if (::view.isInitialized) {
             view.disposeSafely()
         }
+        TeamVisualRegistry.dispose()
+        CityStyleRegistry.dispose()
         font.disposeSafely()
         batch.disposeSafely()
         shapeRenderer.disposeSafely()

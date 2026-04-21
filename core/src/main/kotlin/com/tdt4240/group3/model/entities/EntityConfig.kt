@@ -1,30 +1,18 @@
 package com.tdt4240.group3.model.entities
 
-import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.Team
-import com.tdt4240.group3.model.UnitType
-
-data class PlayerConfig(
-    val name: String
-)
+import com.tdt4240.group3.model.components.TileComponent
 
 data class TroopConfig(
     val team: Team,
-    val unitType: UnitType,
     val strength: Int,
     val q: Int,
     val r: Int
 )
 
+/** Config for both regular cities and capitals — [com.tdt4240.group3.model.entities.CapitalFactory]
+ *  distinguishes a capital by also attaching a [com.tdt4240.group3.model.components.CapitalComponent]. */
 data class CityConfig(
-    val name: String,
-    val baseProduction: Int,
-    val q: Int,
-    val r: Int,
-    val team: Team
-)
-
-data class CapitalConfig(
     val name: String,
     val baseProduction: Int,
     val q: Int,
@@ -35,7 +23,7 @@ data class CapitalConfig(
 data class TileConfig(
     val q: Int,
     val r: Int,
-    val type: TileComponent.TileType //TODO("should look into if we can find a better way to find out Tile type")
+    val type: TileComponent.TileType
 )
 
 data class GameStateConfig(

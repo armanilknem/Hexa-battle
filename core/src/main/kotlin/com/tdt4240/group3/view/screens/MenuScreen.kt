@@ -12,8 +12,6 @@ import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
-import com.tdt4240.group3.model.Team
-import com.tdt4240.group3.screens.LobbySelectScreen
 import com.tdt4240.group3.view.ViewConfig
 import ktx.actors.onClick
 import ktx.app.KtxScreen
@@ -43,7 +41,6 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
         val optionsBtn     = VisTextButton("OPTIONS").apply { color = Color.BLACK }
 
         playBtn.onClick {
-            game.myTeam = Team.RED
             game.setScreen<LobbySelectScreen>()
         }
         howToBtn.onClick       { game.setScreen<HowToPlayScreen>() }
@@ -64,7 +61,7 @@ class MenuScreen(private val game: Hexa_Battle) : KtxScreen {
     }
 
     override fun render(delta: Float) {
-        clearScreen(0.055f, 0.067f, 0.094f, 1f)
+        with(ViewConfig.BG_DARK_BLUE) { clearScreen(r, g, b, a) }
         stage.act(delta)
         stage.draw()
     }

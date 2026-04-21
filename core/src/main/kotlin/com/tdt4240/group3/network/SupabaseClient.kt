@@ -3,9 +3,10 @@ package com.tdt4240.group3.network
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.postgrest.Postgrest
-import io.ktor.client.engine.cio.CIO
 
 object SupabaseClient {
+    // supabaseKey is the publishable anon/client key — safe to ship in client apps.
+    // Row-level security on the Supabase project enforces access control server-side.
     val client by lazy {
         createSupabaseClient(
             supabaseUrl = "https://wbubvspwwbxhucokvflo.supabase.co",

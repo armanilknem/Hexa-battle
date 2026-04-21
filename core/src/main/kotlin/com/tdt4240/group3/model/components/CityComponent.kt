@@ -1,19 +1,13 @@
 package com.tdt4240.group3.model.components
 
 import com.badlogic.ashley.core.Component
-import com.badlogic.gdx.utils.Pool
+import com.tdt4240.group3.config.GameConstants
 import ktx.ashley.mapperFor
-class CityComponent : Component, Pool.Poolable {
+
+/** Identifies a city entity. [baseProduction] troops are added to the owning team each turn. */
+class CityComponent : Component {
     var name: String = ""
-    var baseProduction = 10
+    var baseProduction: Int = GameConstants.CITY_PRODUCTION
 
-    override fun reset() {
-        name = ""
-        baseProduction = 10
-    }
-
-    companion object {
-        val mapper = mapperFor<CityComponent>()
-    }
+    companion object { val mapper = mapperFor<CityComponent>() }
 }
-

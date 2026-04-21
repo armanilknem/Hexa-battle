@@ -1,4 +1,4 @@
-package com.tdt4240.group3.screens
+package com.tdt4240.group3.view.screens
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
@@ -13,11 +13,10 @@ import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.kotcrab.vis.ui.widget.VisTextField
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.model.LobbyResult
 import com.tdt4240.group3.view.ViewConfig
-import com.tdt4240.group3.view.screens.LobbyScreen
-import com.tdt4240.group3.view.screens.MenuScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -59,7 +58,7 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
 
         joinBtn.onClick {
             val code = codeField.text
-            if (code.length == 6) {
+            if (code.length == GameConstants.LOBBY_CODE_LENGTH) {
                 statusLabel.setText("Joining...")
                 statusLabel.color = Color.BLACK
                 scope.launch { handleResult(LobbyService.joinLobbyByCode(code.uppercase(), game.myPlayerId)) }
@@ -105,7 +104,7 @@ class LobbySelectScreen(private val game: Hexa_Battle) : KtxScreen {
     }
 
     override fun render(delta: Float) {
-        clearScreen(0.055f, 0.067f, 0.094f, 1f)
+        with(ViewConfig.BG_DARK_BLUE) { clearScreen(r, g, b, a) }
         stage.act(delta)
         stage.draw()
     }

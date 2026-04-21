@@ -76,6 +76,8 @@ class PlayScreen(
     private val padSm     = ViewConfig.V_HEIGHT * 0.010f
     private val padMed    = ViewConfig.V_HEIGHT * 0.015f
 
+    private val gsFamily = allOf(GameStateComponent::class).get()
+
     private var multiplayerManager: MultiplayerManager? = null
 
     init {
@@ -97,7 +99,7 @@ class PlayScreen(
             lobbyId = lobbyId,
             myPlayerId = myPlayerId,
             engine = engine,
-            screen = this,
+            onTurnChanged = this::onTurnChanged,
             troopFactory = troopFactory
         ).also { it.start() }
     }
@@ -219,7 +221,7 @@ class PlayScreen(
     }
 
     private fun updateTurnLabel() {
-        val gameState = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
+        val gameState = engine.getEntitiesFor(gsFamily).firstOrNull()
         val gs = gameState?.get(GameStateComponent.mapper)!!
 
         teamLabel.setText("Team: ${gs.currentTeam}")
@@ -359,8 +361,8 @@ class PlayScreen(
     }
 
     private fun getGameState(): GameStateComponent {
-        val gameStateEntity = engine.getEntitiesFor(allOf(GameStateComponent::class).get()).firstOrNull()
-        return gameStateEntity?.get(GameStateComponent.mapper)
+        return engine.getEntitiesFor(gsFamily).firstOrNull()
+            ?.get(GameStateComponent.mapper)
             ?: error("GameStateComponent was not found")
     }
 
@@ -392,7 +394,9 @@ class PlayScreen(
         game.setScreen<WinScreen>()
     }
     fun getBatch() = game.batch
-    fun getFont()  = game.font
 
-    override fun dispose() { super.dispose() }
+    override fun dispose() {
+        multiplayerManager?.dispose()
+        super.dispose()
+    }
 }

@@ -2,11 +2,15 @@ package com.tdt4240.group3.config
 
 object MapData {
 
+    /**
+     * Hex coordinates (q, r) of water tiles on the default map.
+     * Used to exclude these positions from city and capital placement.
+     */
     val WATER_TILES = setOf(
-        Pair(2, 9), Pair(3, 9), Pair(2, 8), Pair(3, 8), Pair(2, 7), Pair(3, 7), Pair(4, 7),
-        Pair(8, 14), Pair(9, 14), Pair(9, 13),
-        Pair(10, 5), Pair(10, 4), Pair(11, 4), Pair(10, 3), Pair(11, 3), Pair(12, 3),
-        Pair(6, 0), Pair(7, 0), Pair(8, 0), Pair(9, 0), Pair(10, 0), Pair(11, 0)
+        2 to 9, 3 to 9, 2 to 8, 3 to 8, 2 to 7, 3 to 7, 4 to 7,
+        8 to 14, 9 to 14, 9 to 13,
+        10 to 5, 10 to 4, 11 to 4, 10 to 3, 11 to 3, 12 to 3,
+        6 to 0, 7 to 0, 8 to 0, 9 to 0, 10 to 0, 11 to 0
     )
 
     val CITY_NAMES = listOf(
@@ -28,6 +32,7 @@ object MapData {
     )
 
     val CAPITAL_NAMES = listOf(
-        "London", "Paris", "Berlin", "Rome", "Madrid", "Tokyo", "Washington", "Beijing", "Cairo", "Brasilia"
+        "London", "Paris", "Berlin", "Rome", "Madrid",
+        "Tokyo", "Washington", "Beijing", "Cairo", "Brasilia"
     )
 }

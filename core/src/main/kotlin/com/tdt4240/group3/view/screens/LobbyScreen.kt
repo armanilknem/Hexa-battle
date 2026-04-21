@@ -12,15 +12,14 @@ import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.controller.PlayController
-import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.network.LobbyGameStateService
 import com.tdt4240.group3.network.LobbyService
 import com.tdt4240.group3.network.SupabaseClient
 import com.tdt4240.group3.network.model.Lobby
 import com.tdt4240.group3.network.model.LobbyStatus
 import com.tdt4240.group3.network.model.PresenceState
-import com.tdt4240.group3.screens.LobbySelectScreen
 import com.tdt4240.group3.view.View
 import com.tdt4240.group3.view.ViewConfig
 import io.github.jan.supabase.realtime.RealtimeChannel
@@ -36,7 +35,6 @@ import kotlinx.serialization.json.jsonObject
 import ktx.actors.onClick
 import ktx.app.KtxScreen
 import ktx.app.clearScreen
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 class LobbyScreen(
@@ -171,10 +169,10 @@ class LobbyScreen(
                             playerOrder = shuffledOrder
                         )
 
-                        val cols = 12f
-                        val rows = 11f
-                        val centerX = 16f * (sqrt(3.0).toFloat() * (cols / 2f) + sqrt(3.0).toFloat() / 2f * (rows / 2f))
-                        val centerY = 16f * (3f / 2f * (rows / 2f)) + 36f
+                        val cols = ViewConfig.CAMERA_START_COLS
+                        val rows = ViewConfig.CAMERA_START_ROWS
+                        val centerX = GameConstants.HEX_SIZE * (GameConstants.HEX_SQRT3 * (cols / 2f) + GameConstants.HEX_SQRT3 / 2f * (rows / 2f))
+                        val centerY = GameConstants.HEX_SIZE * (3f / 2f * (rows / 2f)) + ViewConfig.CAMERA_Y_OFFSET
 
                         playScreen.camera.position.set(centerX, centerY, 0f)
                         playScreen.camera.update()
@@ -211,7 +209,7 @@ class LobbyScreen(
     }
 
     override fun render(delta: Float) {
-        clearScreen(0.055f, 0.067f, 0.094f, 1f)
+        with(ViewConfig.BG_DARK_BLUE) { clearScreen(r, g, b, a) }
         stage.act(delta)
         stage.draw()
     }
@@ -237,16 +235,4 @@ class LobbyScreen(
         scope.cancel()
     }
 
-    private fun assignTeamForPlayer(playerId: String, playerIds: Collection<String>): Team {
-        val orderedTeams = listOf(Team.RED, Team.BLUE, Team.PURPLE, Team.GREEN)
-        val orderedPlayerIds = playerIds.sorted()
-        val shuffledPlayerIds = orderedPlayerIds.shuffled(Random(lobby.lobbyCode.hashCode()))
-        val playerIndex = shuffledPlayerIds.indexOf(playerId)
-
-        return if (playerIndex in orderedTeams.indices) {
-            orderedTeams[playerIndex]
-        } else {
-            Team.RED
-        }
-    }
 }
