@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.utils.Align
+import com.badlogic.gdx.utils.Scaling
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
@@ -31,23 +32,22 @@ class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
         "Your Turn:\nMove units, attack,\nsurvive",
         "Select Units:\nTap to select/deselect",
         "Movement:\nUnits move up to 2 tiles",
-        "Combat:\nAttack adjacent enemies.\nStronger unit wins",
-        "Combat Result:\nWinner loses difference.\n50 vs 30 = 20",
-        "Merging:\nMove onto friendly unit\nto combine power",
-        "Cities:\nCapture to gain troops\nper turn",
+        "Combat:\nAttack adjacent\nenemies. Stronger \nunit wins",
+        "Combat Result:\nWinner loses\ndifference.\n50 vs 30 = 20",
+        "Merging:\nMove onto friendly\nunit to combine power",
+        "Cities:\nCapture to gain\ntroops per turn",
         "Capital:\nMore troop production.\nLose it = lose game",
         "Territory:\nMove to capture nearby tiles",
         "Victory:\nCapture all enemy capitals"
     )
 
-    // Will add the rest of the images tomorrow:))
     private val cardSprites = listOf(
         "tutorials/goal.png",
-        "tutorials/turn.png",
+        "tutorials/yourTurn.png",
         "tutorials/select.png",
         "tutorials/movement.png",
         "tutorials/combat.png",
-        "tutorials/combat_result.png",
+        "tutorials/combat_winner.png",
         "tutorials/merge.png",
         "tutorials/city.png",
         "tutorials/capital.png",
@@ -81,6 +81,7 @@ class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
         }
 
         spriteImage = Image()
+        spriteImage.setScaling(Scaling.fit)
         loadSprite(currentCard)
 
         val prevBtn = VisTextButton("< PREV").apply {
@@ -125,7 +126,7 @@ class HowToPlayScreen(private val game: Hexa_Battle) : KtxScreen {
         textColumn.add(cardLabel).width(280f).top().left().expand().row()
 
         val spriteColumn = Table()
-        spriteColumn.add(spriteImage).width(160f).height(130f).center()
+        spriteColumn.add(spriteImage).width(160f).expandY().fillY().top()
 
         contentArea.add(textColumn).width(280f).fillY().padRight(16f)
         contentArea.add(spriteColumn).width(160f).fillY()
