@@ -13,6 +13,7 @@ object GameConstants {
     const val CITY_PRODUCTION = 10
     const val CAPITAL_PRODUCTION = 20
     const val CAPITAL_PADDING_FACTOR = 0.12f
+    const val MIN_CITY_SEPARATION = 2
 
     // Turn rules
     const val MAX_MOVES_PER_TURN = 5

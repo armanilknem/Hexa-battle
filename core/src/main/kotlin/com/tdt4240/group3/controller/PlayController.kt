@@ -44,7 +44,7 @@ class PlayController(
         val movementSystem      = MovementSystem()
         val collisionSystem     = CollisionSystem()
         val unitPromotionSystem = UnitPromotionSystem()
-        val troopCreationSystem = TroopCreationSystem(engine)
+        val troopCreationSystem = TroopCreationSystem(engine, troopFactory)
         val territorySystem     = TerritorySystem(lobbyId)
         val winSystem           = WinSystem()
 

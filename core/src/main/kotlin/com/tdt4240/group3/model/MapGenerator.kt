@@ -1,19 +1,14 @@
 package com.tdt4240.group3.model
 
 import com.badlogic.ashley.core.Engine
-import com.badlogic.ashley.core.Entity
 import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.config.MapData
-import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
-import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
 import com.tdt4240.group3.model.entities.CityConfig
 import com.tdt4240.group3.model.entities.CityFactory
 import com.tdt4240.group3.model.entities.TileConfig
 import com.tdt4240.group3.model.entities.TileFactory
-import com.tdt4240.group3.model.entities.TroopConfig
-import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.model.entities.CapitalFactory
 import com.tdt4240.group3.model.hexmap.MapCalculations
 import kotlin.math.floor
@@ -24,7 +19,6 @@ import ktx.ashley.get
 class MapGenerator(private val engine: Engine) {
 
     private val tileFactory    = TileFactory(engine)
-    private val troopFactory   = TroopFactory(engine)
     private val cityFactory    = CityFactory(engine)
     private val capitalFactory = CapitalFactory(engine)
 
@@ -39,20 +33,6 @@ class MapGenerator(private val engine: Engine) {
                 tileFactory.createEntity(TileConfig(q, r, type))
             }
         }
-    }
-
-    fun createTroopFromCity(cityEntity: Entity): Entity {
-        val city     = cityEntity[CityComponent.mapper]!!
-        val position = cityEntity[PositionComponent.mapper]!!
-        val team     = cityEntity[TeamComponent.mapper]!!
-        return troopFactory.createEntity(
-            TroopConfig(
-                team     = team.team,
-                strength = city.baseProduction,
-                q        = position.q,
-                r        = position.r
-            )
-        )
     }
 
     fun generateCities(count: Int, capitalPositions: List<Pair<Int, Int>>, randomSeed: Int) {
@@ -70,9 +50,9 @@ class MapGenerator(private val engine: Engine) {
         for (tile in candidateTiles.shuffled(Random(randomSeed))) {
             if (placedCities.size >= count) break
             val tooClose = placedCities.any { placed ->
-                MapCalculations.hexDistance(placed.first, placed.second, tile.first, tile.second) < 2
+                MapCalculations.hexDistance(placed.first, placed.second, tile.first, tile.second) < GameConstants.MIN_CITY_SEPARATION
             } || capitalPositions.any { cap ->
-                MapCalculations.hexDistance(cap.first, cap.second, tile.first, tile.second) < 2
+                MapCalculations.hexDistance(cap.first, cap.second, tile.first, tile.second) < GameConstants.MIN_CITY_SEPARATION
             }
             if (!tooClose) {
                 placedCities.add(tile)
@@ -120,14 +100,7 @@ class MapGenerator(private val engine: Engine) {
             (minX + padX) to (maxY - padY)  // top-left
         )
 
-        val anchorIndices = when (teams.size) {
-            1    -> listOf(0)
-            2    -> listOf(0, 3)
-            3    -> listOf(0, 2, 4)
-            4    -> listOf(0, 2, 3, 5)
-            5    -> listOf(0, 1, 2, 3, 5)
-            else -> listOf(0, 1, 2, 3, 4, 5)
-        }
+        val anchorIndices = CAPITAL_ANCHOR_INDICES.getOrElse(teams.size) { listOf(0, 1, 2, 3, 4, 5) }
 
         val used = mutableSetOf<Pair<Int, Int>>()
         val placedCapitals = mutableListOf<Pair<Int, Int>>()
@@ -157,5 +130,21 @@ class MapGenerator(private val engine: Engine) {
         }
 
         return placedCapitals
+    }
+
+    companion object {
+        /**
+         * Maps player count to which of the 6 perimeter anchors are used for capital placement.
+         * Anchor positions: 0=bottom-left, 1=bottom, 2=bottom-right, 3=top-right, 4=top, 5=top-left.
+         * Chosen to spread players as far apart as possible for a given count.
+         */
+        private val CAPITAL_ANCHOR_INDICES = mapOf(
+            1 to listOf(0),
+            2 to listOf(0, 3),
+            3 to listOf(0, 2, 4),
+            4 to listOf(0, 2, 3, 5),
+            5 to listOf(0, 1, 2, 3, 5),
+            6 to listOf(0, 1, 2, 3, 4, 5)
+        )
     }
 }

@@ -3,15 +3,18 @@ package com.tdt4240.group3.model.systems
 import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.EntitySystem
-import com.tdt4240.group3.model.MapGenerator
+import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.model.components.marker.*
-import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.entities.TroopFactory
 import ktx.ashley.allOf
 import ktx.ashley.get
 
-class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
-    private val mapGenerator = MapGenerator(engine)
+class TroopCreationSystem(
+    private val engine: Engine,
+    private val troopFactory: TroopFactory
+) : EntitySystem() {
+
     private val cityFamily = allOf(CityComponent::class, PositionComponent::class, TeamComponent::class).get()
     private val gameStateFamily = allOf(GameStateComponent::class, NeedsTroopSpawnComponent::class).get()
     private val troopFamily = allOf(
@@ -46,21 +49,23 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
 
     fun createTroopFromCity(cityEntity: Entity) {
         val cityComp = cityEntity[CityComponent.mapper] ?: return
-        val cityPos = cityEntity[PositionComponent.mapper] ?: return
+        val cityPos  = cityEntity[PositionComponent.mapper] ?: return
         val cityTeam = cityEntity[TeamComponent.mapper]?.team ?: return
+
         val existingTroop = engine.getEntitiesFor(troopFamily).find {
             val p = it[PositionComponent.mapper]
             p?.q == cityPos.q && p.r == cityPos.r
         }
+
         if (existingTroop != null) {
-            val troopComp = existingTroop[TroopComponent.mapper]!!
+            val troopComp  = existingTroop[TroopComponent.mapper]!!
             val combatComp = existingTroop[CombatComponent.mapper] ?: return
-            val troopTeam = existingTroop[TeamComponent.mapper]?.team ?: return
+            val troopTeam  = existingTroop[TeamComponent.mapper]?.team ?: return
             if (troopTeam == cityTeam) {
                 troopComp.strength = minOf(troopComp.strength + cityComp.baseProduction, combatComp.maxStackSize)
             }
         } else {
-            val newTroop = mapGenerator.createTroopFromCity(cityEntity)
+            val newTroop = troopFactory.createFromCity(cityEntity)
             newTroop.add(engine.createComponent(SelectableComponent::class.java))
         }
     }
@@ -78,12 +83,10 @@ class TroopCreationSystem(private val engine: Engine) : EntitySystem() {
         engine.getEntitiesFor(troopFamily).forEach { troop ->
             troop.remove(SelectableComponent::class.java)
         }
-
         engine.getEntitiesFor(troopFamily)
             .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
             .forEach { troop ->
                 troop.add(engine.createComponent(SelectableComponent::class.java))
             }
     }
-
 }
