@@ -23,7 +23,9 @@ object UnitCatalog {
         ),
         UnitType.PLANE to UnitDefinition(
             displayName = "Plane",
-            movement = MovementRules(),
+            movement = MovementRules(
+                canCrossWater = true
+            ),
             combat = CombatRules(
                 attackMultiplier  = 1.8f,
                 defenseMultiplier = 1.8f
