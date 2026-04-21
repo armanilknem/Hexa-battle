@@ -9,7 +9,6 @@ import com.tdt4240.group3.model.entities.TroopConfig
 import com.tdt4240.group3.model.entities.TroopFactory
 import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.network.model.LobbyMapState
-import com.tdt4240.group3.view.screens.PlayScreen
 import com.tdt4240.group3.model.components.marker.SelectableComponent
 import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TurnSystem
@@ -29,7 +28,7 @@ class MultiplayerManager(
     private val lobbyId: Int,
     private val myPlayerId: String,
     private val engine: Engine,
-    private val screen: PlayScreen,
+    private val onTurnChanged: (Boolean) -> Unit,
     private val troopFactory: TroopFactory
 ) {
     private val client = SupabaseClient.client
@@ -81,7 +80,7 @@ class MultiplayerManager(
                         engine.getSystem(TroopCreationSystem::class.java)?.markSelectable(gs)
                         engine.getSystem(TurnSystem::class.java)?.onRemoteTurnStarted()
                     }
-                    screen.onTurnChanged(newPlayerId == myPlayerId)
+                    onTurnChanged(newPlayerId == myPlayerId)
                 }
             }.launchIn(scope)
 

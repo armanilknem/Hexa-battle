@@ -97,7 +97,7 @@ class PlayScreen(
             lobbyId = lobbyId,
             myPlayerId = myPlayerId,
             engine = engine,
-            screen = this,
+            onTurnChanged = this::onTurnChanged,
             troopFactory = troopFactory
         ).also { it.start() }
     }
@@ -392,7 +392,9 @@ class PlayScreen(
         game.setScreen<WinScreen>()
     }
     fun getBatch() = game.batch
-    fun getFont()  = game.font
 
-    override fun dispose() { super.dispose() }
+    override fun dispose() {
+        multiplayerManager?.dispose()
+        super.dispose()
+    }
 }
