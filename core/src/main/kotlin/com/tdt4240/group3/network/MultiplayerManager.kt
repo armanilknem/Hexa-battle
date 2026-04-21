@@ -96,7 +96,6 @@ class MultiplayerManager(
                 val newTurn     = updated.turnNumber
                 val newPlayerId = updated.currentPlayerId
 
-                // Deduplicate: skip if we already processed this exact turn+player state.
                 if (newTurn == lastSeenTurn && newPlayerId == lastSeenPlayerId) return@onEach
                 lastSeenTurn     = newTurn
                 lastSeenPlayerId = newPlayerId
@@ -123,8 +122,6 @@ class MultiplayerManager(
                         engine.getSystem(TroopCreationSystem::class.java)?.markSelectable(gs)
                         ts?.onRemoteTurnStarted()   // clears lastTurnEndedLocally
 
-                        // ── AFK self-detection (this machine's player was AFK'd) ─────────────
-                        // My turn ended AND I did not end it myself → opponent fired AFK endTurn.
                         if (wasMyTurn && newPlayerId != myPlayerId && !localEndedOwnTurn) {
                             val myIndex = gs.playerOrder.indexOf(myPlayerId)
                             val myTeam  = gs.activeTeams.getOrNull(myIndex)
@@ -136,20 +133,9 @@ class MultiplayerManager(
                                 }
                             }
                         }
-
-                        // ── Legitimate-turn-end bookkeeping ──────────────────────────────────
-                        // Case A: echo of MY OWN endTurn arriving on my machine.
-                        //   gs was already advanced (wasMyTurn=false) + I called endTurn locally.
-                        //   Reset my self-strike counter — I played this turn.
                         if (!wasMyTurn && localEndedOwnTurn) {
                             selfStrikeCount = 0
                         }
-
-                        // Case B: the PREVIOUS player legitimately ended their own turn and it
-                        //   is now MY turn. On the WATCHING machine this means previousIdx was
-                        //   the opponent (wasMyTurn=false) and the new player is me.
-                        //   Clear their accumulated AFK-strike count so only CONSECUTIVE AFK
-                        //   turns count; active play resets the clock.
                         if (!wasMyTurn && newPlayerId == myPlayerId) {
                             ts?.clearStrikeCount(previousIdx)
                         }
@@ -187,10 +173,6 @@ class MultiplayerManager(
 
                         // All engine mutations must happen on the main thread.
                         Gdx.app.postRunnable {
-                            // Reset the inactivity TIMER only — not the strike count.
-                            // Strike counts are managed exclusively via the gamestateFlow
-                            // handler so that automatic troop-spawn territory updates do
-                            // not accidentally wipe accumulated AFK strikes.
                             if (ownerId != null) {
                                 engine.getSystem(TurnSystem::class.java)?.resetActivityTimer(ownerId)
                             }
