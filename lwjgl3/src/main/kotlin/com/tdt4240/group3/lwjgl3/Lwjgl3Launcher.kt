@@ -12,7 +12,7 @@ fun main() {
     if (StartupHelper.startNewJvmIfRequired())
       return
     Lwjgl3Application(Hexa_Battle(), Lwjgl3ApplicationConfiguration().apply {
-        setTitle("hexa-battle")
+        setTitle(Hexa_Battle.TITLE)
         //// Vsync limits the frames per second to what your hardware can display, and helps eliminate
         //// screen tearing. This setting doesn't always work on Linux, so the line after is a safeguard.
         useVsync(true)
@@ -24,10 +24,15 @@ fun main() {
         //// You may also need to configure GPU drivers to fully disable Vsync; this can cause screen tearing.
 
 
-        setWindowedMode(640, 480)
+        setWindowedMode(Hexa_Battle.WIDTH, Hexa_Battle.HEIGHT)
         //// You can change these files; they are in lwjgl3/src/main/resources/ .
         //// They can also be loaded from the root of assets/ .
-        setWindowIcon(*(arrayOf(128, 64, 32, 16).map { "libgdx$it.png" }.toTypedArray()))
+        setWindowIcon(
+            "icons/crossed_swords_icon_128.png",
+            "icons/crossed_swords_icon_64.png",
+            "icons/crossed_swords_icon_32.png",
+            "icons/crossed_swords_icon_16.png"
+        )
 
         //// This could improve compatibility with Windows machines with buggy OpenGL drivers, Macs
         //// with Apple Silicon that have to emulate compatibility with OpenGL anyway, and more.

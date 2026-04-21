@@ -1,0 +1,92 @@
+package com.tdt4240.group3.model.systems
+
+import com.badlogic.ashley.core.Engine
+import com.badlogic.ashley.core.Entity
+import com.badlogic.ashley.core.EntitySystem
+import com.tdt4240.group3.model.Team
+import com.tdt4240.group3.model.components.*
+import com.tdt4240.group3.model.components.marker.*
+import com.tdt4240.group3.model.entities.TroopFactory
+import ktx.ashley.allOf
+import ktx.ashley.get
+
+class TroopCreationSystem(
+    private val engine: Engine,
+    private val troopFactory: TroopFactory
+) : EntitySystem() {
+
+    private val cityFamily = allOf(CityComponent::class, PositionComponent::class, TeamComponent::class).get()
+    private val gameStateFamily = allOf(GameStateComponent::class, NeedsTroopSpawnComponent::class).get()
+    private val troopFamily = allOf(
+        TroopComponent::class,
+        CombatComponent::class,
+        PositionComponent::class,
+        TeamComponent::class
+    ).get()
+
+    private var lastSpawnedTurn: Int = -1
+    private var lastSpawnedPlayerIndex: Int = -1
+
+    override fun update(deltaTime: Float) {
+        val gameStateEntity = engine.getEntitiesFor(gameStateFamily).firstOrNull() ?: return
+        val gs = gameStateEntity[GameStateComponent.mapper] ?: return
+
+        val alreadySpawnedThisState = gs.turnCount == lastSpawnedTurn && gs.currentPlayerIndex == lastSpawnedPlayerIndex
+        if (!alreadySpawnedThisState) {
+            if (gs.turnCount == 0) {
+                gs.activeTeams.forEach { team -> createTroopsForTeam(team) }
+                gs.turnCount = 1
+            } else if (gs.turnCount > 1) {
+                createTroopsForTeam(gs.currentTeam)
+            }
+            lastSpawnedTurn = gs.turnCount
+            lastSpawnedPlayerIndex = gs.currentPlayerIndex
+        }
+
+        markSelectable(gs)
+        gameStateEntity.remove(NeedsTroopSpawnComponent::class.java)
+    }
+
+    fun createTroopFromCity(cityEntity: Entity) {
+        val cityComp = cityEntity[CityComponent.mapper] ?: return
+        val cityPos  = cityEntity[PositionComponent.mapper] ?: return
+        val cityTeam = cityEntity[TeamComponent.mapper]?.team ?: return
+
+        val existingTroop = engine.getEntitiesFor(troopFamily).find {
+            val p = it[PositionComponent.mapper]
+            p?.q == cityPos.q && p.r == cityPos.r
+        }
+
+        if (existingTroop != null) {
+            val troopComp  = existingTroop[TroopComponent.mapper]!!
+            val combatComp = existingTroop[CombatComponent.mapper] ?: return
+            val troopTeam  = existingTroop[TeamComponent.mapper]?.team ?: return
+            if (troopTeam == cityTeam) {
+                troopComp.strength = minOf(troopComp.strength + cityComp.baseProduction, combatComp.maxStackSize)
+            }
+        } else {
+            val newTroop = troopFactory.createFromCity(cityEntity)
+            newTroop.add(engine.createComponent(SelectableComponent::class.java))
+        }
+    }
+
+    fun createTroopsForTeam(team: Team) {
+        engine.getEntitiesFor(cityFamily)
+            .filter { it[TeamComponent.mapper]?.team == team }
+            .forEach {
+                createTroopFromCity(it)
+                it.add(engine.createComponent(TerritoryComponent::class.java))
+            }
+    }
+
+    fun markSelectable(gs: GameStateComponent) {
+        engine.getEntitiesFor(troopFamily).forEach { troop ->
+            troop.remove(SelectableComponent::class.java)
+        }
+        engine.getEntitiesFor(troopFamily)
+            .filter { it[TeamComponent.mapper]?.team == gs.currentTeam }
+            .forEach { troop ->
+                troop.add(engine.createComponent(SelectableComponent::class.java))
+            }
+    }
+}

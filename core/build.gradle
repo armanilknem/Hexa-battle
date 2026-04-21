@@ -1,3 +1,5 @@
+apply plugin: 'org.jetbrains.kotlin.plugin.serialization'
+
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 eclipse.project.name = appName + '-core'
 
@@ -36,6 +38,12 @@ dependencies {
   api "net.onedaybeard.artemis:artemis-odb:$artemisOdbVersion"
   api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
   api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion"
+  api platform("io.github.jan-tennert.supabase:bom:$supabaseVersion")
+  api 'io.github.jan-tennert.supabase:realtime-kt'
+  api 'io.github.jan-tennert.supabase:postgrest-kt'
+  api "io.ktor:ktor-client-cio:$ktorVersion"
+  testImplementation "junit:junit:4.13.2"
+  testImplementation "org.jetbrains.kotlin:kotlin-test"
 
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
