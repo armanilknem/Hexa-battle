@@ -355,7 +355,7 @@ class PlayScreen(
 
         val pauseTitle = VisLabel("PAUSED").apply { setFontScale(ViewConfig.V_HEIGHT * 0.008f) }
         val resumeButton = createShadowButton("RESUME") { resumeGame() }
-        val menuButton = createShadowButton("MAIN MENU") { goToMenu() }
+        val menuButton = createShadowButton("LEAVE GAME") { goToMenu() }
 
         overlay.add(pauseTitle).padBottom(ViewConfig.V_HEIGHT * 0.06f).row()
         overlay.add(resumeButton).width(btnW).height(btnH).padBottom(ViewConfig.V_HEIGHT * 0.04f).row()
