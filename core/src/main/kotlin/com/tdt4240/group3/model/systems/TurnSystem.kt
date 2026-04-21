@@ -27,21 +27,30 @@ class TurnSystem(
     private val myPlayerId: String
 ) : EntitySystem() {
 
-    private val gameStateFamily      = allOf(GameStateComponent::class).get()
+    private val gameStateFamily = allOf(GameStateComponent::class).get()
     private val selectableTroopFamily = allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     var onTurnEnded: (() -> Unit)? = null
 
-    private var inactivityTimer = 0f
+    var inactivityTimer = 0f
+        private set
+
     private val inactivityCounts = mutableMapOf<Int, Int>()
     private var startOfTurn = true
 
-    fun resetActivityTimer() {
-        inactivityTimer = 0f
+    var lastTurnEndedLocally: Boolean = false
+        private set
+
+    fun resetActivityTimer(actingPlayerId: String) {
         val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
             ?.get(GameStateComponent.mapper) ?: return
-        inactivityCounts[gs.currentPlayerIndex] = 0
+        if (actingPlayerId != gs.playerOrder.getOrNull(gs.currentPlayerIndex)) return
+        inactivityTimer = 0f
+    }
+
+    fun clearStrikeCount(playerIndex: Int) {
+        inactivityCounts.remove(playerIndex)
     }
 
     override fun update(deltaTime: Float) {
@@ -86,6 +95,8 @@ class TurnSystem(
         if (gs.playerOrder.isEmpty()) return
         startOfTurn = true
 
+        lastTurnEndedLocally = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
+
         var nextIndex = gs.currentPlayerIndex + 1
         if (nextIndex >= gs.playerOrder.size) {
             nextIndex = 0
@@ -123,12 +134,7 @@ class TurnSystem(
     fun onRemoteTurnStarted() {
         startOfTurn = true
         inactivityTimer = 0f
-    }
-
-    fun isCurrentTeam(team: Team): Boolean {
-        val gs = engine.getEntitiesFor(gameStateFamily).firstOrNull()
-            ?.get(GameStateComponent.mapper) ?: return false
-        return gs.currentTeam == team
+        lastTurnEndedLocally = false
     }
 
     private fun requestTroopSpawn(gameStateEntity: Entity) {

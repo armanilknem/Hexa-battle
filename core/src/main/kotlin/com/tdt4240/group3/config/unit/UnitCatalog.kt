@@ -16,20 +16,14 @@ object UnitCatalog {
         UnitType.TANK to UnitDefinition(
             displayName = "Tank",
             movement = MovementRules(),
-            combat = CombatRules(
-                attackMultiplier  = 1.5f,
-                defenseMultiplier = 1.5f
-            )
+            combat = CombatRules()
         ),
         UnitType.PLANE to UnitDefinition(
             displayName = "Plane",
             movement = MovementRules(
                 canCrossWater = true
             ),
-            combat = CombatRules(
-                attackMultiplier  = 1.8f,
-                defenseMultiplier = 1.8f
-            )
+            combat = CombatRules()
         )
     )
 }

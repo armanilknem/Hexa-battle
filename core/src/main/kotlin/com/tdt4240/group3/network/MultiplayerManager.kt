@@ -2,6 +2,7 @@ package com.tdt4240.group3.network
 
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.Gdx
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.components.*
 import com.tdt4240.group3.model.components.marker.SelectableComponent
@@ -11,32 +12,41 @@ import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.network.model.LobbyMapState
+import com.tdt4240.group3.network.model.PresenceState
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.postgresSingleDataFlow
+import io.github.jan.supabase.realtime.presenceDataFlow
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import ktx.ashley.allOf
 import ktx.ashley.get
 
 /**
  * Manages Supabase Realtime subscriptions for an active multiplayer game.
- * Listens for changes to [lobbyId]'s game-state and map-state rows and applies them
- * to the Ashley [engine] on the LibGDX main thread.
  *
- * Call [start] once after the lobby transitions to `playing`, and [dispose] when the
- * screen is torn down to cancel all coroutines.
+ * Tracks:
+ * - Game state (turn advances) via [postgresSingleDataFlow]
+ * - Map state (troop/city/tile ownership) via [postgresChangeFlow]
+ * - Player presence (connection status + display names) via [presenceDataFlow]
+ *
+ * [onPresenceChanged] receives both the set of connected player IDs and a map of
+ * id -> display name so the UI can show real names without a separate DB lookup.
  */
 class MultiplayerManager(
-    private val lobbyId:       Int,
-    private val myPlayerId:    String,
-    private val engine:        Engine,
-    private val onTurnChanged: (Boolean) -> Unit,
-    private val troopFactory:  TroopFactory
+    private val lobbyId:           Int,
+    private val myPlayerId:        String,
+    private val myPlayerName:      String,
+    private val engine:            Engine,
+    private val onTurnChanged:     (Boolean) -> Unit,
+    private val onPresenceChanged: (connectedIds: Set<String>, names: Map<String, String>) -> Unit,
+    private val troopFactory:      TroopFactory
 ) {
     private val client = SupabaseClient.client
     private val scope  = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -44,6 +54,14 @@ class MultiplayerManager(
     private var lastSeenTurn:     Int     = 0
     private var lastSeenPlayerId: String? = null
     private var mapStateReady:    Boolean = false
+
+    /**
+     * Counts how many times the local player's own turn was ended remotely (AFK strike).
+     * When this reaches [GameConstants.INACTIVITY_STRIKE_LIMIT] the local player is
+     * added to [GameStateComponent.eliminatedTeams], mirroring what [TurnSystem] already
+     * does on the watching player's machine and ensuring [com.tdt4240.group3.model.systems.WinSystem] fires on both clients.
+     */
+    private var selfStrikeCount:  Int     = 0
 
     // Pre-built entity families for efficient filtered queries.
     private val gsFamily    = allOf(GameStateComponent::class).get()
@@ -55,6 +73,17 @@ class MultiplayerManager(
         val channel = client.channel("lobby_gamestate_$lobbyId")
 
         scope.launch {
+            // Presence tracking
+            val presenceFlow = channel.presenceDataFlow<PresenceState>()
+            presenceFlow.onEach { presenceList ->
+                val connectedIds = presenceList.map { it.playerId }.toSet()
+                val names        = presenceList.associate { it.playerId to it.playerName }
+                Gdx.app.postRunnable {
+                    onPresenceChanged(connectedIds, names)
+                }
+            }.launchIn(scope)
+
+            // Game state tracking
             val gamestateFlow = channel.postgresSingleDataFlow(
                 schema = "public",
                 table = "lobby_gamestate",
@@ -67,35 +96,55 @@ class MultiplayerManager(
                 val newTurn     = updated.turnNumber
                 val newPlayerId = updated.currentPlayerId
 
-                // Deduplicate: skip if we already processed this exact turn+player state.
                 if (newTurn == lastSeenTurn && newPlayerId == lastSeenPlayerId) return@onEach
                 lastSeenTurn     = newTurn
                 lastSeenPlayerId = newPlayerId
 
                 if (!mapStateReady) mapStateReady = true
 
-                // Apply the new turn state on the main thread, then trigger troop spawning
-                // so TroopCreationSystem sets movesLeft and marks selectable troops correctly.
                 Gdx.app.postRunnable {
                     val gs = engine.getEntitiesFor(gsFamily)
                         .firstOrNull()
                         ?.get(GameStateComponent.mapper)
+                    val ts = engine.getSystem(TurnSystem::class.java)
+
                     if (gs != null) {
+                        val wasMyTurn         = gs.playerOrder.getOrNull(gs.currentPlayerIndex) == myPlayerId
+                        val previousIdx       = gs.currentPlayerIndex
+
+                        val localEndedOwnTurn = ts?.lastTurnEndedLocally ?: false
+
                         gs.turnCount = newTurn
                         if (newPlayerId != null) {
                             val idx = gs.playerOrder.indexOf(newPlayerId)
                             if (idx >= 0) gs.currentPlayerIndex = idx
                         }
-                        // Mark selectable directly — do NOT add NeedsTroopSpawnComponent here.
-                        // createTroopsForTeam runs only via endTurn() on the machine whose
-                        // turn just ended; running it here too would double-reinforce every city.
                         engine.getSystem(TroopCreationSystem::class.java)?.markSelectable(gs)
-                        engine.getSystem(TurnSystem::class.java)?.onRemoteTurnStarted()
+                        ts?.onRemoteTurnStarted()   // clears lastTurnEndedLocally
+
+                        if (wasMyTurn && newPlayerId != myPlayerId && !localEndedOwnTurn) {
+                            val myIndex = gs.playerOrder.indexOf(myPlayerId)
+                            val myTeam  = gs.activeTeams.getOrNull(myIndex)
+                            if (myTeam != null && myTeam !in gs.eliminatedTeams) {
+                                selfStrikeCount++
+                                if (selfStrikeCount >= GameConstants.INACTIVITY_STRIKE_LIMIT) {
+                                    gs.eliminatedTeams.add(myTeam)
+                                    selfStrikeCount = 0
+                                }
+                            }
+                        }
+                        if (!wasMyTurn && localEndedOwnTurn) {
+                            selfStrikeCount = 0
+                        }
+                        if (!wasMyTurn && newPlayerId == myPlayerId) {
+                            ts?.clearStrikeCount(previousIdx)
+                        }
                     }
                     onTurnChanged(newPlayerId == myPlayerId)
                 }
             }.launchIn(scope)
 
+            // Map state tracking
             val mapstateFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
                 table = "lobby_map_state"
                 filter("lobby_id", FilterOperator.EQ, lobbyId)
@@ -124,7 +173,9 @@ class MultiplayerManager(
 
                         // All engine mutations must happen on the main thread.
                         Gdx.app.postRunnable {
-                            engine.getSystem(TurnSystem::class.java)?.resetActivityTimer()
+                            if (ownerId != null) {
+                                engine.getSystem(TurnSystem::class.java)?.resetActivityTimer(ownerId)
+                            }
 
                             val gs = engine.getEntitiesFor(gsFamily)
                                 .firstOrNull()
@@ -145,7 +196,13 @@ class MultiplayerManager(
                 }
             }.launchIn(scope)
 
-            channel.subscribe()
+            channel.subscribe(blockUntilSubscribed = true)
+
+            channel.track(
+                Json.encodeToJsonElement(
+                    PresenceState(myPlayerId, myPlayerName)
+                ).jsonObject
+            )
         }
     }
 

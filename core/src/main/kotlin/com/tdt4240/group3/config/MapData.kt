@@ -7,10 +7,12 @@ object MapData {
      * Used to exclude these positions from city and capital placement.
      */
     val WATER_TILES = setOf(
-        2 to 9, 3 to 9, 2 to 8, 3 to 8, 2 to 7, 3 to 7, 4 to 7,
-        8 to 14, 9 to 14, 9 to 13,
-        10 to 5, 10 to 4, 11 to 4, 10 to 3, 11 to 3, 12 to 3,
-        6 to 0, 7 to 0, 8 to 0, 9 to 0, 10 to 0, 11 to 0
+        1 to 7, 1 to 8, 1 to 9,
+        2 to 7, 2 to 8, 2 to 9, 3 to 7,
+
+        11 to 3, 11 to 4, 11 to 5, 12 to 3,
+        12 to 3, 12 to 4, 12 to 5,
+        13 to 3, 13 to 4, 14 to 3
     )
 
     val CITY_NAMES = listOf(

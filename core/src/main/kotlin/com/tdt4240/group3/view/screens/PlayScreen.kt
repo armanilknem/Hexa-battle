@@ -19,11 +19,13 @@ import com.kotcrab.vis.ui.VisUI
 import com.kotcrab.vis.ui.widget.VisLabel
 import com.kotcrab.vis.ui.widget.VisTextButton
 import com.tdt4240.group3.Hexa_Battle
+import com.tdt4240.group3.config.GameConstants
 import com.tdt4240.group3.controller.PauseController
 import com.tdt4240.group3.controller.SelectionController
 import com.tdt4240.group3.controller.TurnController
 import com.tdt4240.group3.model.Team
 import com.tdt4240.group3.model.components.*
+import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.view.ViewConfig
 import com.tdt4240.group3.view.states.PlaySubState
 import com.tdt4240.group3.view.states.PauseState
@@ -53,21 +55,27 @@ class PlayScreen(
     private var previousState: PlaySubState = PlayerTurnState()
 
     val camera = OrthographicCamera()
-
-    // Separate viewport for the game world (hex map)
     private lateinit var worldViewport: ExtendViewport
-
     private lateinit var stage: Stage
+
     private lateinit var teamLabel: VisLabel
     private lateinit var turnCountLabel: VisLabel
     private lateinit var movesLeftLabel: VisLabel
+    private lateinit var playerNameLabel: VisLabel
+    private lateinit var timerLabel: VisLabel
+    private lateinit var connectionLabel: VisLabel
+
     private lateinit var topBar: Table
     private lateinit var tooltipLabel: VisLabel
     private lateinit var pauseBtn: VisTextButton
     private lateinit var endTurnBtn: VisTextButton
     private lateinit var pauseOverlay: Table
 
-    // All sizing derived from V_HEIGHT so it scales consistently on any device
+    // No local turn timer — read directly from TurnSystem.inactivityTimer so
+    // display and auto-end behaviour are always driven by the same counter.
+    private var connectedPlayerIds: Set<String> = emptySet()
+    private var presenceNames: Map<String, String> = emptyMap()
+
     private val barH      = ViewConfig.V_HEIGHT * 0.08f
     private val fontScale = ViewConfig.V_HEIGHT * 0.0028f
     private val btnFontSc = ViewConfig.V_HEIGHT * 0.0020f
@@ -98,8 +106,10 @@ class PlayScreen(
         multiplayerManager = MultiplayerManager(
             lobbyId = lobbyId,
             myPlayerId = myPlayerId,
+            myPlayerName = game.myPlayerName,
             engine = engine,
             onTurnChanged = this::onTurnChanged,
+            onPresenceChanged = this::onPresenceChanged,
             troopFactory = troopFactory
         ).also { it.start() }
     }
@@ -155,6 +165,9 @@ class PlayScreen(
 
         val gs = getGameState()
 
+        playerNameLabel = VisLabel(game.myPlayerName).apply {
+            setFontScale(fontScale * 0.85f)
+        }
         teamLabel = VisLabel("Team: ${gs.currentTeam}").apply {
             setFontScale(fontScale)
         }
@@ -164,11 +177,23 @@ class PlayScreen(
         movesLeftLabel = VisLabel("Moves: ${gs.movesLeft}").apply {
             setFontScale(fontScale)
         }
+        timerLabel = VisLabel("0s / 30s").apply {
+            setFontScale(fontScale)
+        }
+        connectionLabel = VisLabel("● Opponent").apply {
+            setFontScale(fontScale * 0.85f)
+            color = Color.GRAY
+        }
 
-        val infoContainer = Table()
-        infoContainer.add(teamLabel).expandX().left().padRight(padMed)
-        infoContainer.add(turnCountLabel).expandX().left().padRight(padMed)
-        infoContainer.add(movesLeftLabel).expandX().left()
+        val infoLeft = Table()
+        infoLeft.add(playerNameLabel).expandX().left().row()
+        infoLeft.add(teamLabel).expandX().left().padRight(padMed)
+        infoLeft.add(turnCountLabel).expandX().left().padRight(padMed)
+        infoLeft.add(movesLeftLabel).expandX().left().row()
+
+        val infoCentre = Table()
+        infoCentre.add(timerLabel).center().padBottom(2f).row()
+        infoCentre.add(connectionLabel).center().row()
 
         pauseBtn = VisTextButton("PAUSE").apply {
             label.setFontScale(btnFontSc)
@@ -187,7 +212,8 @@ class PlayScreen(
             add(endTurnBtn).width(btnW).height(btnH)
         }
 
-        topBar.add(infoContainer).expandX().fillX().height(barH).padRight(padMed)
+        topBar.add(infoLeft).expandX().fillX().height(barH).padRight(padMed)
+        topBar.add(infoCentre).center().height(barH).padRight(padMed)
         topBar.add(buttonGroup).right().height(barH)
 
         root.add(topBar).growX().row()
@@ -224,9 +250,29 @@ class PlayScreen(
         val gameState = engine.getEntitiesFor(gsFamily).firstOrNull()
         val gs = gameState?.get(GameStateComponent.mapper)!!
 
+        val currentPlayerId = gs.playerOrder.getOrNull(gs.currentPlayerIndex)
+        val currentName = when {
+            currentPlayerId == myPlayerId -> game.myPlayerName
+            currentPlayerId != null -> presenceNames[currentPlayerId] ?: "Opponent"
+            else -> "Opponent"
+        }
+        playerNameLabel.setText(currentName)
         teamLabel.setText("Team: ${gs.currentTeam}")
         turnCountLabel.setText("Turn: ${gs.turnCount}")
         movesLeftLabel.setText("Moves: ${gs.movesLeft}")
+
+        val elapsed = engine.getSystem(TurnSystem::class.java)?.inactivityTimer ?: 0f
+        val limit   = GameConstants.INACTIVITY_TIMEOUT_SECONDS.toInt()
+        val secs    = elapsed.toInt().coerceAtMost(limit)
+        timerLabel.setText("${secs}s / ${limit}s")
+
+        if (currentPlayerId in connectedPlayerIds) {
+            connectionLabel.color = Color.GREEN
+            connectionLabel.setText("Connected")
+        } else {
+            connectionLabel.color = Color.LIGHT_GRAY
+            connectionLabel.setText("Disconnected")
+        }
     }
 
     private fun updateTopBarColor() {
@@ -241,6 +287,8 @@ class PlayScreen(
         teamLabel.color = textColor
         turnCountLabel.color = textColor
         movesLeftLabel.color = textColor
+        playerNameLabel.color = textColor
+        timerLabel.color = textColor
     }
 
     private fun chooseContrastingTextColor(bg: Color): Color {
@@ -307,7 +355,7 @@ class PlayScreen(
 
         val pauseTitle = VisLabel("PAUSED").apply { setFontScale(ViewConfig.V_HEIGHT * 0.008f) }
         val resumeButton = createShadowButton("RESUME") { resumeGame() }
-        val menuButton = createShadowButton("MAIN MENU") { goToMenu() }
+        val menuButton = createShadowButton("LEAVE GAME") { goToMenu() }
 
         overlay.add(pauseTitle).padBottom(ViewConfig.V_HEIGHT * 0.06f).row()
         overlay.add(resumeButton).width(btnW).height(btnH).padBottom(ViewConfig.V_HEIGHT * 0.04f).row()
@@ -353,6 +401,11 @@ class PlayScreen(
         }
     }
 
+    fun onPresenceChanged(connectedIds: Set<String>, names: Map<String, String>) {
+        connectedPlayerIds = connectedIds
+        presenceNames = names
+    }
+
     fun changeState(newState: PlaySubState) {
         currentState.exit(this)
         previousState = currentState
@@ -380,9 +433,10 @@ class PlayScreen(
         if (currentState is PlayerTurnState) turnController.endTurn()
         game.setScreen<MenuScreen>()
     }
+
     fun goToWin(winner: Team) {
         val winScreen = game.getScreen<WinScreen>()
-        winScreen.winner = winner
+        winScreen.winner     = winner
         winScreen.viewerTeam = game.myTeam
         game.setScreen<WinScreen>()
     }
@@ -393,6 +447,7 @@ class PlayScreen(
         winScreen.viewerTeam = game.myTeam
         game.setScreen<WinScreen>()
     }
+
     fun getBatch() = game.batch
 
     override fun dispose() {
