@@ -1,17 +1,11 @@
 package com.tdt4240.group3.model.components
 
 import com.badlogic.ashley.core.Component
-import com.badlogic.gdx.utils.Pool
 import ktx.ashley.mapperFor
 
-class TroopComponent : Component, Pool.Poolable {
+/** Marks an entity as a troop and holds its current strength (stack size). */
+class TroopComponent : Component {
     var strength: Int = 0
 
-    override fun reset() {
-        strength = 0
-    }
-
-    companion object {
-        val mapper = mapperFor<TroopComponent>()
-    }
+    companion object { val mapper = mapperFor<TroopComponent>() }
 }

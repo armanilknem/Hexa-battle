@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.ashley.core.Engine
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.tdt4240.group3.model.systems.PlayerSystem
 import com.tdt4240.group3.view.styleRegistries.CityStyleRegistry
 import com.tdt4240.group3.view.styleRegistries.TeamVisualRegistry
 import com.tdt4240.group3.view.screens.HowToPlayScreen
@@ -54,7 +53,6 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         shapeRenderer = ShapeRenderer()
 
         engine = Engine()
-        engine.addSystem(PlayerSystem())
 
         addScreen(MenuScreen(this))
         addScreen(LobbySelectScreen(this))
@@ -97,7 +95,6 @@ class Hexa_Battle : KtxGame<KtxScreen>() {
         }
 
         engine = Engine()
-        engine.addSystem(PlayerSystem())
     }
 
     override fun dispose() {

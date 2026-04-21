@@ -17,28 +17,28 @@ class TroopFactory(private val engine: Engine) : EntityFactory<TroopConfig> {
     override fun createEntity(config: TroopConfig) = engine.entity {
         val unitDef = UnitCatalog.units.getValue(UnitType.SOLDIER)
         with<UnitComponent> {
-            this.unitType = UnitType.SOLDIER
+            unitType = UnitType.SOLDIER
         }
         with<MovementComponent> {
-            this.moveRange = unitDef.movement.moveRange
-            this.canCrossWater = unitDef.movement.canCrossWater
+            moveRange = unitDef.movement.moveRange
+            canCrossWater = unitDef.movement.canCrossWater
         }
         with<CombatComponent> {
-            this.maxStackSize = unitDef.combat.maxStackSize
-            this.attackMultiplier = unitDef.combat.attackMultiplier
-            this.defenseMultiplier = unitDef.combat.defenseMultiplier
-            this.canMergeFriendly = unitDef.combat.canMergeFriendly
+            maxStackSize = unitDef.combat.maxStackSize
+            attackMultiplier = unitDef.combat.attackMultiplier
+            defenseMultiplier = unitDef.combat.defenseMultiplier
+            canMergeFriendly = unitDef.combat.canMergeFriendly
         }
         with<TroopComponent> {
-            this.strength = config.strength
+            strength = config.strength
         }
         with<PositionComponent> {
-            this.q = config.q
-            this.r = config.r
-            this.zIndex = ZIndex.TROOP
+            q = config.q
+            r = config.r
+            zIndex = ZIndex.TROOP
         }
         with<TeamComponent> {
-            this.team = config.team
+            team = config.team
         }
     }
 }

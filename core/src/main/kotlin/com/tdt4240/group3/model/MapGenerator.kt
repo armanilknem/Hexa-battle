@@ -31,7 +31,9 @@ class MapGenerator(private val engine: Engine) {
         for (r in 0 until height) {
             val rOffset = floor(r / 2.0).toInt()
             for (q in -rOffset until width - rOffset) {
-                tileFactory.createEntity(TileConfig(q, r, TileComponent.TileType.GRASS))
+                val type = if (q to r in MapData.WATER_TILES) TileComponent.TileType.WATER
+                           else TileComponent.TileType.GRASS
+                tileFactory.createEntity(TileConfig(q, r, type))
             }
         }
     }
