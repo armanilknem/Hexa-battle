@@ -12,7 +12,6 @@ object GameConstants {
     const val CAPITAL_PADDING_FACTOR = 0.12f
 
     const val MAX_MOVES_PER_TURN = 5
-    const val MAX_TROOP_STRENGTH = 99
 
     const val TANK_PROMOTION_THRESHOLD = 40
     const val PLANE_PROMOTION_THRESHOLD = 80
