@@ -9,20 +9,21 @@ import com.tdt4240.group3.model.components.TeamComponent
 import ktx.ashley.entity
 import ktx.ashley.with
 
-class CapitalFactory(private val engine: Engine) : EntityFactory<CapitalConfig> {
-    override fun createEntity(config: CapitalConfig) = engine.entity {
+/** Creates a city entity that additionally carries a [CapitalComponent] marker. */
+class CapitalFactory(private val engine: Engine) : EntityFactory<CityConfig> {
+    override fun createEntity(config: CityConfig) = engine.entity {
         with<CityComponent> {
-            this.name = config.name
-            this.baseProduction = config.baseProduction
+            name = config.name
+            baseProduction = config.baseProduction
         }
         with<PositionComponent> {
-            this.q = config.q
-            this.r = config.r
-            this.zIndex = ZIndex.CITY
+            q = config.q
+            r = config.r
+            zIndex = ZIndex.CITY
         }
         with<TeamComponent> {
-            this.team = config.team
+            team = config.team
         }
-        with<CapitalComponent> { }
+        with<CapitalComponent> {}
     }
 }

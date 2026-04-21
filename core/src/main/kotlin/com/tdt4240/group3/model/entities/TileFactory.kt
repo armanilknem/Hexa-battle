@@ -12,15 +12,15 @@ import ktx.ashley.with
 class TileFactory(private val engine: Engine) : EntityFactory<TileConfig> {
     override fun createEntity(config: TileConfig) = engine.entity {
         with<TileComponent> {
-            this.type = config.type
+            type = config.type
         }
         with<PositionComponent> {
-            this.q = config.q
-            this.r = config.r
-            this.zIndex = ZIndex.TILE
+            q = config.q
+            r = config.r
+            zIndex = ZIndex.TILE
         }
         with<TeamComponent> {
-            this.team = Team.NONE
+            team = Team.NONE
         }
     }
 }

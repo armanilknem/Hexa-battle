@@ -11,16 +11,16 @@ import ktx.ashley.with
 class CityFactory(private val engine: Engine) : EntityFactory<CityConfig> {
     override fun createEntity(config: CityConfig) = engine.entity {
         with<CityComponent> {
-            this.name = config.name
-            this.baseProduction = config.baseProduction
+            name = config.name
+            baseProduction = config.baseProduction
         }
         with<PositionComponent> {
-            this.q = config.q
-            this.r = config.r
-            this.zIndex = ZIndex.CITY
+            q = config.q
+            r = config.r
+            zIndex = ZIndex.CITY
         }
         with<TeamComponent> {
-            this.team = config.team
+            team = config.team
         }
     }
 }

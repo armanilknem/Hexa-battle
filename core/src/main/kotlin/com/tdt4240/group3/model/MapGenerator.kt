@@ -8,24 +8,27 @@ import com.tdt4240.group3.model.components.CityComponent
 import com.tdt4240.group3.model.components.PositionComponent
 import com.tdt4240.group3.model.components.TeamComponent
 import com.tdt4240.group3.model.components.TileComponent
-import com.tdt4240.group3.model.entities.CapitalConfig
-import com.tdt4240.group3.model.entities.CapitalFactory
 import com.tdt4240.group3.model.entities.CityConfig
 import com.tdt4240.group3.model.entities.CityFactory
 import com.tdt4240.group3.model.entities.TileConfig
 import com.tdt4240.group3.model.entities.TileFactory
 import com.tdt4240.group3.model.entities.TroopConfig
 import com.tdt4240.group3.model.entities.TroopFactory
+import com.tdt4240.group3.model.entities.CapitalFactory
 import com.tdt4240.group3.model.hexmap.MapCalculations
 import kotlin.math.floor
 import kotlin.random.Random
+import ktx.ashley.allOf
+import ktx.ashley.get
 
 class MapGenerator(private val engine: Engine) {
 
-    private val tileFactory = TileFactory(engine)
-    private val troopFactory = TroopFactory(engine)
-    private val cityFactory = CityFactory(engine)
+    private val tileFactory    = TileFactory(engine)
+    private val troopFactory   = TroopFactory(engine)
+    private val cityFactory    = CityFactory(engine)
     private val capitalFactory = CapitalFactory(engine)
+
+    private val tileFamily = allOf(PositionComponent::class, TileComponent::class).get()
 
     fun generateRectangularGrid(width: Int, height: Int) {
         for (r in 0 until height) {
@@ -39,15 +42,15 @@ class MapGenerator(private val engine: Engine) {
     }
 
     fun createTroopFromCity(cityEntity: Entity): Entity {
-        val city = CityComponent.mapper.get(cityEntity)
-        val position = PositionComponent.mapper.get(cityEntity)
-        val team = TeamComponent.mapper.get(cityEntity)
+        val city     = cityEntity[CityComponent.mapper]!!
+        val position = cityEntity[PositionComponent.mapper]!!
+        val team     = cityEntity[TeamComponent.mapper]!!
         return troopFactory.createEntity(
             TroopConfig(
-                team = team.team,
+                team     = team.team,
                 strength = city.baseProduction,
-                q = position.q,
-                r = position.r
+                q        = position.q,
+                r        = position.r
             )
         )
     }
@@ -56,18 +59,15 @@ class MapGenerator(private val engine: Engine) {
         val cityNames = MapData.CITY_NAMES.toMutableList()
             .also { it.shuffle(Random(randomSeed)) }
 
-        val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
-        val allTiles = engine.getEntitiesFor(tileFamily).map { entity ->
-            val pos = PositionComponent.mapper.get(entity)
-            Pair(pos.q, pos.r)
-        }
-
-        val candidateTiles = allTiles.filter { it !in MapData.WATER_TILES && it !in capitalPositions }
+        val candidateTiles = engine.getEntitiesFor(tileFamily).mapNotNull { entity ->
+            if (entity[TileComponent.mapper]!!.type == TileComponent.TileType.WATER) return@mapNotNull null
+            val pos = entity[PositionComponent.mapper]!!
+            pos.q to pos.r
+        }.filter { it !in capitalPositions }
 
         val placedCities = mutableListOf<Pair<Int, Int>>()
 
-        val shuffled = candidateTiles.shuffled(Random(randomSeed))
-        for (tile in shuffled) {
+        for (tile in candidateTiles.shuffled(Random(randomSeed))) {
             if (placedCities.size >= count) break
             val tooClose = placedCities.any { placed ->
                 MapCalculations.hexDistance(placed.first, placed.second, tile.first, tile.second) < 2
@@ -78,11 +78,11 @@ class MapGenerator(private val engine: Engine) {
                 placedCities.add(tile)
                 val name = cityNames.getOrElse(placedCities.size - 1) { "City ${placedCities.size}" }
                 cityFactory.createEntity(CityConfig(
-                    name = name,
+                    name           = name,
                     baseProduction = GameConstants.CITY_PRODUCTION,
-                    q = tile.first,
-                    r = tile.second,
-                    team = Team.NONE
+                    q              = tile.first,
+                    r              = tile.second,
+                    team           = Team.NONE
                 ))
             }
         }
@@ -92,17 +92,13 @@ class MapGenerator(private val engine: Engine) {
         val capitalNames = MapData.CAPITAL_NAMES.toMutableList()
             .also { it.shuffle(Random(randomSeed)) }
 
-        val tileFamily = ktx.ashley.allOf(PositionComponent::class, TileComponent::class).get()
-
         data class TilePos(val q: Int, val r: Int, val x: Float, val y: Float)
 
-        val validTiles = engine.getEntitiesFor(tileFamily)
-            .mapNotNull { entity ->
-                val pos = PositionComponent.mapper.get(entity) ?: return@mapNotNull null
-                val coords = pos.q to pos.r
-                if (coords in MapData.WATER_TILES) return@mapNotNull null
-                TilePos(pos.q, pos.r, pos.x, pos.y)
-            }
+        val validTiles = engine.getEntitiesFor(tileFamily).mapNotNull { entity ->
+            if (entity[TileComponent.mapper]!!.type == TileComponent.TileType.WATER) return@mapNotNull null
+            val pos = entity[PositionComponent.mapper]!!
+            TilePos(pos.q, pos.r, pos.x, pos.y)
+        }
 
         if (validTiles.isEmpty()) return emptyList()
 
@@ -125,11 +121,11 @@ class MapGenerator(private val engine: Engine) {
         )
 
         val anchorIndices = when (teams.size) {
-            1 -> listOf(0)
-            2 -> listOf(0, 3)
-            3 -> listOf(0, 2, 4)
-            4 -> listOf(0, 2, 3, 5)
-            5 -> listOf(0, 1, 2, 3, 5)
+            1    -> listOf(0)
+            2    -> listOf(0, 3)
+            3    -> listOf(0, 2, 4)
+            4    -> listOf(0, 2, 3, 5)
+            5    -> listOf(0, 1, 2, 3, 5)
             else -> listOf(0, 1, 2, 3, 4, 5)
         }
 
@@ -151,12 +147,12 @@ class MapGenerator(private val engine: Engine) {
             used.add(coords)
             placedCapitals.add(coords)
 
-            capitalFactory.createEntity(CapitalConfig(
-                name = capitalNames.getOrElse(index) { "Capital ${index + 1}" },
+            capitalFactory.createEntity(CityConfig(
+                name           = capitalNames.getOrElse(index) { "Capital ${index + 1}" },
                 baseProduction = GameConstants.CAPITAL_PRODUCTION,
-                q = bestTile.q,
-                r = bestTile.r,
-                team = team
+                q              = bestTile.q,
+                r              = bestTile.r,
+                team           = team
             ))
         }
 
