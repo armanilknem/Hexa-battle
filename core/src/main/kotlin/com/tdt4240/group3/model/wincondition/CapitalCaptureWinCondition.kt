@@ -8,7 +8,12 @@ import com.tdt4240.group3.model.components.TeamComponent
 import ktx.ashley.allOf
 import ktx.ashley.get
 
+/**
+ * A team is eliminated when it no longer owns any capital.
+ * The last surviving team wins.
+ */
 class CapitalCaptureWinCondition : WinCondition {
+
     private val capitalFamily = allOf(CapitalComponent::class, TeamComponent::class).get()
 
     override fun isGameInitialized(engine: Engine): Boolean {
@@ -20,14 +25,12 @@ class CapitalCaptureWinCondition : WinCondition {
         val capitalOwners = engine.getEntitiesFor(capitalFamily)
             .map { it[TeamComponent.mapper]?.team ?: Team.NONE }
         gs.activeTeams.forEach { team ->
-            if (!gs.eliminatedTeams.contains(team) && capitalOwners.none { it == team }) {
+            if (team !in gs.eliminatedTeams && team !in capitalOwners) {
                 gs.eliminatedTeams.add(team)
             }
         }
     }
 
-    override fun findWinner(gs: GameStateComponent): Team? {
-        val survivors = gs.activeTeams.filter { !gs.eliminatedTeams.contains(it) }
-        return if (survivors.size == 1) survivors.first() else null
-    }
+    override fun findWinner(gs: GameStateComponent): Team? =
+        gs.activeTeams.filterNot { it in gs.eliminatedTeams }.singleOrNull()
 }
