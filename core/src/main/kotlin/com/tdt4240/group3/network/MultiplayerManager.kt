@@ -11,32 +11,41 @@ import com.tdt4240.group3.model.systems.TroopCreationSystem
 import com.tdt4240.group3.model.systems.TurnSystem
 import com.tdt4240.group3.network.model.LobbyGameState
 import com.tdt4240.group3.network.model.LobbyMapState
+import com.tdt4240.group3.network.model.PresenceState
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.postgresSingleDataFlow
+import io.github.jan.supabase.realtime.presenceDataFlow
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import ktx.ashley.allOf
 import ktx.ashley.get
 
 /**
  * Manages Supabase Realtime subscriptions for an active multiplayer game.
- * Listens for changes to [lobbyId]'s game-state and map-state rows and applies them
- * to the Ashley [engine] on the LibGDX main thread.
  *
- * Call [start] once after the lobby transitions to `playing`, and [dispose] when the
- * screen is torn down to cancel all coroutines.
+ * Tracks:
+ * - Game state (turn advances) via [postgresSingleDataFlow]
+ * - Map state (troop/city/tile ownership) via [postgresChangeFlow]
+ * - Player presence (connection status + display names) via [presenceDataFlow]
+ *
+ * [onPresenceChanged] receives both the set of connected player IDs and a map of
+ * id -> display name so the UI can show real names without a separate DB lookup.
  */
 class MultiplayerManager(
-    private val lobbyId:       Int,
-    private val myPlayerId:    String,
-    private val engine:        Engine,
-    private val onTurnChanged: (Boolean) -> Unit,
-    private val troopFactory:  TroopFactory
+    private val lobbyId:           Int,
+    private val myPlayerId:        String,
+    private val myPlayerName:      String,
+    private val engine:            Engine,
+    private val onTurnChanged:     (Boolean) -> Unit,
+    private val onPresenceChanged: (connectedIds: Set<String>, names: Map<String, String>) -> Unit,
+    private val troopFactory:      TroopFactory
 ) {
     private val client = SupabaseClient.client
     private val scope  = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -55,6 +64,17 @@ class MultiplayerManager(
         val channel = client.channel("lobby_gamestate_$lobbyId")
 
         scope.launch {
+            // Presence tracking
+            val presenceFlow = channel.presenceDataFlow<PresenceState>()
+            presenceFlow.onEach { presenceList ->
+                val connectedIds = presenceList.map { it.playerId }.toSet()
+                val names        = presenceList.associate { it.playerId to it.playerName }
+                Gdx.app.postRunnable {
+                    onPresenceChanged(connectedIds, names)
+                }
+            }.launchIn(scope)
+
+            // Game state tracking
             val gamestateFlow = channel.postgresSingleDataFlow(
                 schema = "public",
                 table = "lobby_gamestate",
@@ -96,6 +116,7 @@ class MultiplayerManager(
                 }
             }.launchIn(scope)
 
+            // Map state tracking
             val mapstateFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
                 table = "lobby_map_state"
                 filter("lobby_id", FilterOperator.EQ, lobbyId)
@@ -145,7 +166,13 @@ class MultiplayerManager(
                 }
             }.launchIn(scope)
 
-            channel.subscribe()
+            channel.subscribe(blockUntilSubscribed = true)
+
+            channel.track(
+                Json.encodeToJsonElement(
+                    PresenceState(myPlayerId, myPlayerName)
+                ).jsonObject
+            )
         }
     }
 

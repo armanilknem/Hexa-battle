@@ -27,13 +27,15 @@ class TurnSystem(
     private val myPlayerId: String
 ) : EntitySystem() {
 
-    private val gameStateFamily      = allOf(GameStateComponent::class).get()
+    private val gameStateFamily = allOf(GameStateComponent::class).get()
     private val selectableTroopFamily = allOf(TroopComponent::class, TeamComponent::class, SelectableComponent::class).get()
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     var onTurnEnded: (() -> Unit)? = null
 
-    private var inactivityTimer = 0f
+    var inactivityTimer = 0f
+        private set
+
     private val inactivityCounts = mutableMapOf<Int, Int>()
     private var startOfTurn = true
 
